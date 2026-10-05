@@ -1,0 +1,27 @@
+---
+import { z } from 'zod';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AlbumEditor from '@/components/admin/AlbumEditor';
+import { getAlbumWithPhotos, listAlbums } from '@/lib/albums';
+
+export const prerender = false;
+
+const id = z.uuid().safeParse(Astro.params.id);
+const album = id.success ? await getAlbumWithPhotos(id.data) : undefined;
+if (!album) return Astro.redirect('/admin');
+
+const otherAlbums = (await listAlbums())
+  .filter((a) => a.id !== album.id)
+  .map(({ id, title }) => ({ id, title }));
+---
+
+<AdminLayout title={album.title}>
+  <a href="/admin" class="mb-6 inline-block text-sm">
+    ← All albums
+  </a>
+  <AlbumEditor
+    client:load
+    initialAlbum={JSON.parse(JSON.stringify(album))}
+    otherAlbums={otherAlbums}
+  />
+</AdminLayout>

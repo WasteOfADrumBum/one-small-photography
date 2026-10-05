@@ -1,0 +1,19 @@
+---
+interface Props {
+  title: string;
+  error?: string | undefined;
+}
+const { title, error } = Astro.props;
+---
+
+<section class="mx-auto max-w-md px-4 py-24 sm:px-6">
+  <div class="rounded-xl border border-sand/20 bg-moss p-8 shadow-xl shadow-black/30">
+    <h1 class="text-3xl">{title}</h1>
+    {error && (
+      <p role="alert" class="mt-4 rounded-md border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
+        {error}
+      </p>
+    )}
+    <slot />
+  </div>
+</section>

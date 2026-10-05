@@ -1,0 +1,147 @@
+---
+import type { Photo, PhotoExif } from '@/db/schema';
+import { photoSrcset, photoUrl } from '@/lib/photo-url';
+
+interface Props {
+  photos: Photo[];
+}
+const { photos } = Astro.props;
+
+function exifLine(exif: PhotoExif): string {
+  const shutter = exif.exposureTime
+    ? exif.exposureTime >= 1
+      ? `${exif.exposureTime}s`
+      : `1/${Math.round(1 / exif.exposureTime)}s`
+    : undefined;
+  return [
+    exif.model,
+    exif.lens,
+    exif.focalLength && `${Math.round(exif.focalLength)}mm`,
+    exif.fNumber && `f/${exif.fNumber}`,
+    shutter,
+    exif.iso && `ISO ${exif.iso}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+---
+
+<div class="mt-14 columns-1 gap-4 sm:columns-2 lg:columns-3">
+  {photos.map((photo, index) => (
+    <button
+      type="button"
+      class="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-sm bg-moss"
+      data-gallery-item={index}
+      data-src={photoUrl(photo, 'lg')}
+      data-title={photo.title}
+      data-description={photo.description}
+      data-exif={exifLine(photo.exif)}
+      data-alt={photo.alt || photo.title}
+      aria-label={`Open ${photo.title || 'photo'} full screen`}
+    >
+      <img
+        src={photoUrl(photo, 'md')}
+        srcset={photoSrcset(photo)}
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        width={photo.width}
+        height={photo.height}
+        alt={photo.alt || photo.title}
+        loading={index < 3 ? 'eager' : 'lazy'}
+        decoding="async"
+        class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
+      />
+    </button>
+  ))}
+</div>
+
+<dialog
+  data-lightbox
+  class="m-0 h-dvh max-h-none w-dvw max-w-none bg-espresso/95 p-0 text-paper backdrop:bg-black/70"
+  aria-label="Photo viewer"
+>
+  <div class="flex h-full flex-col">
+    <div class="flex justify-end gap-2 p-4">
+      <button
+        data-prev
+        class="rounded-full border border-sand/30 px-4 py-2 hover:border-gold"
+        aria-label="Previous photo"
+      >
+        ←
+      </button>
+      <button
+        data-next
+        class="rounded-full border border-sand/30 px-4 py-2 hover:border-gold"
+        aria-label="Next photo"
+      >
+        →
+      </button>
+      <button
+        data-close
+        class="rounded-full border border-sand/30 px-4 py-2 hover:border-gold"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+    </div>
+    <figure class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 pb-6">
+      <img data-image alt="" class="min-h-0 max-w-full flex-1 object-contain" />
+      <figcaption class="max-w-2xl text-center">
+        <p data-title class="font-serif text-2xl"></p>
+        <p data-description class="mt-1 text-sand"></p>
+        <p data-exif class="mt-2 text-xs tracking-wide text-sage"></p>
+      </figcaption>
+    </figure>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]');
+  const items = [...document.querySelectorAll<HTMLButtonElement>('[data-gallery-item]')];
+
+  if (dialog && items.length > 0) {
+    const image = dialog.querySelector<HTMLImageElement>('[data-image]')!;
+    const text = (name: string) => dialog.querySelector<HTMLElement>(`[data-${name}]`)!;
+    let current = 0;
+
+    const show = (index: number) => {
+      current = (index + items.length) % items.length;
+      const {
+        src = '',
+        title = '',
+        description = '',
+        exif = '',
+        alt = '',
+      } = items[current]!.dataset;
+      image.src = src;
+      image.alt = alt;
+      text('title').textContent = title;
+      text('description').textContent = description;
+      text('exif').textContent = exif;
+    };
+
+    items.forEach((item, index) =>
+      item.addEventListener('click', () => {
+        show(index);
+        dialog.showModal();
+      }),
+    );
+    text('prev').addEventListener('click', () => show(current - 1));
+    text('next').addEventListener('click', () => show(current + 1));
+    text('close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => items[current]?.focus());
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+
+    // Swipe on phones.
+    let startX = 0;
+    dialog.addEventListener('touchstart', (e) => (startX = e.touches[0]!.clientX), {
+      passive: true,
+    });
+    dialog.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0]!.clientX - startX;
+      if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    });
+  }
+</script>

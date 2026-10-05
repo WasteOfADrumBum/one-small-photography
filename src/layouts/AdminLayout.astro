@@ -1,0 +1,44 @@
+---
+import '@/styles/global.css';
+
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+const email = Astro.locals.user?.email;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} | OneSmallPhoto admin</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="min-h-dvh">
+    <header class="sticky top-0 z-40 border-b border-sand/15 bg-espresso/90 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-4 sm:px-6">
+        <a href="/admin" class="font-serif text-xl text-paper no-underline">
+          OneSmallPhoto admin
+        </a>
+        <a href="/" class="text-sm text-sand no-underline hover:text-gold">
+          View site
+        </a>
+        <div class="ml-auto flex items-center gap-4 text-sm text-sand">
+          <span class="hidden sm:inline">{email}</span>
+          <form method="post" action="/api/auth/logout">
+            <button class="rounded-full border border-sand/30 px-4 py-1.5 hover:border-gold">
+              Log out
+            </button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <h1 class="mb-8 text-4xl">{title}</h1>
+      <slot />
+    </main>
+  </body>
+</html>

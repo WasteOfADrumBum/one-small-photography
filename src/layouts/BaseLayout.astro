@@ -7,11 +7,14 @@ import { site } from '@/lib/site';
 interface Props {
   title?: string;
   description?: string;
+  /** Keep private pages (login, setup) out of search results. */
+  noindex?: boolean;
 }
 
 const {
   title,
   description = `${site.owner}'s photography portfolio, made in the North Carolina Triad.`,
+  noindex = false,
 } = Astro.props;
 const pageTitle = title ? `${title} | ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -25,6 +28,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#15120f" />
     <meta property="og:title" content={pageTitle} />
