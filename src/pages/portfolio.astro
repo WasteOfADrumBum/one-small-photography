@@ -1,0 +1,34 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PolaroidStack from '@/components/PolaroidStack.astro';
+
+const albums = [
+  { title: 'Portraits', tone: 'moss' },
+  { title: 'Fashion & Models', tone: 'gold' },
+  { title: 'Landscapes & Nature', tone: 'sage' },
+  { title: 'Events', tone: 'moss' },
+  { title: 'Weddings', tone: 'gold' },
+] as const;
+---
+
+<BaseLayout
+  title="Portfolio"
+  description="Albums of portrait, fashion, landscape, event and wedding photography."
+>
+  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <h1 class="text-5xl" data-reveal>
+      Portfolio
+    </h1>
+    <p class="mt-4 max-w-xl text-sand" data-reveal>
+      Each album is a stack of prints. Soon you'll scroll to flip through them and click one to open
+      the full gallery.
+    </p>
+    <div class="mt-20 grid gap-x-10 gap-y-28 sm:grid-cols-2 lg:grid-cols-3">
+      {albums.map((album) => (
+        <div data-reveal>
+          <PolaroidStack title={album.title} tone={album.tone} subtitle="Photos coming soon" />
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

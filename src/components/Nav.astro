@@ -1,0 +1,29 @@
+---
+import { nav, site } from '@/lib/site';
+
+const current = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b border-sand/15 bg-espresso/85 backdrop-blur">
+  <nav
+    class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-4 sm:px-6"
+    aria-label="Main"
+  >
+    <a href="/" class="font-serif text-xl text-paper no-underline">
+      {site.name}
+    </a>
+    <ul class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+      {nav.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            aria-current={current.startsWith(item.href) ? 'page' : undefined}
+            class="text-sand no-underline transition-colors hover:text-gold aria-[current=page]:text-gold"
+          >
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>

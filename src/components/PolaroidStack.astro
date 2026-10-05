@@ -1,0 +1,32 @@
+---
+/**
+ * A stack of three Polaroids with a handwritten caption. Static for now;
+ * the scroll-driven flip-through deck builds on this markup.
+ */
+interface Props {
+  title: string;
+  subtitle?: string;
+  tone?: 'moss' | 'sage' | 'gold';
+}
+
+const { title, subtitle, tone = 'moss' } = Astro.props;
+const fills = { moss: 'bg-moss', sage: 'bg-sage/40', gold: 'bg-gold/30' } as const;
+---
+
+<figure class="group relative mx-auto aspect-[4/5] w-56 sm:w-64" aria-label={title}>
+  <div
+    class="absolute inset-0 rotate-[-6deg] rounded-sm bg-polaroid/80 shadow-lg shadow-black/40 transition-transform duration-500 group-hover:rotate-[-9deg]"
+    aria-hidden="true"
+  ></div>
+  <div
+    class="absolute inset-0 rotate-[4deg] rounded-sm bg-polaroid/90 shadow-lg shadow-black/40 transition-transform duration-500 group-hover:rotate-[7deg]"
+    aria-hidden="true"
+  ></div>
+  <div class="absolute inset-0 flex flex-col rounded-sm bg-polaroid p-3 pb-0 shadow-xl shadow-black/50">
+    <div class:list={['flex-1', fills[tone]]}></div>
+    <figcaption class="py-3 text-center font-hand text-2xl leading-none text-espresso">
+      {title}
+    </figcaption>
+  </div>
+  {subtitle && <p class="absolute -bottom-9 w-full text-center text-sm text-sand">{subtitle}</p>}
+</figure>

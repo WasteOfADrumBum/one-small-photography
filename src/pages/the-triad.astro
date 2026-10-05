@@ -1,0 +1,26 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { site } from '@/lib/site';
+---
+
+<BaseLayout
+  title="The Triad"
+  description="Photographing Greensboro, High Point and Winston-Salem, North Carolina."
+>
+  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <h1 class="text-5xl" data-reveal>
+      The Triad
+    </h1>
+    <p class="mt-4 max-w-xl text-sand" data-reveal>
+      Home base is {site.homeBase}, right in the middle of North Carolina's Piedmont Triad. A map of
+      every street in these three cities, drawn in gold as you scroll, is on its way.
+    </p>
+    <ul class="mt-16 grid gap-6 sm:grid-cols-3">
+      {site.triadCities.map((city) => (
+        <li class="rounded-lg border border-sand/20 bg-moss p-8" data-reveal>
+          <span class="font-serif text-3xl text-gold">{city}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

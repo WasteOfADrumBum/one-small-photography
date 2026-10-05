@@ -1,0 +1,65 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PolaroidStack from '@/components/PolaroidStack.astro';
+import { site } from '@/lib/site';
+
+const years = new Date().getFullYear() - site.shootingSince;
+---
+
+<BaseLayout>
+  <section class="mx-auto flex min-h-[80dvh] max-w-6xl flex-col justify-center px-4 py-24 sm:px-6">
+    <p class="mb-6 text-sm tracking-[0.3em] text-sage uppercase" data-reveal>
+      {site.owner} · North Carolina
+    </p>
+    <h1 class="max-w-4xl text-5xl leading-[1.05] sm:text-7xl" data-reveal>
+      {site.tagline}
+    </h1>
+    <p class="mt-8 max-w-xl text-lg text-sand" data-reveal>
+      {years}+ years behind a Nikon, in the studio and on location: fashion, portraits, families,
+      weddings, sports, landscapes and animals.
+    </p>
+    <div class="mt-10 flex flex-wrap gap-4" data-reveal>
+      <a
+        href="/portfolio"
+        class="rounded-full bg-sage px-6 py-3 text-espresso no-underline transition-colors hover:bg-gold"
+      >
+        See the portfolio
+      </a>
+      <a
+        href="/contact"
+        class="rounded-full border border-sand/40 px-6 py-3 text-paper no-underline transition-colors hover:border-gold"
+      >
+        Say hello
+      </a>
+    </div>
+  </section>
+
+  <section class="bg-moss/60">
+    <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-2">
+      <div data-reveal>
+        <h2 class="text-4xl">Why "One Small"</h2>
+      </div>
+      <div class="space-y-5 text-lg text-sand" data-reveal>
+        <p>
+          Small is the family name. One Small Family, One Small Studio, One Small Photo: everything
+          made here carries it.
+        </p>
+        <p>
+          In 2014, a portrait of Dusty, a horse from Virginia, was published in Photographer's Forum
+          Magazine. Photography has been part of life ever since, and this is where the work lives.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+    <h2 class="mb-16 text-center text-4xl" data-reveal>
+      Albums
+    </h2>
+    <div class="grid gap-20 sm:grid-cols-3" data-reveal>
+      <PolaroidStack title="Portraits" tone="moss" />
+      <PolaroidStack title="Fashion" tone="gold" />
+      <PolaroidStack title="Weddings" tone="sage" />
+    </div>
+  </section>
+</BaseLayout>

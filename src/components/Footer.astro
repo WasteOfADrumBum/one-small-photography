@@ -1,0 +1,14 @@
+---
+import { site } from '@/lib/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-sand/15">
+  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-sand sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <p>
+      &copy; {year} {site.owner}. All photographs are original work.
+    </p>
+    <p>Made in the NC Triad, shot on Nikon.</p>
+  </div>
+</footer>

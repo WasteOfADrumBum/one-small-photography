@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const stack = [
+  ['Framework', 'Astro with React islands, TypeScript end to end'],
+  ['Styling', 'Tailwind CSS v4 with a custom dark, earthy palette'],
+  ['Motion', 'GSAP ScrollTrigger and Lenis smooth scrolling'],
+  ['Hosting', 'Vercel, with a preview deploy for every pull request'],
+  ['Database', 'Neon Postgres with Drizzle ORM (coming next)'],
+  ['Photos', 'Backblaze B2, resized in the browser on upload (coming next)'],
+  ['CI', 'GitHub Actions: type checks, linting, formatting and a production build'],
+] as const;
+---
+
+<BaseLayout
+  title="Under the hood"
+  description="How this site is built: Astro, React, TypeScript, Vercel and more."
+>
+  <section class="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+    <h1 class="text-5xl" data-reveal>
+      Under the hood
+    </h1>
+    <p class="mt-4 text-sand" data-reveal>
+      The photographer behind this site also builds software. Here's what it runs on.
+    </p>
+    <dl class="mt-12 divide-y divide-sand/15 border-y border-sand/15">
+      {stack.map(([term, detail]) => (
+        <div class="grid gap-1 py-5 sm:grid-cols-[10rem_1fr]" data-reveal>
+          <dt class="text-gold">{term}</dt>
+          <dd class="text-paper">{detail}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+</BaseLayout>

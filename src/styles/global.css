@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/inter';
+@import '@fontsource/caveat/500.css';
+
+/*
+ * OneSmallPhoto palette: dark first, warmed with golds, greens and beiges.
+ * Fashion work stays edgy; wedding work feels soft.
+ */
+@theme {
+  --color-espresso: #15120f; /* page background */
+  --color-moss: #1f241c; /* raised surfaces, cards, section bands */
+  --color-paper: #ede6da; /* body text */
+  --color-sand: #b9a88f; /* quiet text, rules */
+  --color-gold: #c6a15b; /* links, highlights, map streets */
+  --color-sage: #7d8461; /* buttons, tags, the Triad zone */
+  --color-polaroid: #f4efe6; /* Polaroid frames */
+
+  --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-hand: 'Caveat', 'Segoe Print', cursive;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-espresso);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  a {
+    color: var(--color-gold);
+    text-underline-offset: 0.2em;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-espresso);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+}
+
+/* Lenis smooth scrolling */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Elements revealed on scroll start hidden only when motion is allowed and JS runs. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
