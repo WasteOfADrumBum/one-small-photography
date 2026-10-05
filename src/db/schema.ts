@@ -1,0 +1,90 @@
+import { relations } from 'drizzle-orm';
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  failedLogins: integer('failed_logins').notNull().default(0),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Session ids are SHA-256 hashes of the cookie token, so a leaked table can't sign anyone in. */
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (t) => [index('sessions_user_id_idx').on(t.userId)],
+);
+
+export const albums = pgTable('albums', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  description: text('description').notNull().default(''),
+  coverPhotoId: uuid('cover_photo_id'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  published: boolean('published').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PhotoExif = {
+  make?: string;
+  model?: string;
+  lens?: string;
+  focalLength?: number;
+  fNumber?: number;
+  exposureTime?: number;
+  iso?: number;
+  takenAt?: string;
+};
+
+export const photos = pgTable(
+  'photos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    albumId: uuid('album_id')
+      .notNull()
+      .references(() => albums.id, { onDelete: 'cascade' }),
+    title: text('title').notNull().default(''),
+    description: text('description').notNull().default(''),
+    alt: text('alt').notNull().default(''),
+    /** File extension of the stored sizes: `webp` or `jpg`. */
+    format: text('format').notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    exif: jsonb('exif').$type<PhotoExif>().notNull().default({}),
+    sortOrder: integer('sort_order').notNull().default(0),
+    published: boolean('published').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('photos_album_id_idx').on(t.albumId, t.sortOrder)],
+);
+
+export const albumsRelations = relations(albums, ({ many }) => ({
+  photos: many(photos),
+}));
+
+export const photosRelations = relations(photos, ({ one }) => ({
+  album: one(albums, { fields: [photos.albumId], references: [albums.id] }),
+}));
+
+export type Album = typeof albums.$inferSelect;
+export type Photo = typeof photos.$inferSelect;
+export type User = typeof users.$inferSelect;

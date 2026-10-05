@@ -1,0 +1,96 @@
+---
+/**
+ * One-time setup: creates the single admin account. It needs the SETUP_TOKEN
+ * environment variable, and turns itself off once an account exists.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AuthCard from '@/components/AuthCard.astro';
+import { db } from '@/db/client';
+import { users } from '@/db/schema';
+import { hasAnyUser, hashPassword, MIN_PASSWORD_LENGTH, startSession } from '@/lib/auth';
+import { timingSafeEqual } from 'node:crypto';
+
+export const prerender = false;
+
+if (await hasAnyUser()) return Astro.redirect('/login');
+
+const setupToken = process.env.SETUP_TOKEN;
+const sameToken = (given: string) =>
+  !!setupToken &&
+  given.length === setupToken.length &&
+  timingSafeEqual(Buffer.from(given), Buffer.from(setupToken));
+
+let error: string | undefined;
+if (!setupToken) {
+  error = 'Add a SETUP_TOKEN environment variable in Vercel, redeploy, then come back here.';
+} else if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const email = String(form.get('email') ?? '')
+    .trim()
+    .toLowerCase();
+  const password = String(form.get('password') ?? '');
+  const confirm = String(form.get('confirm') ?? '');
+
+  if (!sameToken(String(form.get('token') ?? ''))) error = 'That setup token is wrong.';
+  else if (!email.includes('@')) error = 'Enter a valid email.';
+  else if (password.length < MIN_PASSWORD_LENGTH)
+    error = `Use at least ${MIN_PASSWORD_LENGTH} characters for the password.`;
+  else if (password !== confirm) error = "The passwords don't match.";
+  else {
+    const [user] = await db()
+      .insert(users)
+      .values({ email, passwordHash: await hashPassword(password) })
+      .returning();
+    await startSession(user!.id, Astro.cookies);
+    return Astro.redirect('/admin');
+  }
+  Astro.response.status = 400;
+}
+
+const field =
+  'mt-1 w-full rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper focus:border-gold';
+---
+
+<BaseLayout title="Set up your account" noindex>
+  <AuthCard title="Set up your account" error={error}>
+    <p class="mt-3 text-sm text-sand">
+      This page works once. After your account exists it redirects to the login.
+    </p>
+    {setupToken && (
+      <form method="post" class="mt-6 space-y-5">
+        <label class="block">
+          <span class="text-sm text-sand">Setup token (from Vercel)</span>
+          <input name="token" type="password" required class={field} />
+        </label>
+        <label class="block">
+          <span class="text-sm text-sand">Email</span>
+          <input name="email" type="email" required autocomplete="username" class={field} />
+        </label>
+        <label class="block">
+          <span class="text-sm text-sand">Password ({MIN_PASSWORD_LENGTH}+ characters)</span>
+          <input
+            name="password"
+            type="password"
+            required
+            minlength={MIN_PASSWORD_LENGTH}
+            autocomplete="new-password"
+            class={field}
+          />
+        </label>
+        <label class="block">
+          <span class="text-sm text-sand">Confirm password</span>
+          <input
+            name="confirm"
+            type="password"
+            required
+            autocomplete="new-password"
+            class={field}
+          />
+        </label>
+        <button class="w-full rounded-full bg-sage px-6 py-3 text-espresso transition-colors hover:bg-gold">
+          Create account
+        </button>
+      </form>
+    )}
+  </AuthCard>
+</BaseLayout>

@@ -1,29 +1,59 @@
 ---
 /**
- * A stack of three Polaroids with a handwritten caption. Static for now;
- * the scroll-driven flip-through deck builds on this markup.
+ * A stack of three Polaroids with a handwritten caption. With photos, the top
+ * print shows the album cover and the two behind it show the next photos.
+ * The scroll-driven flip-through deck builds on this markup.
  */
+import type { Photo } from '@/db/schema';
+import { photoUrl } from '@/lib/photo-url';
+
 interface Props {
   title: string;
   subtitle?: string;
   tone?: 'moss' | 'sage' | 'gold';
+  photos?: Photo[];
 }
 
-const { title, subtitle, tone = 'moss' } = Astro.props;
+const { title, subtitle, tone = 'moss', photos = [] } = Astro.props;
 const fills = { moss: 'bg-moss', sage: 'bg-sage/40', gold: 'bg-gold/30' } as const;
+const [cover, second, third] = photos;
+const back = [
+  { photo: third, rotate: 'rotate-[-6deg] group-hover:rotate-[-9deg]', shade: 'bg-polaroid/80' },
+  { photo: second, rotate: 'rotate-[4deg] group-hover:rotate-[7deg]', shade: 'bg-polaroid/90' },
+];
 ---
 
-<figure class="group relative mx-auto aspect-[4/5] w-56 sm:w-64" aria-label={title}>
-  <div
-    class="absolute inset-0 rotate-[-6deg] rounded-sm bg-polaroid/80 shadow-lg shadow-black/40 transition-transform duration-500 group-hover:rotate-[-9deg]"
-    aria-hidden="true"
-  ></div>
-  <div
-    class="absolute inset-0 rotate-[4deg] rounded-sm bg-polaroid/90 shadow-lg shadow-black/40 transition-transform duration-500 group-hover:rotate-[7deg]"
-    aria-hidden="true"
-  ></div>
+<figure class="group relative mx-auto aspect-[4/5] w-56 sm:w-64">
+  {back.map(({ photo, rotate, shade }) => (
+    <div
+      class:list={[
+        'absolute inset-0 rounded-sm p-3 pb-12 shadow-lg shadow-black/40 transition-transform duration-500',
+        rotate,
+        shade,
+      ]}
+      aria-hidden="true"
+    >
+      {photo && (
+        <img
+          src={photoUrl(photo, 'sm')}
+          alt=""
+          loading="lazy"
+          class="h-full w-full object-cover opacity-80"
+        />
+      )}
+    </div>
+  ))}
   <div class="absolute inset-0 flex flex-col rounded-sm bg-polaroid p-3 pb-0 shadow-xl shadow-black/50">
-    <div class:list={['flex-1', fills[tone]]}></div>
+    {cover ? (
+      <img
+        src={photoUrl(cover, 'sm')}
+        alt={cover.alt || cover.title}
+        loading="lazy"
+        class="min-h-0 flex-1 object-cover"
+      />
+    ) : (
+      <div class:list={['flex-1', fills[tone]]} />
+    )}
     <figcaption class="py-3 text-center font-hand text-2xl leading-none text-espresso">
       {title}
     </figcaption>

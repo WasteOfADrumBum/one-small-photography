@@ -1,0 +1,14 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AlbumsManager from '@/components/admin/AlbumsManager';
+import { listAlbums } from '@/lib/albums';
+
+export const prerender = false;
+
+// Plain JSON so dates cross into the React island as strings.
+const albums = JSON.parse(JSON.stringify(await listAlbums()));
+---
+
+<AdminLayout title="Your albums">
+  <AlbumsManager client:load initialAlbums={albums} />
+</AdminLayout>

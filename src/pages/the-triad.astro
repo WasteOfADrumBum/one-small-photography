@@ -12,8 +12,8 @@ import { site } from '@/lib/site';
       The Triad
     </h1>
     <p class="mt-4 max-w-xl text-sand" data-reveal>
-      Home base is {site.homeBase}, right in the middle of North Carolina's Piedmont Triad. A map of
-      every street in these three cities, drawn in gold as you scroll, is on its way.
+      Home base is {site.homeBase}, right in the middle of North Carolina's Piedmont Triad. These
+      are the roads I drive to get to you.
     </p>
     <ul class="mt-16 grid gap-6 sm:grid-cols-3">
       {site.triadCities.map((city) => (
@@ -22,5 +22,22 @@ import { site } from '@/lib/site';
         </li>
       ))}
     </ul>
+    <figure
+      class="mt-10 overflow-hidden rounded-lg border border-sand/20 bg-moss p-4 sm:p-8"
+      data-reveal
+    >
+      <picture>
+        <source srcset="/triad-streets.webp" type="image/webp" />
+        <img
+          src="/triad-streets.png"
+          width="2000"
+          height="2000"
+          loading="lazy"
+          decoding="async"
+          alt="Street map of the Piedmont Triad, with roads linking Winston-Salem, Greensboro and High Point."
+          class="mx-auto h-auto w-full max-w-3xl opacity-90 [mask-image:radial-gradient(closest-side,black_70%,transparent)]"
+        />
+      </picture>
+    </figure>
   </section>
 </BaseLayout>

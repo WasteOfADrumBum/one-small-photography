@@ -35,9 +35,32 @@ const years = new Date().getFullYear() - site.shootingSince;
   </section>
 
   <section class="bg-moss/60">
-    <div class="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 md:grid-cols-2">
+    <div class="mx-auto grid max-w-6xl items-start gap-8 px-4 py-24 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-12 sm:px-6">
       <div data-reveal>
-        <h2 class="text-4xl">Why "One Small"</h2>
+        <h2 class="text-4xl leading-tight">
+          Why <strong class="font-semibold text-gold">One Small</strong> Photo
+        </h2>
+        <figure class="mt-10 max-w-sm -rotate-2 rounded-sm bg-polaroid p-3 pb-2 shadow-2xl shadow-black/50">
+          <picture>
+            <source
+              type="image/webp"
+              srcset="/dusty-800.webp 800w, /dusty-1200.webp 1200w"
+              sizes="(min-width: 640px) 24rem, 100vw"
+            />
+            <img
+              src="/dusty-1600.jpg"
+              width="1600"
+              height="1062"
+              loading="lazy"
+              decoding="async"
+              alt="Dusty, a chestnut horse with a white blaze and blond mane, grazing beside a metal gate in autumn."
+              class="h-auto w-full"
+            />
+          </picture>
+          <figcaption class="pt-2 text-center font-hand text-xl text-espresso">
+            Dusty, Virginia, 2014
+          </figcaption>
+        </figure>
       </div>
       <div class="space-y-5 text-lg text-sand" data-reveal>
         <p>

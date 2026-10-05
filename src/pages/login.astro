@@ -1,0 +1,61 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AuthCard from '@/components/AuthCard.astro';
+import { attemptLogin, getSessionUser, hasAnyUser, startSession } from '@/lib/auth';
+
+export const prerender = false;
+
+const next = Astro.url.searchParams.get('next');
+const destination = next?.startsWith('/admin') ? next : '/admin';
+
+if (!(await hasAnyUser())) return Astro.redirect('/setup');
+if (await getSessionUser(Astro.cookies)) return Astro.redirect(destination);
+
+let error: string | undefined;
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const result = await attemptLogin(
+    String(form.get('email') ?? ''),
+    String(form.get('password') ?? ''),
+  );
+  if (result.ok) {
+    await startSession(result.user.id, Astro.cookies);
+    return Astro.redirect(destination);
+  }
+  error =
+    result.reason === 'locked'
+      ? 'Too many attempts. Try again in 15 minutes.'
+      : "That email and password don't match.";
+  Astro.response.status = 401;
+}
+---
+
+<BaseLayout title="Log in" noindex>
+  <AuthCard title="Log in" error={error}>
+    <form method="post" class="mt-6 space-y-5">
+      <label class="block">
+        <span class="text-sm text-sand">Email</span>
+        <input
+          name="email"
+          type="email"
+          required
+          autocomplete="username"
+          class="mt-1 w-full rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper focus:border-gold"
+        />
+      </label>
+      <label class="block">
+        <span class="text-sm text-sand">Password</span>
+        <input
+          name="password"
+          type="password"
+          required
+          autocomplete="current-password"
+          class="mt-1 w-full rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper focus:border-gold"
+        />
+      </label>
+      <button class="w-full rounded-full bg-sage px-6 py-3 text-espresso transition-colors hover:bg-gold">
+        Log in
+      </button>
+    </form>
+  </AuthCard>
+</BaseLayout>
