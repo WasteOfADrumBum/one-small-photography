@@ -3,7 +3,17 @@ import type { Album as DbAlbum, Photo as DbPhoto } from '@/db/schema';
 import { photoUrl } from '@/lib/photo-url';
 import { api, send } from './api';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
-import { Badge, Button, ErrorNote, TextArea, TextField, move } from './ui';
+import { ArrowLeft, ArrowRight, ExternalLink, Star, Trash2, Upload } from 'lucide-react';
+import {
+  Badge,
+  Button,
+  SaveToast,
+  TextArea,
+  TextField,
+  VisibilityToggle,
+  move,
+  useSaveStatus,
+} from './ui';
 
 type Dated<T> = Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt?: string };
 type Photo = Dated<DbPhoto>;
@@ -35,24 +45,8 @@ export default function AlbumEditor({
   });
   const [photos, setPhotos] = useState(initialAlbum.photos);
   const [pending, setPending] = useState<Pending[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-
-  const flash = (message: string) => {
-    setSaved(message);
-    setTimeout(() => setSaved(null), 2500);
-  };
-
-  async function run<T>(task: () => Promise<T>): Promise<T | undefined> {
-    setError(null);
-    try {
-      return await task();
-    } catch (err) {
-      setError((err as Error).message);
-      return undefined;
-    }
-  }
+  const { state: saveState, track: run, dismiss } = useSaveStatus();
 
   const updateAlbum = (
     changes: Partial<Pick<DbAlbum, 'title' | 'description' | 'published' | 'coverPhotoId'>>,
@@ -60,7 +54,6 @@ export default function AlbumEditor({
     run(async () => {
       const next = await api<Album>(`/api/admin/albums/${album.id}`, send('PATCH', changes));
       setAlbum((a) => ({ ...a, ...next }));
-      flash('Saved');
     });
 
   // ---- New uploads -------------------------------------------------------
@@ -139,7 +132,6 @@ export default function AlbumEditor({
       } else {
         setPhotos((list) => list.map((p) => (p.id === id ? photo : p)));
       }
-      flash('Saved');
     });
 
   const deletePhoto = (photo: Photo) => {
@@ -148,7 +140,7 @@ export default function AlbumEditor({
       await api(`/api/admin/photos/${photo.id}`, { method: 'DELETE' });
       setPhotos((list) => list.filter((p) => p.id !== photo.id));
       if (album.coverPhotoId === photo.id) setAlbum((a) => ({ ...a, coverPhotoId: null }));
-    });
+    }, 'Photo deleted');
   };
 
   const reorderPhoto = (index: number, delta: -1 | 1) => {
@@ -166,7 +158,7 @@ export default function AlbumEditor({
         setPhotos(previous);
         throw err;
       }
-    });
+    }, 'Order saved');
   };
 
   const deleteAlbum = () => {
@@ -179,20 +171,17 @@ export default function AlbumEditor({
     void run(async () => {
       await api(`/api/admin/albums/${album.id}`, { method: 'DELETE' });
       window.location.href = '/admin';
-    });
+    }, 'Album deleted');
   };
 
   const readyCount = pending.filter((p) => p.status === 'ready').length;
 
   return (
     <div className="space-y-12">
-      <div className="sticky top-16 z-30 flex min-h-8 items-center gap-3">
-        <ErrorNote message={error} />
-        {saved && <span className="rounded-full bg-sage/30 px-3 py-1 text-sm">{saved}</span>}
-      </div>
+      <SaveToast state={saveState} onDismiss={dismiss} />
 
       {/* Album details */}
-      <section className="grid gap-6 rounded-xl border border-sand/20 bg-moss p-6 lg:grid-cols-[1fr_16rem]">
+      <section className="space-y-5 rounded-xl border border-sand/20 bg-moss p-6">
         <div className="space-y-4">
           <TextField
             label="Album name"
@@ -215,26 +204,28 @@ export default function AlbumEditor({
               updateAlbum({ description: details.description })
             }
           />
-          <p className="text-xs text-sand">Changes save when you click away from a field.</p>
+          <p className="text-xs text-sand">
+            There's no save button. Changes save on their own when you click away from a field, and
+            a note in the bottom corner confirms each save.
+          </p>
         </div>
-        <div className="flex flex-col gap-3">
-          <Badge on={album.published}>
-            {album.published ? 'Visible on the site' : 'Hidden from the site'}
-          </Badge>
-          <Button variant="primary" onClick={() => updateAlbum({ published: !album.published })}>
-            {album.published ? 'Hide album' : 'Make album visible'}
-          </Button>
+        <div className="flex flex-wrap items-center gap-3 border-t border-sand/15 pt-5">
+          <VisibilityToggle
+            noun="album"
+            visible={album.published}
+            onToggle={() => updateAlbum({ published: !album.published })}
+          />
           {album.published && (
             <a
               href={`/portfolio/${album.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="text-sm"
+              className="inline-flex items-center gap-1 text-sm"
             >
-              View on the site ↗
+              View on the site <ExternalLink aria-hidden size={14} />
             </a>
           )}
-          <Button variant="danger" onClick={deleteAlbum} className="mt-auto">
+          <Button variant="danger" icon={Trash2} onClick={deleteAlbum} className="ml-auto">
             Delete album
           </Button>
         </div>
@@ -325,7 +316,7 @@ export default function AlbumEditor({
                 </li>
               ))}
             </ul>
-            <Button variant="primary" disabled={readyCount === 0} onClick={uploadAll}>
+            <Button variant="primary" icon={Upload} disabled={readyCount === 0} onClick={uploadAll}>
               Upload {readyCount} {readyCount === 1 ? 'photo' : 'photos'}
             </Button>
           </div>
@@ -355,31 +346,48 @@ export default function AlbumEditor({
                 </div>
                 <PhotoFields photo={photo} onSave={(changes) => updatePhoto(photo.id, changes)} />
                 <div className="flex flex-wrap gap-2">
+                  <VisibilityToggle
+                    noun="photo"
+                    visible={photo.published}
+                    onToggle={() => updatePhoto(photo.id, { published: !photo.published })}
+                  />
                   <Button
+                    icon={Star}
+                    disabled={album.coverPhotoId === photo.id}
+                    onClick={() => updateAlbum({ coverPhotoId: photo.id })}
+                    title="Use this photo on the album's Polaroid stack"
+                  >
+                    {album.coverPhotoId === photo.id ? 'Cover' : 'Make cover'}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    icon={Trash2}
+                    aria-label="Delete photo"
+                    title="Delete photo"
+                    onClick={() => deletePhoto(photo)}
+                    className="ml-auto px-3"
+                  />
+                </div>
+                <div className="flex items-center gap-2 border-t border-sand/15 pt-3">
+                  <span className="mr-auto text-xs text-sand">
+                    Order: {i + 1} of {photos.length}
+                  </span>
+                  <Button
+                    icon={ArrowLeft}
                     aria-label="Move earlier"
+                    title="Move earlier"
                     disabled={i === 0}
                     onClick={() => reorderPhoto(i, -1)}
-                  >
-                    ←
-                  </Button>
+                    className="px-3"
+                  />
                   <Button
+                    icon={ArrowRight}
                     aria-label="Move later"
+                    title="Move later"
                     disabled={i === photos.length - 1}
                     onClick={() => reorderPhoto(i, 1)}
-                  >
-                    →
-                  </Button>
-                  {album.coverPhotoId !== photo.id && (
-                    <Button onClick={() => updateAlbum({ coverPhotoId: photo.id })}>
-                      Make cover
-                    </Button>
-                  )}
-                  <Button onClick={() => updatePhoto(photo.id, { published: !photo.published })}>
-                    {photo.published ? 'Hide' : 'Show'}
-                  </Button>
-                  <Button variant="danger" onClick={() => deletePhoto(photo)}>
-                    Delete
-                  </Button>
+                    className="px-3"
+                  />
                 </div>
                 {otherAlbums.length > 0 && (
                   <label className="block text-sm text-sand">

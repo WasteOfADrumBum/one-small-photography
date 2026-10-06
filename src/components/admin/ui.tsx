@@ -1,4 +1,13 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type TextareaHTMLAttributes,
+} from 'react';
+import { CircleAlert, Check, Eye, EyeOff, LoaderCircle, X, type LucideIcon } from 'lucide-react';
 
 const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' ');
 
@@ -11,19 +20,57 @@ const variants: Record<Variant, string> = {
 
 export function Button({
   variant = 'quiet',
+  icon: Icon,
   className,
+  children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; icon?: LucideIcon }) {
   return (
     <button
       type="button"
       {...props}
       className={cx(
-        'rounded-full px-4 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
         variants[variant],
         className,
       )}
-    />
+    >
+      {Icon && <Icon aria-hidden size={16} strokeWidth={1.75} />}
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Shows whether something is visible on the site and flips it when clicked.
+ * Solid with an open eye when visible, outlined with a crossed-out eye when hidden.
+ */
+export function VisibilityToggle({
+  visible,
+  onToggle,
+  noun,
+  className,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+  noun: string;
+  className?: string;
+}) {
+  return (
+    <Button
+      variant={visible ? 'primary' : 'quiet'}
+      icon={visible ? Eye : EyeOff}
+      aria-pressed={visible}
+      title={
+        visible
+          ? `Visible on the site. Click to hide this ${noun}.`
+          : `Hidden. Click to show this ${noun}.`
+      }
+      onClick={onToggle}
+      className={cx(!visible && 'border-dashed text-sand', className)}
+    >
+      {visible ? 'Visible' : 'Hidden'}
+    </Button>
   );
 }
 
@@ -63,7 +110,7 @@ export function ErrorNote({ message }: { message: string | null }) {
   );
 }
 
-export function Badge({ on, children }: { on: boolean; children: React.ReactNode }) {
+export function Badge({ on, children }: { on: boolean; children: ReactNode }) {
   return (
     <span
       className={cx(
@@ -83,4 +130,76 @@ export function move<T>(items: T[], index: number, delta: -1 | 1): T[] {
   const next = [...items];
   [next[index], next[target]] = [next[target]!, next[index]!];
   return next;
+}
+
+type SaveState =
+  | { kind: 'idle' }
+  | { kind: 'saving' }
+  | { kind: 'saved'; message: string }
+  | { kind: 'error'; message: string };
+
+/**
+ * Tracks background saves for the toast. `track` wraps any save: the toast shows a
+ * spinner while saves are in flight, then a check mark, or the error if one failed.
+ */
+export function useSaveStatus() {
+  const [state, setState] = useState<SaveState>({ kind: 'idle' });
+  const inFlight = useRef(0);
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const track = useCallback(
+    async <T,>(task: () => Promise<T>, message = 'Changes saved'): Promise<T | undefined> => {
+      clearTimeout(hideTimer.current);
+      inFlight.current += 1;
+      setState({ kind: 'saving' });
+      try {
+        const result = await task();
+        inFlight.current -= 1;
+        if (inFlight.current === 0) {
+          setState({ kind: 'saved', message });
+          hideTimer.current = setTimeout(() => setState({ kind: 'idle' }), 2200);
+        }
+        return result;
+      } catch (err) {
+        inFlight.current -= 1;
+        setState({ kind: 'error', message: (err as Error).message });
+        return undefined;
+      }
+    },
+    [],
+  );
+
+  const dismiss = useCallback(() => setState({ kind: 'idle' }), []);
+  return { state, track, dismiss };
+}
+
+export function SaveToast({ state, onDismiss }: { state: SaveState; onDismiss: () => void }) {
+  if (state.kind === 'idle') return null;
+  const error = state.kind === 'error';
+  return (
+    <div
+      role={error ? 'alert' : 'status'}
+      className={cx(
+        'fixed right-4 bottom-4 z-50 flex max-w-sm items-center gap-3 rounded-full border px-4 py-2.5 text-sm shadow-2xl shadow-black/50',
+        error ? 'border-red-400/40 bg-espresso text-red-100' : 'border-sand/20 bg-moss text-paper',
+      )}
+    >
+      {state.kind === 'saving' && (
+        <LoaderCircle aria-hidden size={18} className="animate-spin text-sand" />
+      )}
+      {state.kind === 'saved' && <Check aria-hidden size={18} className="text-gold" />}
+      {error && <CircleAlert aria-hidden size={18} className="shrink-0 text-red-300" />}
+      <span>{state.kind === 'saving' ? 'Saving…' : state.message}</span>
+      {error && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className="text-sand hover:text-paper"
+        >
+          <X aria-hidden size={16} />
+        </button>
+      )}
+    </div>
+  );
 }

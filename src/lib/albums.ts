@@ -1,18 +1,22 @@
 import { and, asc, count, eq, inArray, max, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { db } from '@/db/client';
 import { albums, photos, type Album, type Photo } from '@/db/schema';
 import { slugify } from '@/lib/http';
 
-export type AlbumSummary = Album & { photoCount: number };
+export type AlbumSummary = Album & { photoCount: number; coverFormat: string | null };
+
+const cover = alias(photos, 'cover');
 
 export async function listAlbums(): Promise<AlbumSummary[]> {
   const rows = await db()
-    .select({ album: albums, photoCount: count(photos.id) })
+    .select({ album: albums, photoCount: count(photos.id), coverFormat: cover.format })
     .from(albums)
     .leftJoin(photos, eq(photos.albumId, albums.id))
-    .groupBy(albums.id)
+    .leftJoin(cover, eq(cover.id, albums.coverPhotoId))
+    .groupBy(albums.id, cover.id)
     .orderBy(asc(albums.sortOrder), asc(albums.createdAt));
-  return rows.map((r) => ({ ...r.album, photoCount: r.photoCount }));
+  return rows.map((r) => ({ ...r.album, photoCount: r.photoCount, coverFormat: r.coverFormat }));
 }
 
 export async function getAlbumWithPhotos(
@@ -55,9 +59,10 @@ export async function nextPhotoOrder(albumId: string): Promise<number> {
 export type PublicAlbum = Album & { photos: Photo[] };
 
 /** Published albums with their published photos, in display order, for the public site. */
-export async function listPublishedAlbums(): Promise<PublicAlbum[]> {
+export async function listPublishedAlbums(limit?: number): Promise<PublicAlbum[]> {
   return db().query.albums.findMany({
     where: eq(albums.published, true),
+    limit,
     orderBy: [asc(albums.sortOrder), asc(albums.createdAt)],
     with: {
       photos: {
