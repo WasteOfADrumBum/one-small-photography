@@ -14,8 +14,9 @@ if (hasDatabase()) {
     console.error('Could not load albums', err);
   }
 }
-// Edits from the admin panel show up within a minute.
-Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
+// Never cache album pages on the CDN or in the browser, so edits from the admin
+// panel show up on the next page load. Photos themselves are still cached by /img.
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
 const tones = ['moss', 'gold', 'sage'] as const;
 const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'Events', 'Weddings'];
