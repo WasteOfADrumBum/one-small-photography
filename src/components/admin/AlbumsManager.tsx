@@ -1,7 +1,8 @@
 import { useState, type SyntheticEvent } from 'react';
 import type { AlbumSummary } from '@/lib/albums';
-import { ArrowDown, ArrowUp, Eye, EyeOff, ImageOff, Plus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, ImageOff, Plus, Star } from 'lucide-react';
 import { photoUrl } from '@/lib/photo-url';
+import { FEATURED_ALBUM_COUNT } from '@/lib/featured';
 import { api, send } from './api';
 import { Button, ErrorNote, SaveToast, TextArea, TextField, move, useSaveStatus } from './ui';
 
@@ -46,12 +47,22 @@ export default function AlbumsManager({ initialAlbums }: { initialAlbums: Album[
     }, 'Order saved');
   }
 
+  // Featured = the first few visible albums, in this order.
+  const featuredIds = new Set(
+    albums
+      .filter((a) => a.published)
+      .slice(0, FEATURED_ALBUM_COUNT)
+      .map((a) => a.id),
+  );
+
   return (
     <div className="grid gap-12 lg:grid-cols-[1fr_22rem]">
       <section>
         <h2 className="text-2xl">Albums</h2>
         <p className="mt-1 text-sm text-sand">
-          This is the order of the Polaroid stack on the portfolio page.
+          This is the order of the Polaroid stacks on the portfolio page. The first{' '}
+          {FEATURED_ALBUM_COUNT} visible albums are also featured on your home page, marked with a
+          gold star. Use the arrows to change which ones they are.
         </p>
         <SaveToast state={saveState} onDismiss={dismiss} />
         {albums.length === 0 ? (
@@ -59,7 +70,10 @@ export default function AlbumsManager({ initialAlbums }: { initialAlbums: Album[
         ) : (
           <ol className="mt-6 divide-y divide-sand/15 rounded-xl border border-sand/20 bg-moss">
             {albums.map((album, i) => (
-              <li key={album.id} className="flex items-center gap-4 p-4">
+              <li
+                key={album.id}
+                className={`flex items-center gap-4 p-4 ${featuredIds.has(album.id) ? 'bg-gold/[0.07]' : ''}`}
+              >
                 <div className="flex flex-col gap-1">
                   <Button
                     icon={ArrowUp}
@@ -108,6 +122,15 @@ export default function AlbumsManager({ initialAlbums }: { initialAlbums: Album[
                     )}
                   </span>
                 </a>
+                {featuredIds.has(album.id) && (
+                  <span
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-gold/50 px-3 py-1 text-xs text-gold"
+                    title="Shown on your home page"
+                  >
+                    <Star aria-hidden size={14} className="fill-gold" />
+                    Featured
+                  </span>
+                )}
                 <span
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
                     album.published

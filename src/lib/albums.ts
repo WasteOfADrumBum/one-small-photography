@@ -59,9 +59,10 @@ export async function nextPhotoOrder(albumId: string): Promise<number> {
 export type PublicAlbum = Album & { photos: Photo[] };
 
 /** Published albums with their published photos, in display order, for the public site. */
-export async function listPublishedAlbums(): Promise<PublicAlbum[]> {
+export async function listPublishedAlbums(limit?: number): Promise<PublicAlbum[]> {
   return db().query.albums.findMany({
     where: eq(albums.published, true),
+    limit,
     orderBy: [asc(albums.sortOrder), asc(albums.createdAt)],
     with: {
       photos: {

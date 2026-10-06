@@ -2,7 +2,24 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PolaroidStack from '@/components/PolaroidStack.astro';
 import { site } from '@/lib/site';
+import { listPublishedAlbums, stackPhotos, type PublicAlbum } from '@/lib/albums';
+import { FEATURED_ALBUM_COUNT } from '@/lib/featured';
+import { hasDatabase } from '@/db/client';
 
+// Rendered on each visit so the featured albums always match the admin panel.
+export const prerender = false;
+
+let featured: PublicAlbum[] = [];
+if (hasDatabase()) {
+  try {
+    featured = await listPublishedAlbums(FEATURED_ALBUM_COUNT);
+  } catch (err) {
+    console.error('Could not load featured albums', err);
+  }
+}
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+const tones = ['moss', 'gold', 'sage'] as const;
 const years = new Date().getFullYear() - site.shootingSince;
 ---
 
@@ -80,9 +97,22 @@ const years = new Date().getFullYear() - site.shootingSince;
       Albums
     </h2>
     <div class="grid gap-20 sm:grid-cols-3" data-reveal>
-      <PolaroidStack title="Portraits" tone="moss" />
-      <PolaroidStack title="Fashion" tone="gold" />
-      <PolaroidStack title="Weddings" tone="sage" />
+      {featured.length > 0
+        ? featured.map((album, i) => (
+            <a href={`/portfolio/${album.slug}`} class="no-underline">
+              <PolaroidStack
+                title={album.title}
+                tone={tones[i % tones.length]}
+                photos={stackPhotos(album).slice(0, 3)}
+              />
+            </a>
+          ))
+        : ['Portraits', 'Fashion', 'Weddings'].map((title, i) => (
+            <PolaroidStack title={title} tone={tones[i % tones.length]} />
+          ))}
     </div>
+    <p class="mt-16 text-center" data-reveal>
+      <a href="/portfolio">See every album →</a>
+    </p>
   </section>
 </BaseLayout>
