@@ -4,7 +4,13 @@ import { photoUrl } from '@/lib/photo-url';
 import { api, send } from './api';
 import { settingsFromExif } from '@/lib/camera-settings';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
-import SettingsFields, { type GearOptions, type Settings } from './SettingsFields';
+import SettingsFields, {
+  GearSelects,
+  NoGearHint,
+  type Gear,
+  type GearOptions,
+  type Settings,
+} from './SettingsFields';
 import { ArrowLeft, ArrowRight, ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
@@ -59,19 +65,12 @@ export default function AlbumEditor({
   const [photos, setPhotos] = useState(initialAlbum.photos);
   const [pending, setPending] = useState<Pending[]>([]);
   const [dragging, setDragging] = useState(false);
-  // New uploads start with the camera and lens you picked last, since a shoot usually uses one kit.
-  const [lastGear, setLastGear] = useState<Pick<Settings, 'cameraId' | 'lensId'>>(() => {
+  // Camera and lens for the whole upload batch, since a shoot usually uses one kit.
+  // Starts from the album's most recent photo; each photo can still be changed on its own.
+  const [batchGear, setBatchGear] = useState<Gear>(() => {
     const recent = initialAlbum.photos.findLast((p) => p.cameraId || p.lensId);
     return { cameraId: recent?.cameraId ?? null, lensId: recent?.lensId ?? null };
   });
-  const rememberGear = (changes: Partial<Settings>) => {
-    if ('cameraId' in changes || 'lensId' in changes) {
-      setLastGear((g) => ({
-        cameraId: 'cameraId' in changes ? (changes.cameraId ?? null) : g.cameraId,
-        lensId: 'lensId' in changes ? (changes.lensId ?? null) : g.lensId,
-      }));
-    }
-  };
   const { state: saveState, track: run, dismiss } = useSaveStatus();
 
   const updateAlbum = (
@@ -94,7 +93,7 @@ export default function AlbumEditor({
       title: titleFromFilename(file.name),
       description: '',
       alt: '',
-      settings: { ...lastGear, aperture: null, shutterSpeed: null, iso: null },
+      settings: { ...batchGear, aperture: null, shutterSpeed: null, iso: null },
       status: 'preparing',
     }));
     setPending((list) => [...list, ...entries]);
@@ -127,6 +126,12 @@ export default function AlbumEditor({
         }
       }
     })();
+  }
+
+  /** Sets the batch camera or lens and applies it to every photo waiting to upload. */
+  function changeBatchGear(changes: Partial<Gear>) {
+    setBatchGear((g) => ({ ...g, ...changes }));
+    setPending((list) => list.map((p) => ({ ...p, settings: { ...p.settings, ...changes } })));
   }
 
   async function uploadAll() {
@@ -283,6 +288,22 @@ export default function AlbumEditor({
       {/* Upload */}
       <section>
         <h2 className="text-2xl">Add photos</h2>
+        <fieldset className="mt-4 rounded-xl border border-sand/20 bg-moss p-4">
+          <legend className="px-1 text-sm text-sand">
+            Camera and lens for every photo you add
+          </legend>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-4 [&>label]:md:col-span-2">
+            <GearSelects value={batchGear} gear={gear} onChange={changeBatchGear} />
+          </div>
+          {gear.cameras.length === 0 && gear.lenses.length === 0 ? (
+            <NoGearHint />
+          ) : (
+            <p className="mt-2 text-xs text-sand">
+              Changing these updates every photo waiting below. You can still pick a different
+              camera or lens on any single photo, before or after it uploads.
+            </p>
+          )}
+        </fieldset>
         <label
           onDragOver={(e) => {
             e.preventDefault();
@@ -359,7 +380,6 @@ export default function AlbumEditor({
                       value={item.settings}
                       gear={gear}
                       onChange={(changes) => {
-                        rememberGear(changes);
                         setPending((list) =>
                           list.map((p) =>
                             p.key === item.key
@@ -412,7 +432,6 @@ export default function AlbumEditor({
                   value={settingsOf(photo)}
                   gear={gear}
                   onChange={(changes) => {
-                    rememberGear(changes);
                     // Show the pick right away; the saved photo replaces it when the server answers.
                     setPhotos((list) =>
                       list.map((p) => (p.id === photo.id ? { ...p, ...changes } : p)),
