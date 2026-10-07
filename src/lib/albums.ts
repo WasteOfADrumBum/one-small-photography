@@ -1,7 +1,7 @@
 import { and, asc, count, eq, inArray, max, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '@/db/client';
-import { albums, photos, type Album, type Photo } from '@/db/schema';
+import { albums, photos, type Album, type Gear, type Photo } from '@/db/schema';
 import { slugify } from '@/lib/http';
 
 export type AlbumSummary = Album & { photoCount: number; coverFormat: string | null };
@@ -73,13 +73,19 @@ export async function listPublishedAlbums(limit?: number): Promise<PublicAlbum[]
   });
 }
 
-export async function getPublishedAlbumBySlug(slug: string): Promise<PublicAlbum | undefined> {
+/** A photo with the names of the camera and lens it was taken with, for the gallery. */
+export type GalleryPhoto = Photo & { camera: Gear | null; lens: Gear | null };
+
+export async function getPublishedAlbumBySlug(
+  slug: string,
+): Promise<(Album & { photos: GalleryPhoto[] }) | undefined> {
   return db().query.albums.findFirst({
     where: and(eq(albums.slug, slug), eq(albums.published, true)),
     with: {
       photos: {
         where: eq(photos.published, true),
         orderBy: [asc(photos.sortOrder), asc(photos.createdAt)],
+        with: { camera: true, lens: true },
       },
     },
   });

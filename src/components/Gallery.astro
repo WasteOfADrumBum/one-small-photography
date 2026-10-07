@@ -1,29 +1,12 @@
 ---
-import type { Photo, PhotoExif } from '@/db/schema';
+import type { GalleryPhoto } from '@/lib/albums';
 import { photoSrcset, photoUrl } from '@/lib/photo-url';
+import PhotoSettingsLine from '@/components/PhotoSettingsLine';
 
 interface Props {
-  photos: Photo[];
+  photos: GalleryPhoto[];
 }
 const { photos } = Astro.props;
-
-function exifLine(exif: PhotoExif): string {
-  const shutter = exif.exposureTime
-    ? exif.exposureTime >= 1
-      ? `${exif.exposureTime}s`
-      : `1/${Math.round(1 / exif.exposureTime)}s`
-    : undefined;
-  return [
-    exif.model,
-    exif.lens,
-    exif.focalLength && `${Math.round(exif.focalLength)}mm`,
-    exif.fNumber && `f/${exif.fNumber}`,
-    shutter,
-    exif.iso && `ISO ${exif.iso}`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
 ---
 
 <div class="mt-14 columns-1 gap-4 sm:columns-2 lg:columns-3">
@@ -35,7 +18,6 @@ function exifLine(exif: PhotoExif): string {
       data-src={photoUrl(photo, 'lg')}
       data-title={photo.title}
       data-description={photo.description}
-      data-exif={exifLine(photo.exif)}
       data-alt={photo.alt || photo.title}
       aria-label={`Open ${photo.title || 'photo'} full screen`}
     >
@@ -51,6 +33,23 @@ function exifLine(exif: PhotoExif): string {
         class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
       />
     </button>
+  ))}
+</div>
+
+<!-- Each photo's settings line, rendered here once and copied into the viewer. -->
+<div hidden>
+  {photos.map((photo, index) => (
+    <div data-settings-for={index}>
+      <PhotoSettingsLine
+        settings={{
+          camera: photo.camera?.name,
+          lens: photo.lens?.name,
+          aperture: photo.aperture,
+          shutterSpeed: photo.shutterSpeed,
+          iso: photo.iso,
+        }}
+      />
+    </div>
   ))}
 </div>
 
@@ -88,7 +87,7 @@ function exifLine(exif: PhotoExif): string {
       <figcaption class="max-w-2xl text-center">
         <p data-title class="font-serif text-2xl"></p>
         <p data-description class="mt-1 text-sand"></p>
-        <p data-exif class="mt-2 text-xs tracking-wide text-sage"></p>
+        <div data-settings class="mt-4"></div>
       </figcaption>
     </figure>
   </div>
@@ -105,18 +104,13 @@ function exifLine(exif: PhotoExif): string {
 
     const show = (index: number) => {
       current = (index + items.length) % items.length;
-      const {
-        src = '',
-        title = '',
-        description = '',
-        exif = '',
-        alt = '',
-      } = items[current]!.dataset;
+      const { src = '', title = '', description = '', alt = '' } = items[current]!.dataset;
       image.src = src;
       image.alt = alt;
       text('title').textContent = title;
       text('description').textContent = description;
-      text('exif').textContent = exif;
+      text('settings').innerHTML =
+        document.querySelector(`[data-settings-for="${current}"]`)?.innerHTML ?? '';
     };
 
     items.forEach((item, index) =>

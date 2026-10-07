@@ -3,6 +3,7 @@ import { z } from 'zod';
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import AlbumEditor from '@/components/admin/AlbumEditor';
 import { getAlbumWithPhotos, listAlbums } from '@/lib/albums';
+import { listGear } from '@/lib/gear';
 
 export const prerender = false;
 
@@ -13,6 +14,11 @@ if (!album) return Astro.redirect('/admin');
 const otherAlbums = (await listAlbums())
   .filter((a) => a.id !== album.id)
   .map(({ id, title }) => ({ id, title }));
+const [cameras, lenses] = await Promise.all([listGear('cameras'), listGear('lenses')]);
+const gear = {
+  cameras: cameras.map(({ id, name }) => ({ id, name })),
+  lenses: lenses.map(({ id, name }) => ({ id, name })),
+};
 ---
 
 <AdminLayout title={album.title}>
@@ -23,5 +29,6 @@ const otherAlbums = (await listAlbums())
     client:load
     initialAlbum={JSON.parse(JSON.stringify(album))}
     otherAlbums={otherAlbums}
+    gear={gear}
   />
 </AdminLayout>

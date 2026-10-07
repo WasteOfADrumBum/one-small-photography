@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { albums, photos, type PhotoExif } from '@/db/schema';
 import { nextPhotoOrder, photosInAlbum, setOrder } from '@/lib/albums';
+import { PhotoSettings, missingGear } from '@/lib/gear';
 import { fail, json, readJson } from '@/lib/http';
 import { PHOTO_SIZES, photoKey, putPhoto, type PhotoSize } from '@/lib/storage';
 
@@ -19,6 +20,23 @@ const Meta = z.object({
   alt: z.string().trim().max(500).default(''),
   width: z.coerce.number().int().positive().max(20000),
   height: z.coerce.number().int().positive().max(20000),
+  // Optional camera settings arrive as one JSON field, like the EXIF.
+  settings: z
+    .string()
+    .default('{}')
+    .transform((s, ctx) => {
+      try {
+        const parsed = PhotoSettings.safeParse(JSON.parse(s));
+        if (parsed.success) return parsed.data;
+        ctx.addIssue({
+          code: 'custom',
+          message: parsed.error.issues[0]?.message ?? 'Invalid settings.',
+        });
+      } catch {
+        ctx.addIssue({ code: 'custom', message: 'Invalid settings.' });
+      }
+      return z.NEVER;
+    }),
   exif: z
     .string()
     .default('{}')
@@ -60,10 +78,14 @@ export const POST: APIRoute = async ({ params, request }) => {
     files[size] = file;
   }
 
+  const { settings, ...details } = meta.data;
+  const gearError = await missingGear(settings);
+  if (gearError) return fail(gearError);
   const [photo] = await db()
     .insert(photos)
     .values({
-      ...meta.data,
+      ...details,
+      ...settings,
       albumId: album.id,
       format: format!,
       sortOrder: await nextPhotoOrder(album.id),

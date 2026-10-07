@@ -1,14 +1,19 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import AlbumsManager from '@/components/admin/AlbumsManager';
+import GearManager from '@/components/admin/GearManager';
 import { listAlbums } from '@/lib/albums';
+import { listGear } from '@/lib/gear';
 
 export const prerender = false;
 
 // Plain JSON so dates cross into the React island as strings.
 const albums = JSON.parse(JSON.stringify(await listAlbums()));
+const [cameras, lenses] = await Promise.all([listGear('cameras'), listGear('lenses')]);
+const pick = (list: { id: string; name: string }[]) => list.map(({ id, name }) => ({ id, name }));
 ---
 
 <AdminLayout title="Your albums">
   <AlbumsManager client:load initialAlbums={albums} />
+  <GearManager client:load initialCameras={pick(cameras)} initialLenses={pick(lenses)} />
 </AdminLayout>
