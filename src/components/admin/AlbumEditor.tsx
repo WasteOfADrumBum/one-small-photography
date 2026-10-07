@@ -2,7 +2,9 @@ import { useState, type ChangeEvent, type DragEvent } from 'react';
 import type { Album as DbAlbum, Photo as DbPhoto } from '@/db/schema';
 import { photoUrl } from '@/lib/photo-url';
 import { api, send } from './api';
+import { settingsFromExif } from '@/lib/camera-settings';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
+import SettingsFields, { type GearOptions, type Settings } from './SettingsFields';
 import { ArrowLeft, ArrowRight, ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
@@ -27,16 +29,27 @@ type Pending = {
   description: string;
   alt: string;
   prepared?: PreparedPhoto;
+  settings: Settings;
   status: 'preparing' | 'ready' | 'uploading' | 'error';
   error?: string;
 };
 
+const settingsOf = (photo: Photo): Settings => ({
+  cameraId: photo.cameraId,
+  lensId: photo.lensId,
+  aperture: photo.aperture,
+  shutterSpeed: photo.shutterSpeed,
+  iso: photo.iso,
+});
+
 export default function AlbumEditor({
   initialAlbum,
   otherAlbums,
+  gear,
 }: {
   initialAlbum: Album;
   otherAlbums: AlbumOption[];
+  gear: GearOptions;
 }) {
   const [album, setAlbum] = useState(initialAlbum);
   const [details, setDetails] = useState({
@@ -46,6 +59,19 @@ export default function AlbumEditor({
   const [photos, setPhotos] = useState(initialAlbum.photos);
   const [pending, setPending] = useState<Pending[]>([]);
   const [dragging, setDragging] = useState(false);
+  // New uploads start with the camera and lens you picked last, since a shoot usually uses one kit.
+  const [lastGear, setLastGear] = useState<Pick<Settings, 'cameraId' | 'lensId'>>(() => {
+    const recent = initialAlbum.photos.findLast((p) => p.cameraId || p.lensId);
+    return { cameraId: recent?.cameraId ?? null, lensId: recent?.lensId ?? null };
+  });
+  const rememberGear = (changes: Partial<Settings>) => {
+    if ('cameraId' in changes || 'lensId' in changes) {
+      setLastGear((g) => ({
+        cameraId: 'cameraId' in changes ? (changes.cameraId ?? null) : g.cameraId,
+        lensId: 'lensId' in changes ? (changes.lensId ?? null) : g.lensId,
+      }));
+    }
+  };
   const { state: saveState, track: run, dismiss } = useSaveStatus();
 
   const updateAlbum = (
@@ -68,6 +94,7 @@ export default function AlbumEditor({
       title: titleFromFilename(file.name),
       description: '',
       alt: '',
+      settings: { ...lastGear, aperture: null, shutterSpeed: null, iso: null },
       status: 'preparing',
     }));
     setPending((list) => [...list, ...entries]);
@@ -75,7 +102,26 @@ export default function AlbumEditor({
     void (async () => {
       for (const [i, entry] of entries.entries()) {
         try {
-          patchPending(entry.key, { prepared: await preparePhoto(images[i]!), status: 'ready' });
+          const prepared = await preparePhoto(images[i]!);
+          // Pre-fill aperture, shutter and ISO from the camera's EXIF; anything already picked wins.
+          const fromExif = settingsFromExif(prepared.exif);
+          setPending((list) =>
+            list.map((p) =>
+              p.key === entry.key
+                ? {
+                    ...p,
+                    prepared,
+                    status: 'ready',
+                    settings: {
+                      ...p.settings,
+                      aperture: p.settings.aperture ?? fromExif.aperture,
+                      shutterSpeed: p.settings.shutterSpeed ?? fromExif.shutterSpeed,
+                      iso: p.settings.iso ?? fromExif.iso,
+                    },
+                  }
+                : p,
+            ),
+          );
         } catch (err) {
           patchPending(entry.key, { status: 'error', error: (err as Error).message });
         }
@@ -95,6 +141,7 @@ export default function AlbumEditor({
       form.set('width', String(prepared.width));
       form.set('height', String(prepared.height));
       form.set('exif', JSON.stringify(prepared.exif));
+      form.set('settings', JSON.stringify(item.settings));
       for (const [size, blob] of Object.entries(prepared.files)) {
         form.set(size, blob, `${size}.${prepared.format}`);
       }
@@ -122,7 +169,9 @@ export default function AlbumEditor({
   // ---- Existing photos ---------------------------------------------------
   const updatePhoto = (
     id: string,
-    changes: Partial<Pick<DbPhoto, 'title' | 'description' | 'alt' | 'published' | 'albumId'>>,
+    changes: Partial<
+      Pick<DbPhoto, 'title' | 'description' | 'alt' | 'published' | 'albumId'> & Settings
+    >,
   ) =>
     run(async () => {
       const photo = await api<Photo>(`/api/admin/photos/${id}`, send('PATCH', changes));
@@ -306,6 +355,20 @@ export default function AlbumEditor({
                       value={item.alt}
                       onChange={(e) => patchPending(item.key, { alt: e.target.value })}
                     />
+                    <SettingsFields
+                      value={item.settings}
+                      gear={gear}
+                      onChange={(changes) => {
+                        rememberGear(changes);
+                        setPending((list) =>
+                          list.map((p) =>
+                            p.key === item.key
+                              ? { ...p, settings: { ...p.settings, ...changes } }
+                              : p,
+                          ),
+                        );
+                      }}
+                    />
                     <Button
                       variant="quiet"
                       onClick={() => setPending((list) => list.filter((p) => p.key !== item.key))}
@@ -345,6 +408,18 @@ export default function AlbumEditor({
                   </div>
                 </div>
                 <PhotoFields photo={photo} onSave={(changes) => updatePhoto(photo.id, changes)} />
+                <SettingsFields
+                  value={settingsOf(photo)}
+                  gear={gear}
+                  onChange={(changes) => {
+                    rememberGear(changes);
+                    // Show the pick right away; the saved photo replaces it when the server answers.
+                    setPhotos((list) =>
+                      list.map((p) => (p.id === photo.id ? { ...p, ...changes } : p)),
+                    );
+                    void updatePhoto(photo.id, changes);
+                  }}
+                />
                 <div className="flex flex-wrap gap-2">
                   <VisibilityToggle
                     noun="photo"

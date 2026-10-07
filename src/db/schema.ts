@@ -44,6 +44,19 @@ export const albums = pgTable('albums', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Cameras and lenses Joshua manages in the admin and picks per photo. */
+export const cameras = pgTable('cameras', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const lenses = pgTable('lenses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type PhotoExif = {
   make?: string;
   model?: string;
@@ -70,6 +83,12 @@ export const photos = pgTable(
     width: integer('width').notNull(),
     height: integer('height').notNull(),
     exif: jsonb('exif').$type<PhotoExif>().notNull().default({}),
+    // Optional settings shown under the photo. Values come from src/lib/camera-settings.ts.
+    cameraId: uuid('camera_id').references(() => cameras.id, { onDelete: 'set null' }),
+    lensId: uuid('lens_id').references(() => lenses.id, { onDelete: 'set null' }),
+    aperture: text('aperture'),
+    shutterSpeed: text('shutter_speed'),
+    iso: integer('iso'),
     sortOrder: integer('sort_order').notNull().default(0),
     published: boolean('published').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -83,8 +102,11 @@ export const albumsRelations = relations(albums, ({ many }) => ({
 
 export const photosRelations = relations(photos, ({ one }) => ({
   album: one(albums, { fields: [photos.albumId], references: [albums.id] }),
+  camera: one(cameras, { fields: [photos.cameraId], references: [cameras.id] }),
+  lens: one(lenses, { fields: [photos.lensId], references: [lenses.id] }),
 }));
 
 export type Album = typeof albums.$inferSelect;
 export type Photo = typeof photos.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type Gear = typeof cameras.$inferSelect;

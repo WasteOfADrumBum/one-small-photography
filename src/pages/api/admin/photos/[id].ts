@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { albums, photos } from '@/db/schema';
 import { nextPhotoOrder } from '@/lib/albums';
+import { PhotoSettings, missingGear } from '@/lib/gear';
 import { fail, json, readJson } from '@/lib/http';
 import { deletePhotoFiles } from '@/lib/storage';
 
 export const prerender = false;
 
-const UpdatePhoto = z.object({
+const UpdatePhoto = PhotoSettings.extend({
   title: z.string().trim().max(200).optional(),
   description: z.string().trim().max(4000).optional(),
   alt: z.string().trim().max(500).optional(),
@@ -23,6 +24,8 @@ export const PATCH: APIRoute = async ({ params, request }) => {
   const input = await readJson(request, UpdatePhoto);
   if ('response' in input) return input.response;
   const changes = input.data;
+  const gearError = await missingGear(changes);
+  if (gearError) return fail(gearError);
 
   const [current] = await db().select().from(photos).where(eq(photos.id, photoId.data));
   if (!current) return fail('Not found.', 404);
