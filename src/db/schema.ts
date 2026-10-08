@@ -96,6 +96,20 @@ export const photos = pgTable(
   (t) => [index('photos_album_id_idx').on(t.albumId, t.sortOrder)],
 );
 
+/** Notes sent from the contact page. They stay here; no email service is involved. */
+export const messages = pgTable(
+  'messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    body: text('body').notNull(),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('messages_created_at_idx').on(t.createdAt)],
+);
+
 export const albumsRelations = relations(albums, ({ many }) => ({
   photos: many(photos),
 }));
@@ -110,3 +124,4 @@ export type Album = typeof albums.$inferSelect;
 export type Photo = typeof photos.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Gear = typeof cameras.$inferSelect;
+export type Message = typeof messages.$inferSelect;
