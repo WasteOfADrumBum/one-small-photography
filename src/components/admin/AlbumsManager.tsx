@@ -84,33 +84,31 @@ export default function AlbumsManager({ initialAlbums }: { initialAlbums: Album[
     <div className="space-y-12">
       <SaveToast state={saveState} onDismiss={dismiss} />
 
-      <form onSubmit={create} className="rounded-xl border border-sand/20 bg-moss p-6">
-        <h2 className="text-2xl">New album</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <TextField
-            label="Name"
-            required
-            maxLength={120}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <TextArea
-            label="Description"
-            rows={2}
-            maxLength={2000}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+      <form onSubmit={create} className="space-y-4 rounded-xl border border-sand/20 bg-moss p-6">
+        <div>
+          <h2 className="text-2xl">New album</h2>
+          <p className="mt-1 text-sm text-sand">
+            New albums start hidden until you make them visible.
+          </p>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <Button type="submit" variant="primary" icon={Plus} disabled={busy || !title.trim()}>
-            {busy ? 'Creating…' : 'Create album'}
-          </Button>
-          <p className="text-xs text-sand">New albums start hidden until you make them visible.</p>
-        </div>
-        <div className="mt-3">
-          <ErrorNote message={error} />
-        </div>
+        <TextField
+          label="Name"
+          required
+          maxLength={120}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <TextArea
+          label="Description"
+          rows={2}
+          maxLength={2000}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <ErrorNote message={error} />
+        <Button type="submit" variant="primary" icon={Plus} disabled={busy || !title.trim()}>
+          {busy ? 'Creating…' : 'Create album'}
+        </Button>
       </form>
 
       <section>
