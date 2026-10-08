@@ -75,8 +75,7 @@ export function GearSelects({
 
 export const NoGearHint = () => (
   <p className="mt-2 text-xs text-sand">
-    Add your cameras and lenses under "Your gear" on the <a href="/admin#gear">albums page</a> to
-    pick them here.
+    Add your cameras and lenses on the <a href="/admin#gear">Gear tab</a> to pick them here.
   </p>
 );
 
@@ -171,5 +170,39 @@ export default function SettingsFields({
       </div>
       {noGear ? <NoGearHint /> : hint && <p className="mt-2 text-xs text-sand">{hint}</p>}
     </fieldset>
+  );
+}
+
+/** One line describing the settings, like "Nikon D300s · 35mm f/1.8 · ƒ/8 · 1/200s · ISO 200". */
+function summarize(value: Settings, gear: GearOptions) {
+  const parts = [
+    gear.cameras.find((c) => c.id === value.cameraId)?.name,
+    gear.lenses.find((l) => l.id === value.lensId)?.name,
+    value.aperture && `ƒ/${value.aperture}`,
+    value.shutterSpeed && formatShutter(value.shutterSpeed),
+    value.iso && `ISO ${formatIso(value.iso)}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'None set';
+}
+
+/**
+ * The same dropdowns folded behind a one-line summary, so a photo card stays short.
+ * Click the summary to open them.
+ */
+export function CollapsedSettingsFields(props: Parameters<typeof SettingsFields>[0]) {
+  return (
+    <details className="group rounded-lg border border-sand/15">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm [&::-webkit-details-marker]:hidden">
+        <span className="shrink-0 text-sand">Camera</span>
+        <span className="min-w-0 flex-1 truncate text-paper">
+          {summarize(props.value, props.gear)}
+        </span>
+        <span className="shrink-0 text-xs text-sand group-open:hidden">Edit</span>
+        <span className="hidden shrink-0 text-xs text-sand group-open:inline">Done</span>
+      </summary>
+      <div className="px-2 pb-2">
+        <SettingsFields legend="Camera settings (optional)" {...props} />
+      </div>
+    </details>
   );
 }

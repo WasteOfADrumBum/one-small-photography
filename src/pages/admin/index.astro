@@ -1,8 +1,6 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
-import AlbumsManager from '@/components/admin/AlbumsManager';
-import GearManager from '@/components/admin/GearManager';
-import MessagesInbox from '@/components/admin/MessagesInbox';
+import AdminTabs from '@/components/admin/AdminTabs';
 import { listAlbums } from '@/lib/albums';
 import { listGear } from '@/lib/gear';
 import { listMessages } from '@/lib/messages';
@@ -16,8 +14,11 @@ const messages = JSON.parse(JSON.stringify(await listMessages()));
 const pick = (list: { id: string; name: string }[]) => list.map(({ id, name }) => ({ id, name }));
 ---
 
-<AdminLayout title="Your albums">
-  <MessagesInbox client:load initialMessages={messages} />
-  <AlbumsManager client:load initialAlbums={albums} />
-  <GearManager client:load initialCameras={pick(cameras)} initialLenses={pick(lenses)} />
+<AdminLayout title="Admin">
+  <AdminTabs
+    client:load
+    albums={albums}
+    gear={{ initialCameras: pick(cameras), initialLenses: pick(lenses) }}
+    messages={messages}
+  />
 </AdminLayout>

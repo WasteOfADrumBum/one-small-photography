@@ -4,8 +4,13 @@ import { photoUrl } from '@/lib/photo-url';
 import { api, send } from './api';
 import { settingsFromExif } from '@/lib/camera-settings';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
-import SettingsFields, { type GearOptions, type Settings } from './SettingsFields';
-import { ArrowLeft, ArrowRight, ExternalLink, Star, Trash2, Upload } from 'lucide-react';
+import SettingsFields, {
+  CollapsedSettingsFields,
+  type GearOptions,
+  type Settings,
+} from './SettingsFields';
+import { Sortable, useSortableItem } from './sortable';
+import { ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -13,7 +18,6 @@ import {
   TextArea,
   TextField,
   VisibilityToggle,
-  move,
   useSaveStatus,
 } from './ui';
 
@@ -198,9 +202,7 @@ export default function AlbumEditor({
     }, 'Photo deleted');
   };
 
-  const reorderPhoto = (index: number, delta: -1 | 1) => {
-    const next = move(photos, index, delta);
-    if (next === photos) return;
+  const reorderPhotos = (next: Photo[]) => {
     const previous = photos;
     setPhotos(next);
     void run(async () => {
@@ -371,7 +373,7 @@ export default function AlbumEditor({
                       value={item.alt}
                       onChange={(e) => patchPending(item.key, { alt: e.target.value })}
                     />
-                    <SettingsFields
+                    <CollapsedSettingsFields
                       value={item.settings}
                       gear={gear}
                       onChange={(changes) => {
@@ -407,134 +409,137 @@ export default function AlbumEditor({
         {photos.length === 0 ? (
           <p className="mt-4 text-sand">No photos yet.</p>
         ) : (
-          <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {photos.map((photo, i) => (
-              <li key={photo.id} className="space-y-3 rounded-xl border border-sand/20 bg-moss p-4">
-                <div className="relative aspect-[4/3] overflow-hidden rounded bg-espresso">
-                  <img
-                    src={photoUrl(photo, 'sm')}
-                    alt={photo.alt}
-                    loading="lazy"
-                    className={`h-full w-full object-cover ${photo.published ? '' : 'opacity-40'}`}
-                  />
-                  <div className="absolute top-2 left-2 flex gap-2">
-                    {album.coverPhotoId === photo.id && <Badge on>Cover</Badge>}
-                    {!photo.published && <Badge on={false}>Hidden</Badge>}
+          <>
+            <div className="mt-4 rounded-xl border border-sand/20 bg-moss p-4">
+              <h3 className="font-serif text-lg">Order</h3>
+              <p className="mt-1 text-sm text-sand">
+                Drag a photo to move it. This is the order on the site. Click one to jump to its
+                details.
+              </p>
+              <Sortable items={photos} onReorder={reorderPhotos} layout="grid">
+                <ol className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-10">
+                  {photos.map((photo, i) => (
+                    <OrderTile
+                      key={photo.id}
+                      photo={photo}
+                      position={i + 1}
+                      cover={album.coverPhotoId === photo.id}
+                    />
+                  ))}
+                </ol>
+              </Sortable>
+            </div>
+
+            <ul className="mt-6 grid gap-4 md:grid-cols-2">
+              {photos.map((photo, i) => (
+                <li
+                  key={photo.id}
+                  id={`photo-${photo.id}`}
+                  className="scroll-mt-24 space-y-3 rounded-xl border border-sand/20 bg-moss p-4"
+                >
+                  <div className="flex gap-4">
+                    <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded bg-espresso">
+                      <img
+                        src={photoUrl(photo, 'sm')}
+                        alt={photo.alt}
+                        loading="lazy"
+                        className={`h-full w-full object-cover ${photo.published ? '' : 'opacity-40'}`}
+                      />
+                      <span className="absolute top-1.5 left-1.5 rounded-full bg-espresso/80 px-2 py-0.5 text-xs text-paper">
+                        {i + 1}
+                      </span>
+                      <div className="absolute bottom-1.5 left-1.5 flex gap-1">
+                        {album.coverPhotoId === photo.id && <Badge on>Cover</Badge>}
+                        {!photo.published && <Badge on={false}>Hidden</Badge>}
+                      </div>
+                    </div>
+                    <PhotoFields
+                      photo={photo}
+                      onSave={(changes) => updatePhoto(photo.id, changes)}
+                    />
                   </div>
-                </div>
-                <PhotoFields photo={photo} onSave={(changes) => updatePhoto(photo.id, changes)} />
-                <SettingsFields
-                  value={settingsOf(photo)}
-                  gear={gear}
-                  onChange={(changes) => {
-                    // Show the pick right away; the saved photo replaces it when the server answers.
-                    setPhotos((list) =>
-                      list.map((p) => (p.id === photo.id ? { ...p, ...changes } : p)),
-                    );
-                    void updatePhoto(photo.id, changes);
-                  }}
-                />
-                <div className="flex flex-wrap gap-2">
-                  <VisibilityToggle
-                    noun="photo"
-                    visible={photo.published}
-                    onToggle={() => updatePhoto(photo.id, { published: !photo.published })}
+                  <PhotoDescription
+                    photo={photo}
+                    onSave={(changes) => updatePhoto(photo.id, changes)}
                   />
-                  <Button
-                    icon={Star}
-                    disabled={album.coverPhotoId === photo.id}
-                    onClick={() => updateAlbum({ coverPhotoId: photo.id })}
-                    title="Use this photo on the album's Polaroid stack"
-                  >
-                    {album.coverPhotoId === photo.id ? 'Cover' : 'Make cover'}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    icon={Trash2}
-                    aria-label="Delete photo"
-                    title="Delete photo"
-                    onClick={() => deletePhoto(photo)}
-                    className="ml-auto px-3"
+                  <CollapsedSettingsFields
+                    value={settingsOf(photo)}
+                    gear={gear}
+                    onChange={(changes) => {
+                      // Show the pick right away; the saved photo replaces it when the server answers.
+                      setPhotos((list) =>
+                        list.map((p) => (p.id === photo.id ? { ...p, ...changes } : p)),
+                      );
+                      void updatePhoto(photo.id, changes);
+                    }}
                   />
-                </div>
-                <div className="flex items-center gap-2 border-t border-sand/15 pt-3">
-                  <span className="mr-auto text-xs text-sand">
-                    Order: {i + 1} of {photos.length}
-                  </span>
-                  <Button
-                    icon={ArrowLeft}
-                    aria-label="Move earlier"
-                    title="Move earlier"
-                    disabled={i === 0}
-                    onClick={() => reorderPhoto(i, -1)}
-                    className="px-3"
-                  />
-                  <Button
-                    icon={ArrowRight}
-                    aria-label="Move later"
-                    title="Move later"
-                    disabled={i === photos.length - 1}
-                    onClick={() => reorderPhoto(i, 1)}
-                    className="px-3"
-                  />
-                </div>
-                {otherAlbums.length > 0 && (
-                  <label className="block text-sm text-sand">
-                    Move to album
-                    <select
-                      className="mt-1 w-full rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper"
-                      value=""
-                      onChange={(e) =>
-                        e.target.value && updatePhoto(photo.id, { albumId: e.target.value })
-                      }
+                  <div className="flex flex-wrap items-center gap-2">
+                    <VisibilityToggle
+                      noun="photo"
+                      visible={photo.published}
+                      onToggle={() => updatePhoto(photo.id, { published: !photo.published })}
+                      className="px-3 py-1.5"
+                    />
+                    <Button
+                      icon={Star}
+                      disabled={album.coverPhotoId === photo.id}
+                      onClick={() => updateAlbum({ coverPhotoId: photo.id })}
+                      title="Use this photo on the album's Polaroid stack"
+                      className="px-3 py-1.5"
                     >
-                      <option value="">Choose…</option>
-                      {otherAlbums.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.title}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </li>
-            ))}
-          </ul>
+                      {album.coverPhotoId === photo.id ? 'Cover' : 'Make cover'}
+                    </Button>
+                    {otherAlbums.length > 0 && (
+                      <select
+                        aria-label="Move to another album"
+                        className="min-w-0 flex-1 rounded-full border border-sand/30 bg-espresso px-3 py-1.5 text-sm text-paper"
+                        value=""
+                        onChange={(e) =>
+                          e.target.value && updatePhoto(photo.id, { albumId: e.target.value })
+                        }
+                      >
+                        <option value="">Move to album…</option>
+                        {otherAlbums.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <Button
+                      variant="danger"
+                      icon={Trash2}
+                      aria-label="Delete photo"
+                      title="Delete photo"
+                      onClick={() => deletePhoto(photo)}
+                      className="ml-auto px-3 py-1.5"
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </div>
   );
 }
 
-function PhotoFields({
-  photo,
-  onSave,
-}: {
-  photo: Photo;
-  onSave: (changes: Partial<Pick<DbPhoto, 'title' | 'description' | 'alt'>>) => void;
-}) {
-  const [values, setValues] = useState({
-    title: photo.title,
-    description: photo.description,
-    alt: photo.alt,
-  });
+type TextChanges = Partial<Pick<DbPhoto, 'title' | 'description' | 'alt'>>;
+
+/** Title and alt text, beside the thumbnail. Each saves when you leave the field. */
+function PhotoFields({ photo, onSave }: { photo: Photo; onSave: (changes: TextChanges) => void }) {
+  const [values, setValues] = useState({ title: photo.title, alt: photo.alt });
   const save = (key: keyof typeof values) => {
     if (values[key] !== photo[key]) onSave({ [key]: values[key] });
   };
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 flex-1 space-y-2">
       <TextField
         label="Title"
         value={values.title}
         onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))}
         onBlur={() => save('title')}
-      />
-      <TextArea
-        label="Description"
-        rows={2}
-        value={values.description}
-        onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
-        onBlur={() => save('description')}
       />
       <TextField
         label="Alt text"
@@ -543,5 +548,67 @@ function PhotoFields({
         onBlur={() => save('alt')}
       />
     </div>
+  );
+}
+
+function PhotoDescription({
+  photo,
+  onSave,
+}: {
+  photo: Photo;
+  onSave: (changes: TextChanges) => void;
+}) {
+  const [description, setDescription] = useState(photo.description);
+  return (
+    <TextArea
+      label="Description"
+      rows={2}
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+      onBlur={() => description !== photo.description && onSave({ description })}
+    />
+  );
+}
+
+/** A small draggable thumbnail in the Order grid. A click jumps to the photo's card. */
+function OrderTile({ photo, position, cover }: { photo: Photo; position: number; cover: boolean }) {
+  const { ref, style, handle, isDragging } = useSortableItem(photo.id);
+  return (
+    <li ref={ref} style={style}>
+      <button
+        type="button"
+        {...handle}
+        aria-label={`${photo.title || 'Photo'}, position ${position}. Drag to move, or click to jump to it.`}
+        title={photo.title || undefined}
+        onClick={() =>
+          document
+            .getElementById(`photo-${photo.id}`)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+        className={`relative block aspect-square w-full cursor-grab touch-none overflow-hidden rounded-md bg-espresso active:cursor-grabbing ${
+          isDragging
+            ? 'shadow-2xl ring-2 shadow-black/60 ring-gold'
+            : 'hover:ring-2 hover:ring-gold/60'
+        }`}
+      >
+        <img
+          src={photoUrl(photo, 'sm')}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className={`h-full w-full object-cover ${photo.published ? '' : 'opacity-40'}`}
+        />
+        <span className="absolute top-1 left-1 rounded-full bg-espresso/80 px-1.5 text-xs text-paper">
+          {position}
+        </span>
+        {cover && (
+          <Star
+            aria-label="Cover"
+            size={14}
+            className="absolute top-1.5 right-1.5 fill-gold text-gold"
+          />
+        )}
+      </button>
+    </li>
   );
 }
