@@ -1,14 +1,25 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import ContactForm from '@/components/ContactForm';
 ---
 
-<BaseLayout title="Contact" description="Get in touch with Joshua Small.">
+<BaseLayout title="Contact" description="Say hello to Joshua Small.">
   <section class="mx-auto max-w-3xl px-4 py-20 sm:px-6">
     <h1 class="text-5xl" data-reveal>
       Say hello
     </h1>
-    <p class="mt-4 text-sand" data-reveal>
-      Questions about a photo or anything else on the site? A contact form is coming soon.
-    </p>
+    <div class="mt-6 space-y-4 text-lg text-sand" data-reveal>
+      <p>
+        I'm not booking shoots these days, so this isn't a hire-me page. It's here for everything
+        else.
+      </p>
+      <p>
+        Maybe a photo stuck with you, or you shoot in the Triad and want to compare notes. Maybe you
+        want to talk gear, editing, music or code. I'm always glad to meet people who make things.
+      </p>
+    </div>
+    <div class="mt-10" data-reveal>
+      <ContactForm client:visible />
+    </div>
   </section>
 </BaseLayout>
