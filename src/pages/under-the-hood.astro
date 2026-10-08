@@ -6,8 +6,14 @@ const stack = [
   ['Styling', 'Tailwind CSS v4 with a custom dark, earthy palette'],
   ['Motion', 'GSAP ScrollTrigger and Lenis smooth scrolling'],
   ['Hosting', 'Vercel, with a preview deploy for every pull request'],
-  ['Database', 'Neon Postgres with Drizzle ORM (coming next)'],
-  ['Photos', 'Backblaze B2, resized in the browser on upload (coming next)'],
+  ['Database', 'Neon Postgres with Drizzle ORM; migrations run on each production deploy'],
+  [
+    'Photos',
+    'Resized to three WebP sizes in the browser before upload, stored in a private Backblaze B2 bucket and served through the site',
+  ],
+  ['Camera data', "Read from each photo's EXIF on upload, then shown under the photo"],
+  ['Admin', 'Email and password sign-in with scrypt-hashed passwords; every edit saves as you go'],
+  ['Messages', 'Contact notes are saved to the database, with no third-party email service'],
   ['CI', 'GitHub Actions: type checks, linting, formatting and a production build'],
 ] as const;
 ---
