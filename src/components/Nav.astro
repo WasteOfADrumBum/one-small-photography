@@ -6,11 +6,20 @@ const current = Astro.url.pathname;
 
 <header class="sticky top-0 z-40 border-b border-sand/15 bg-espresso/85 backdrop-blur">
   <nav
-    class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-4 sm:px-6"
+    class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-3 sm:px-6"
     aria-label="Main"
   >
-    <a href="/" class="font-serif text-xl text-paper no-underline">
-      {site.name}
+    <a href="/" class="block shrink-0 no-underline">
+      <img
+        src="/logo-480.webp"
+        srcset="/logo-240.webp 240w, /logo-480.webp 480w, /logo-720.webp 720w"
+        sizes="(min-width: 640px) 216px, 154px"
+        width="1495"
+        height="389"
+        alt={site.name}
+        decoding="async"
+        class="h-10 w-auto sm:h-14"
+      />
     </a>
     <ul class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
       {nav.map((item) => (

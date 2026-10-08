@@ -20,8 +20,18 @@ const email = Astro.locals.user?.email;
   <body class="min-h-dvh">
     <header class="sticky top-0 z-40 border-b border-sand/15 bg-espresso/90 backdrop-blur">
       <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-4 sm:px-6">
-        <a href="/admin" class="font-serif text-xl text-paper no-underline">
-          OneSmallPhoto admin
+        <a href="/admin" class="flex items-center gap-3 font-serif text-xl text-paper no-underline">
+          <img
+            src="/logo-480.webp"
+            srcset="/logo-240.webp 240w, /logo-480.webp 480w, /logo-720.webp 720w"
+            sizes="154px"
+            width="1495"
+            height="389"
+            alt="OneSmallPhoto"
+            decoding="async"
+            class="h-10 w-auto"
+          />
+          <span class="text-sand">admin</span>
         </a>
         <a href="/" class="text-sm text-sand no-underline hover:text-gold">
           View site
