@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Mail, MailOpen, Trash2 } from 'lucide-react';
 import { api, send } from './api';
-import { Badge, Button, SaveToast, useSaveStatus } from './ui';
+import { Button, SaveToast, useSaveStatus } from './ui';
 
 type Message = {
   id: string;
@@ -16,10 +16,18 @@ const when = (iso: string) =>
   new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 /** Notes sent from the contact page, newest first. */
-export default function MessagesInbox({ initialMessages }: { initialMessages: Message[] }) {
+export default function MessagesInbox({
+  initialMessages,
+  onUnreadChange,
+}: {
+  initialMessages: Message[];
+  /** Lets the tab label keep its "new" count current. */
+  onUnreadChange?: (unread: number) => void;
+}) {
   const [messages, setMessages] = useState(initialMessages);
   const { state, track, dismiss } = useSaveStatus();
   const unread = messages.filter((m) => !m.readAt).length;
+  useEffect(() => onUnreadChange?.(unread), [unread, onUnreadChange]);
 
   const markRead = (message: Message, read: boolean) =>
     track(
@@ -42,12 +50,9 @@ export default function MessagesInbox({ initialMessages }: { initialMessages: Me
   };
 
   return (
-    <section id="messages" className="mb-16 scroll-mt-24">
+    <section>
       <SaveToast state={state} onDismiss={dismiss} />
-      <h2 className="flex items-center gap-3 text-2xl">
-        Messages {unread > 0 && <Badge on>{unread} new</Badge>}
-      </h2>
-      <p className="mt-1 text-sm text-sand">Notes people send from the contact page.</p>
+      <p className="text-sm text-sand">Notes people send from the contact page, newest first.</p>
       {messages.length === 0 ? (
         <p className="mt-4 text-sand">Nothing yet.</p>
       ) : (

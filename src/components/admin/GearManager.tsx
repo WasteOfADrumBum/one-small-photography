@@ -20,10 +20,9 @@ export default function GearManager({
 }) {
   const { state, track, dismiss } = useSaveStatus();
   return (
-    <section id="gear" className="mt-16 scroll-mt-24">
+    <section>
       <SaveToast state={state} onDismiss={dismiss} />
-      <h2 className="text-2xl">Your gear</h2>
-      <p className="mt-1 text-sm text-sand">
+      <p className="text-sm text-sand">
         Add the cameras and lenses you shoot with. Each photo can then pick from these lists.
       </p>
       <div className="mt-6 grid gap-6 md:grid-cols-2">
