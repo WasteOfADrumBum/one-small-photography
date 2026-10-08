@@ -4,13 +4,7 @@ import { photoUrl } from '@/lib/photo-url';
 import { api, send } from './api';
 import { settingsFromExif } from '@/lib/camera-settings';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
-import SettingsFields, {
-  GearSelects,
-  NoGearHint,
-  type Gear,
-  type GearOptions,
-  type Settings,
-} from './SettingsFields';
+import SettingsFields, { type GearOptions, type Settings } from './SettingsFields';
 import { ArrowLeft, ArrowRight, ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
@@ -65,11 +59,18 @@ export default function AlbumEditor({
   const [photos, setPhotos] = useState(initialAlbum.photos);
   const [pending, setPending] = useState<Pending[]>([]);
   const [dragging, setDragging] = useState(false);
-  // Camera and lens for the whole upload batch, since a shoot usually uses one kit.
-  // Starts from the album's most recent photo; each photo can still be changed on its own.
-  const [batchGear, setBatchGear] = useState<Gear>(() => {
+  // Settings for the whole upload batch, since a shoot usually uses one kit and often one
+  // exposure. Camera and lens start from the album's most recent photo. Each photo can still
+  // be changed on its own.
+  const [batch, setBatch] = useState<Settings>(() => {
     const recent = initialAlbum.photos.findLast((p) => p.cameraId || p.lensId);
-    return { cameraId: recent?.cameraId ?? null, lensId: recent?.lensId ?? null };
+    return {
+      cameraId: recent?.cameraId ?? null,
+      lensId: recent?.lensId ?? null,
+      aperture: null,
+      shutterSpeed: null,
+      iso: null,
+    };
   });
   const { state: saveState, track: run, dismiss } = useSaveStatus();
 
@@ -93,7 +94,7 @@ export default function AlbumEditor({
       title: titleFromFilename(file.name),
       description: '',
       alt: '',
-      settings: { ...batchGear, aperture: null, shutterSpeed: null, iso: null },
+      settings: { ...batch },
       status: 'preparing',
     }));
     setPending((list) => [...list, ...entries]);
@@ -128,9 +129,9 @@ export default function AlbumEditor({
     })();
   }
 
-  /** Sets the batch camera or lens and applies it to every photo waiting to upload. */
-  function changeBatchGear(changes: Partial<Gear>) {
-    setBatchGear((g) => ({ ...g, ...changes }));
+  /** Changes a batch setting and applies it to every photo waiting to upload. */
+  function changeBatch(changes: Partial<Settings>) {
+    setBatch((b) => ({ ...b, ...changes }));
     setPending((list) => list.map((p) => ({ ...p, settings: { ...p.settings, ...changes } })));
   }
 
@@ -288,22 +289,16 @@ export default function AlbumEditor({
       {/* Upload */}
       <section>
         <h2 className="text-2xl">Add photos</h2>
-        <fieldset className="mt-4 rounded-xl border border-sand/20 bg-moss p-4">
-          <legend className="px-1 text-sm text-sand">
-            Camera and lens for every photo you add
-          </legend>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-4 [&>label]:md:col-span-2">
-            <GearSelects value={batchGear} gear={gear} onChange={changeBatchGear} />
-          </div>
-          {gear.cameras.length === 0 && gear.lenses.length === 0 ? (
-            <NoGearHint />
-          ) : (
-            <p className="mt-2 text-xs text-sand">
-              Changing these updates every photo waiting below. You can still pick a different
-              camera or lens on any single photo, before or after it uploads.
-            </p>
-          )}
-        </fieldset>
+        <div className="mt-4 rounded-xl bg-moss">
+          <SettingsFields
+            value={batch}
+            gear={gear}
+            onChange={changeBatch}
+            wide
+            legend="Settings for every photo you add"
+            hint="Changing these updates every photo waiting below. Leave a setting blank to read it from each photo's own data. You can still change any single photo, before or after it uploads."
+          />
+        </div>
         <label
           onDragOver={(e) => {
             e.preventDefault();

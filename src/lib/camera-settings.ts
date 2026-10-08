@@ -103,6 +103,10 @@ export const ISOS = [
   3200, 4000, 5000, 6400, 8000, 10000, 12800, 16000, 20000, 25600, 32000, 51200, 102400,
 ] as const;
 
+/** Joshua's everyday picks, listed again at the top of their dropdowns. */
+export const FAVORITE_SHUTTER_SPEEDS: readonly ShutterSpeed[] = ['1/250'];
+export const FAVORITE_ISOS: readonly Iso[] = [50, 100, 200, 1600];
+
 export type Aperture = (typeof APERTURES)[number];
 export type ShutterSpeed = (typeof SHUTTER_SPEEDS)[number];
 export type Iso = (typeof ISOS)[number];

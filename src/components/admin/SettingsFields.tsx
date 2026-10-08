@@ -1,4 +1,12 @@
-import { APERTURES, ISOS, SHUTTER_SPEEDS, formatIso, formatShutter } from '@/lib/camera-settings';
+import {
+  APERTURES,
+  FAVORITE_ISOS,
+  FAVORITE_SHUTTER_SPEEDS,
+  ISOS,
+  SHUTTER_SPEEDS,
+  formatIso,
+  formatShutter,
+} from '@/lib/camera-settings';
 import { ApertureIcon } from '@/components/PhotoSettingsLine';
 
 export type Settings = {
@@ -72,21 +80,53 @@ export const NoGearHint = () => (
   </p>
 );
 
+/** Options with favorites listed first, then the full list (favorites included again). */
+function Options<T extends string | number>({
+  all,
+  favorites = [],
+  label,
+}: {
+  all: readonly T[];
+  favorites?: readonly T[];
+  label: (value: T) => string;
+}) {
+  const options = (list: readonly T[]) =>
+    list.map((v) => (
+      <option key={v} value={v}>
+        {label(v)}
+      </option>
+    ));
+  if (favorites.length === 0) return options(all);
+  return (
+    <>
+      <optgroup label="Favorites">{options(favorites)}</optgroup>
+      <optgroup label="All">{options(all)}</optgroup>
+    </>
+  );
+}
+
 /** Five optional dropdowns for a photo's camera settings. Each change is passed up on its own. */
 export default function SettingsFields({
   value,
   gear,
   onChange,
+  legend = 'Camera settings (optional)',
+  wide = false,
+  hint,
 }: {
   value: Settings;
   gear: GearOptions;
   onChange: (changes: Partial<Settings>) => void;
+  legend?: string;
+  /** Lay the dropdowns out in more columns on wide screens. */
+  wide?: boolean;
+  hint?: string;
 }) {
   const noGear = gear.cameras.length === 0 && gear.lenses.length === 0;
   return (
     <fieldset className="rounded-lg border border-sand/15 p-3">
-      <legend className="px-1 text-sm text-sand">Camera settings (optional)</legend>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+      <legend className="px-1 text-sm text-sand">{legend}</legend>
+      <div className={`grid grid-cols-2 gap-x-3 gap-y-2 ${wide ? 'md:grid-cols-4' : ''}`}>
         <GearSelects value={value} gear={gear} onChange={onChange} />
         <label className="block text-xs text-sand">
           <span className="flex items-center gap-1">
@@ -99,11 +139,7 @@ export default function SettingsFields({
             onChange={(e) => onChange({ aperture: e.target.value || null })}
           >
             <option value="">—</option>
-            {APERTURES.map((a) => (
-              <option key={a} value={a}>
-                ƒ/{a}
-              </option>
-            ))}
+            <Options all={APERTURES} label={(a) => `ƒ/${a}`} />
           </select>
         </label>
         <label className="block text-xs text-sand">
@@ -114,11 +150,11 @@ export default function SettingsFields({
             onChange={(e) => onChange({ shutterSpeed: e.target.value || null })}
           >
             <option value="">—</option>
-            {SHUTTER_SPEEDS.map((s) => (
-              <option key={s} value={s}>
-                {formatShutter(s)}
-              </option>
-            ))}
+            <Options
+              all={SHUTTER_SPEEDS}
+              favorites={FAVORITE_SHUTTER_SPEEDS}
+              label={formatShutter}
+            />
           </select>
         </label>
         <label className="col-span-2 block text-xs text-sand sm:col-span-1">
@@ -129,15 +165,11 @@ export default function SettingsFields({
             onChange={(e) => onChange({ iso: e.target.value ? Number(e.target.value) : null })}
           >
             <option value="">—</option>
-            {ISOS.map((i) => (
-              <option key={i} value={i}>
-                {formatIso(i)}
-              </option>
-            ))}
+            <Options all={ISOS} favorites={FAVORITE_ISOS} label={formatIso} />
           </select>
         </label>
       </div>
-      {noGear && <NoGearHint />}
+      {noGear ? <NoGearHint /> : hint && <p className="mt-2 text-xs text-sand">{hint}</p>}
     </fieldset>
   );
 }
