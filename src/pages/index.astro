@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PolaroidStack from '@/components/PolaroidStack.astro';
+import HeroLogo from '@/components/HeroLogo.astro';
 import { site } from '@/lib/site';
 import { listPublishedAlbums, stackPhotos, type PublicAlbum } from '@/lib/albums';
 import { FEATURED_ALBUM_COUNT } from '@/lib/featured';
@@ -24,28 +25,31 @@ const years = new Date().getFullYear() - site.shootingSince;
 ---
 
 <BaseLayout>
-  <section class="mx-auto flex min-h-[80dvh] max-w-6xl flex-col justify-center px-4 py-24 sm:px-6">
-    <p class="mb-6 text-sm tracking-[0.3em] text-sage uppercase" data-reveal>
+  <section class="relative mx-auto flex min-h-[80dvh] max-w-6xl flex-col justify-center px-4 py-24 sm:px-6">
+    <div class="pointer-events-none absolute top-1/2 right-0 -z-0 w-[92%] -translate-y-1/2 opacity-20 sm:-right-4 sm:w-[52%] sm:opacity-100 lg:-right-8 lg:w-[46%]">
+      <HeroLogo />
+    </div>
+    <p class="relative mb-6 text-sm tracking-[0.3em] text-sage uppercase" data-reveal>
       {site.owner} · North Carolina
     </p>
-    <h1 class="max-w-4xl text-5xl leading-[1.05] sm:text-7xl" data-reveal>
+    <h1
+      class="relative max-w-4xl text-5xl [text-shadow:0_2px_28px_var(--color-espresso),0_0_8px_var(--color-espresso)] leading-[1.05] sm:text-7xl"
+      data-reveal
+    >
       {site.tagline}
     </h1>
-    <p class="mt-8 max-w-xl text-lg text-sand" data-reveal>
+    <p
+      class="relative mt-8 max-w-xl text-lg text-sand [text-shadow:0_0_14px_var(--color-espresso)]"
+      data-reveal
+    >
       {years}+ years behind a Nikon, in the studio and on location: fashion, portraits, families,
       weddings, sports, landscapes and animals.
     </p>
-    <div class="mt-10 flex flex-wrap gap-4" data-reveal>
-      <a
-        href="/portfolio"
-        class="rounded-full bg-sage px-6 py-3 text-espresso no-underline transition-colors hover:bg-gold"
-      >
+    <div class="relative mt-10 flex flex-wrap gap-4" data-reveal>
+      <a href="/portfolio" class="btn-gilt btn-gilt-solid px-6 py-3">
         See the portfolio
       </a>
-      <a
-        href="/contact"
-        class="rounded-full border border-sand/40 px-6 py-3 text-paper no-underline transition-colors hover:border-gold"
-      >
+      <a href="/contact" class="btn-gilt px-6 py-3">
         Say hello
       </a>
     </div>
@@ -122,7 +126,9 @@ const years = new Date().getFullYear() - site.shootingSince;
           ))}
     </div>
     <p class="mt-16 text-center" data-reveal>
-      <a href="/portfolio">See every album →</a>
+      <a href="/portfolio" class="btn-gilt px-6 py-3">
+        See every album →
+      </a>
     </p>
   </section>
 </BaseLayout>

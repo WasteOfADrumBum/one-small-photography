@@ -73,3 +73,57 @@ html.lenis body {
     transform: translateY(24px);
   }
 }
+
+/*
+ * Gilt buttons: light text, a hairline gold edge, and a soft green glow that
+ * fades in from the inside edges. The solid variant is the primary action.
+ */
+@layer components {
+  .btn-gilt {
+    display: inline-block;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in oklab, var(--color-gold) 55%, transparent);
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-sage) 10%, transparent),
+      color-mix(in oklab, var(--color-sage) 26%, transparent)
+    );
+    box-shadow:
+      inset 0 0 14px color-mix(in oklab, var(--color-sage) 45%, transparent),
+      inset 0 1px 0 color-mix(in oklab, var(--color-paper) 12%, transparent);
+    color: var(--color-paper);
+    text-decoration: none;
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      color 200ms ease;
+  }
+
+  .btn-gilt:hover {
+    border-color: var(--color-gold);
+    box-shadow:
+      inset 0 0 18px color-mix(in oklab, var(--color-sage) 65%, transparent),
+      inset 0 1px 0 color-mix(in oklab, var(--color-paper) 18%, transparent),
+      0 0 14px color-mix(in oklab, var(--color-gold) 18%, transparent);
+  }
+
+  .btn-gilt-solid {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-sage) 85%, var(--color-paper)),
+      var(--color-sage)
+    );
+    color: var(--color-espresso);
+  }
+
+  .btn-gilt-nav {
+    color: var(--color-sand);
+    border-color: color-mix(in oklab, var(--color-gold) 30%, transparent);
+  }
+
+  .btn-gilt-nav:hover,
+  .btn-gilt-nav[aria-current='page'] {
+    color: var(--color-paper);
+    border-color: var(--color-gold);
+  }
+}
