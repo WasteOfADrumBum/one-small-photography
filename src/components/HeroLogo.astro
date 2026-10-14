@@ -1,0 +1,156 @@
+---
+/**
+ * Animated camera mark for the home hero. Six pre-aligned layers share one
+ * 979x616 canvas, so they stack exactly like the full logo and each animates
+ * on its own. Plays once on load; reduced-motion users get the finished logo.
+ */
+const layers = [
+  { name: 'leaves-right', alt: '' },
+  { name: 'camera', alt: '' },
+  { name: 'leaves-left', alt: '' },
+  { name: 'lens', alt: '' },
+  { name: 'aperture', alt: '' },
+  { name: 'polaroid', alt: '' },
+] as const;
+---
+
+<div class="hero-logo" aria-hidden="true">
+  {layers.map((layer) => (
+    <img
+      src={`/logo/${layer.name}.webp`}
+      width="979"
+      height="616"
+      alt={layer.alt}
+      decoding="async"
+      class={`hero-logo__layer hero-logo__${layer.name}`}
+    />
+  ))}
+</div>
+
+<style>
+  .hero-logo {
+    position: relative;
+    aspect-ratio: 979 / 616;
+    width: 100%;
+  }
+
+  .hero-logo__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-logo__layer {
+      opacity: 0;
+      animation-fill-mode: forwards;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .hero-logo__camera {
+      animation: camera-in 0.8s 0.1s forwards;
+    }
+
+    .hero-logo__lens {
+      transform-origin: 45.4% 47.7%;
+      animation: lens-in 0.7s 0.6s forwards;
+    }
+
+    .hero-logo__aperture {
+      transform-origin: 45.2% 49.2%;
+      animation: aperture-in 1.1s 1.2s forwards;
+    }
+
+    .hero-logo__polaroid {
+      transform-origin: 30% 60%;
+      animation: polaroid-in 0.9s 2.1s forwards;
+    }
+
+    .hero-logo__leaves-left {
+      transform-origin: 30% 76%;
+      animation: leaves-left-in 0.9s 2.8s forwards;
+    }
+
+    .hero-logo__leaves-right {
+      transform-origin: 75% 38%;
+      animation: leaves-right-in 0.8s 3s forwards;
+    }
+  }
+
+  @keyframes camera-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes lens-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes polaroid-in {
+    from {
+      opacity: 0;
+      transform: translateX(-14%) rotate(-8deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Iris: starts nearly shut, snaps open, blinks down a touch, settles open. */
+  @keyframes aperture-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.35) rotate(-60deg);
+    }
+    35% {
+      opacity: 1;
+      transform: scale(1.06) rotate(8deg);
+    }
+    60% {
+      transform: scale(0.82) rotate(-4deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  @keyframes leaves-left-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6) rotate(-14deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes leaves-right-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6) rotate(12deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>
