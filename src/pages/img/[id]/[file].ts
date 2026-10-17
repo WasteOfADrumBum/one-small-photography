@@ -4,15 +4,18 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { albums, photos } from '@/db/schema';
 import { getPhoto, isPhotoSize, photoKey } from '@/lib/storage';
+import { copyrightXmp, embedXmp } from '@/lib/xmp';
 
 export const prerender = false;
 
 const notFound = () => new Response('Not found', { status: 404 });
+const xmp = copyrightXmp();
 
 /**
  * Streams a photo from the private B2 bucket. Published photos are cached on
  * Vercel's CDN, so B2 is only read once per photo size per cache period.
- * Hidden photos are only shown to you while logged in.
+ * Hidden photos are only shown to you while logged in. Each file goes out with
+ * the copyright tags from `copyright.ts` embedded (see `xmp.ts`).
  */
 export const GET: APIRoute = async ({ params, locals }) => {
   const id = z.uuid().safeParse(params.id);
@@ -36,7 +39,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const file = await getPhoto(photoKey(id.data, match[1], row.format));
   if (!file) return notFound();
 
-  return new Response(file.body as BodyInit, {
+  return new Response(embedXmp(file.body, row.format, xmp) as BodyInit, {
     headers: {
       'Content-Type': file.contentType,
       'Cache-Control': isPublic

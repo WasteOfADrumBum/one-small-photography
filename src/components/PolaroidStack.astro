@@ -38,6 +38,8 @@ const back = [
           src={photoUrl(photo, 'sm')}
           alt=""
           loading="lazy"
+          draggable="false"
+          data-protected
           class="h-full w-full object-cover opacity-80"
         />
       )}
@@ -49,6 +51,8 @@ const back = [
         src={photoUrl(cover, 'sm')}
         alt={cover.alt || cover.title}
         loading="lazy"
+        draggable="false"
+        data-protected
         class="min-h-0 flex-1 object-cover"
       />
     ) : (

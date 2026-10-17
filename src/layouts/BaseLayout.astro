@@ -53,7 +53,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <Footer />
     <script>
       import { initMotion } from '@/scripts/motion';
+      import { initPhotoProtection } from '@/scripts/protect-photos';
       initMotion();
+      initPhotoProtection();
     </script>
   </body>
 </html>
