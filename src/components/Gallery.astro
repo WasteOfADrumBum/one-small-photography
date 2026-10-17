@@ -20,6 +20,7 @@ const { photos } = Astro.props;
       data-description={photo.description}
       data-alt={photo.alt || photo.title}
       aria-label={`Open ${photo.title || 'photo'} full screen`}
+      data-protected
     >
       <img
         src={photoUrl(photo, 'md')}
@@ -30,6 +31,8 @@ const { photos } = Astro.props;
         alt={photo.alt || photo.title}
         loading={index < 3 ? 'eager' : 'lazy'}
         decoding="async"
+        draggable="false"
+        data-protected
         class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
       />
     </button>
@@ -83,7 +86,13 @@ const { photos } = Astro.props;
       </button>
     </div>
     <figure class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 pb-6">
-      <img data-image alt="" class="min-h-0 max-w-full flex-1 object-contain" />
+      <img
+        data-image
+        alt=""
+        draggable="false"
+        data-protected
+        class="min-h-0 max-w-full flex-1 object-contain"
+      />
       <figcaption class="max-w-2xl text-center">
         <p data-title class="font-serif text-2xl"></p>
         <p data-description class="mt-1 text-sand"></p>

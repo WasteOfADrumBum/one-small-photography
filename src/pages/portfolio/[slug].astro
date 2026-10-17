@@ -3,6 +3,9 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Gallery from '@/components/Gallery.astro';
 import { getPublishedAlbumBySlug } from '@/lib/albums';
 import { hasDatabase } from '@/db/client';
+import { copyright } from '@/lib/copyright';
+import { photoUrl } from '@/lib/photo-url';
+import { site } from '@/lib/site';
 
 export const prerender = false;
 
@@ -13,6 +16,30 @@ if (!album) return Astro.rewrite('/404');
 // Never cache album pages on the CDN or in the browser, so edits from the admin
 // panel show up on the next page load. Photos themselves are still cached by /img.
 Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+// Copyright and credit for search engines (Google shows it beside image results).
+const absolute = (path: string) => new URL(path, Astro.site).href;
+const rights = {
+  creator: { '@type': 'Person', name: site.owner },
+  copyrightHolder: { '@type': 'Organization', name: copyright.holder, url: copyright.website },
+  copyrightNotice: copyright.notice,
+  creditText: copyright.holder,
+  acquireLicensePage: absolute('/contact'),
+};
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ImageGallery',
+  name: album.title,
+  url: absolute(`/portfolio/${album.slug}`),
+  ...rights,
+  image: album.photos.map((photo) => ({
+    '@type': 'ImageObject',
+    contentUrl: absolute(photoUrl(photo, 'lg')),
+    name: photo.title || undefined,
+    caption: photo.alt || photo.title || undefined,
+    ...rights,
+  })),
+};
 ---
 
 <BaseLayout
@@ -33,4 +60,9 @@ Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate
     )}
     <Gallery photos={album.photos} />
   </section>
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
+  />
 </BaseLayout>

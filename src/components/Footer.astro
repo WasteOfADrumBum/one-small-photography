@@ -1,5 +1,5 @@
 ---
-import { site } from '@/lib/site';
+import { copyright } from '@/lib/copyright';
 
 const year = new Date().getFullYear();
 ---
@@ -7,7 +7,7 @@ const year = new Date().getFullYear();
 <footer class="border-t border-sand/15">
   <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-sand sm:flex-row sm:items-center sm:justify-between sm:px-6">
     <p>
-      &copy; {year} {site.owner}. All photographs are original work.
+      &copy; {year} {copyright.holder}. All rights reserved.
     </p>
     <p class="flex gap-5">
       <span>Made in the NC Triad, shot on Nikon.</span>
