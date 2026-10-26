@@ -16,7 +16,7 @@ const FORMATS = { 'image/webp': 'webp', 'image/jpeg': 'jpg' } as const;
 
 /** The camera details read in the browser. Anything else, or anything malformed, is dropped. */
 const text = z.string().max(200).optional().catch(undefined);
-const positive = z.number().positive().finite().optional().catch(undefined);
+const positive = z.number().positive().optional().catch(undefined);
 const Exif = z.object({
   make: text,
   model: text,
