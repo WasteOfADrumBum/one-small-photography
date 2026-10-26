@@ -1,25 +1,35 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ContactForm from '@/components/ContactForm';
+
+// A transparent 1x1 GIF, so phones never fetch the banner they don't show.
+const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 ---
 
 <BaseLayout title="Contact" description="Say hello to Joshua Small.">
   <div class="mx-auto max-w-6xl px-4 pt-12 pb-24 sm:px-6">
-    <figure data-reveal>
-      <img
-        src="/contact-portraits-1100.webp"
-        srcset="/contact-portraits-1100.webp 1100w, /contact-portraits-2172.webp 2172w"
-        sizes="(min-width: 72rem) 70rem, 100vw"
-        width="2172"
-        height="724"
-        decoding="async"
-        draggable="false"
-        data-protected
-        alt="Five studio portraits of women side by side, framed by painted leaves and small yellow and white flowers."
-        class="h-auto w-full"
-      />
+    <!--
+      Desktop only: on phones the banner pushes the form too far down. The
+      phone source is BLANK_PIXEL.
+    -->
+    <figure data-reveal data-contact-banner class="hidden sm:block">
+      <picture>
+        <source media="(max-width: 39.999rem)" srcset={BLANK_PIXEL} />
+        <img
+          src="/contact-portraits-1100.webp"
+          srcset="/contact-portraits-1100.webp 1100w, /contact-portraits-2172.webp 2172w"
+          sizes="(min-width: 72rem) 70rem, 100vw"
+          width="2172"
+          height="724"
+          decoding="async"
+          draggable="false"
+          data-protected
+          alt="Five studio portraits of women side by side, framed by painted leaves and small yellow and white flowers."
+          class="h-auto w-full"
+        />
+      </picture>
     </figure>
-    <section class="mt-12 grid items-start gap-10 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12">
+    <section class="grid sm:mt-12 items-start gap-10 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12">
       <div data-reveal>
         <h1 class="text-5xl">Say hello</h1>
         <div class="mt-6 space-y-4 text-lg text-sand">

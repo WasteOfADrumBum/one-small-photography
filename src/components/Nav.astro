@@ -21,7 +21,22 @@ const current = Astro.url.pathname;
         class="h-10 w-auto sm:h-14"
       />
     </a>
-    <ul class="flex flex-wrap gap-2 text-sm">
+    <!-- Phones only, and only once JS runs: without it the links show as before. -->
+    <button
+      type="button"
+      class="site-menu-toggle btn-gilt btn-gilt-nav"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      data-site-menu-toggle
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path class="site-menu-bar site-menu-bar-top" d="M4 7h16" />
+        <path class="site-menu-bar site-menu-bar-mid" d="M4 12h16" />
+        <path class="site-menu-bar site-menu-bar-bottom" d="M4 17h16" />
+      </svg>
+      <span class="sr-only">Menu</span>
+    </button>
+    <ul id="site-menu" class="site-menu flex flex-wrap gap-2 text-sm" data-site-menu>
       {nav.map((item) => (
         <li>
           <a
@@ -36,3 +51,8 @@ const current = Astro.url.pathname;
     </ul>
   </nav>
 </header>
+
+<script>
+  import { initSiteMenu } from '@/scripts/site-menu';
+  initSiteMenu();
+</script>

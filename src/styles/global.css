@@ -129,6 +129,74 @@ html.lenis body {
 }
 
 /*
+ * Phone-width header menu (src/scripts/site-menu.ts). Without JS the button
+ * stays hidden and the links show as wrapped pills, as they always did.
+ */
+.site-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 39.999rem) {
+  .js .site-menu-toggle {
+    display: grid;
+    height: 2.75rem;
+    width: 2.75rem;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .js .site-menu-toggle[aria-expanded='true'] {
+    color: var(--color-paper);
+    border-color: var(--color-gold);
+  }
+
+  .js .site-menu:not([data-open]) {
+    display: none;
+  }
+
+  .js .site-menu {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-block: 0.25rem 0.5rem;
+    font-size: 1rem;
+  }
+
+  .js .site-menu a {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    padding-inline: 1.25rem;
+  }
+}
+
+.site-menu-bar {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  transform-origin: 12px 12px;
+}
+
+.site-menu-toggle[aria-expanded='true'] .site-menu-bar-top {
+  transform: translateY(5px) rotate(45deg);
+}
+.site-menu-toggle[aria-expanded='true'] .site-menu-bar-mid {
+  opacity: 0;
+}
+.site-menu-toggle[aria-expanded='true'] .site-menu-bar-bottom {
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-menu-bar {
+    transition:
+      transform 200ms ease,
+      opacity 150ms ease;
+  }
+}
+
+/*
  * Protected photographs (see src/scripts/protect-photos.ts): no iOS long-press
  * "Save image" sheet, no text-style selection and no dragging. Scrolling,
  * pinch-zoom and taps are untouched.
