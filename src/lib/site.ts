@@ -8,7 +8,6 @@ export const site = {
   name: 'OneSmallPhoto',
   owner: 'Joshua Small',
   tagline: 'Photography is how I live, not how I make a living.',
-  homeBase: 'Trinity, NC',
   triadCities: ['Greensboro', 'High Point', 'Winston-Salem'],
   shootingSince: 2010,
 } as const;
