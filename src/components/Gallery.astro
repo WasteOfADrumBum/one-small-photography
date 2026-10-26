@@ -2,11 +2,15 @@
 import type { GalleryPhoto } from '@/lib/albums';
 import { photoSrcset, photoUrl } from '@/lib/photo-url';
 import PhotoSettingsLine from '@/components/PhotoSettingsLine';
+import { albumPhotoAlt, photoAlt } from '@/lib/alt-text';
 
 interface Props {
   photos: GalleryPhoto[];
+  /** For alt text when a photo has none of its own. */
+  albumTitle: string;
 }
-const { photos } = Astro.props;
+const { photos, albumTitle } = Astro.props;
+const alts = photos.map((photo, i) => photoAlt(photo, albumPhotoAlt(albumTitle, i + 1)));
 ---
 
 <div class="mt-14 columns-1 gap-4 sm:columns-2 lg:columns-3">
@@ -18,8 +22,8 @@ const { photos } = Astro.props;
       data-src={photoUrl(photo, 'lg')}
       data-title={photo.title}
       data-description={photo.description}
-      data-alt={photo.alt || photo.title}
-      aria-label={`${photo.alt || photo.title || 'Photo'}. Open full screen.`}
+      data-alt={alts[index]}
+      aria-label={`${alts[index]}. Open full screen.`}
       aria-haspopup="dialog"
       data-protected
     >
@@ -29,7 +33,7 @@ const { photos } = Astro.props;
         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
         width={photo.width}
         height={photo.height}
-        alt={photo.alt || photo.title}
+        alt={alts[index]}
         loading={index < 3 ? 'eager' : 'lazy'}
         decoding="async"
         draggable="false"

@@ -10,6 +10,8 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
+import reactRenderer from '@astrojs/react/server.js';
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/db/client';
 import { albums, messages, photos, sessions, users, type User } from '@/db/schema';
@@ -35,6 +37,7 @@ import * as createAlbumRoute from '@/pages/api/admin/albums/index';
 import * as photoRoute from '@/pages/api/admin/photos/[id]';
 import * as contactRoute from '@/pages/api/contact';
 import * as imgRoute from '@/pages/img/[id]/[file]';
+import AlbumPage from '@/pages/portfolio/[slug].astro';
 
 const url = process.env.TEST_DATABASE_URL;
 const ORIGIN = 'http://localhost';
@@ -351,6 +354,33 @@ describe.skipIf(!url)('with a database', () => {
       const [row] = await db().select().from(albums);
       expect(row!.coverPhotoId).toBeNull();
       expect(await readdir(join(storage, 'photos'))).not.toContain(photo.id);
+    });
+  });
+
+  describe('alt text', () => {
+    it('describes every photo on the album page, even with no alt text typed in', async () => {
+      const album = await createAlbum('Portraits', true);
+      await upload(album.id, 'Dusty', { alt: 'A chestnut horse by a gate' });
+      await upload(album.id, 'Studio light');
+      await upload(album.id, 'DSC 0042');
+      await upload(album.id, '');
+      await db()
+        .update(photos)
+        .set({ alt: '' })
+        .where(sql`${photos.title} <> 'Dusty'`);
+
+      const container = await AstroContainer.create({ astroConfig: { site: ORIGIN } });
+      container.addServerRenderer({ name: '@astrojs/react', renderer: reactRenderer });
+      const html = await container.renderToString(AlbumPage, { params: { slug: album.slug } });
+      // The gallery's photos (served from /img), in album order.
+      const alts = [...html.matchAll(/<img[^>]*src="\/img\/[^>]* alt="([^"]*)"/g)].map((m) => m[1]);
+      expect(alts).toEqual([
+        'A chestnut horse by a gate',
+        'Studio light',
+        'Photo 3 from the Portraits album',
+        'Photo 4 from the Portraits album',
+      ]);
+      expect(html).toContain('data-alt="Photo 4 from the Portraits album"');
     });
   });
 

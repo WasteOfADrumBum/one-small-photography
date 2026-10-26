@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type DragEvent } from 'react';
 import type { Album as DbAlbum, Photo as DbPhoto } from '@/db/schema';
 import { photoUrl } from '@/lib/photo-url';
+import { albumPhotoAlt, photoAlt } from '@/lib/alt-text';
 import { api, send } from './api';
 import { settingsFromExif } from '@/lib/camera-settings';
 import { preparePhoto, titleFromFilename, type PreparedPhoto } from './prepare-photo';
@@ -147,7 +148,8 @@ export default function AlbumEditor({
       const form = new FormData();
       form.set('title', item.title);
       form.set('description', item.description);
-      form.set('alt', item.alt || item.title);
+      // Left blank, the site describes the photo by its title or its place in the album.
+      form.set('alt', item.alt);
       form.set('width', String(prepared.width));
       form.set('height', String(prepared.height));
       form.set('exif', JSON.stringify(prepared.exif));
@@ -333,7 +335,7 @@ export default function AlbumEditor({
         {pending.length > 0 && (
           <div className="mt-6 space-y-4">
             <ul className="grid gap-4 md:grid-cols-2">
-              {pending.map((item) => (
+              {pending.map((item, n) => (
                 <li
                   key={item.key}
                   className="flex gap-4 rounded-xl border border-sand/20 bg-moss p-4"
@@ -371,6 +373,7 @@ export default function AlbumEditor({
                     />
                     <TextField
                       label="Alt text (what's in the photo, for screen readers)"
+                      placeholder={`Blank: "${photoAlt({ alt: '', title: item.title }, albumPhotoAlt(album.title, photos.length + n + 1))}"`}
                       value={item.alt}
                       onChange={(e) => patchPending(item.key, { alt: e.target.value })}
                     />
@@ -443,7 +446,7 @@ export default function AlbumEditor({
                     <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded bg-espresso">
                       <img
                         src={photoUrl(photo, 'sm')}
-                        alt={photo.alt}
+                        alt={photoAlt(photo, albumPhotoAlt(album.title, i + 1))}
                         loading="lazy"
                         className={`h-full w-full object-cover ${photo.published ? '' : 'opacity-40'}`}
                       />
@@ -457,6 +460,10 @@ export default function AlbumEditor({
                     </div>
                     <PhotoFields
                       photo={photo}
+                      fallbackAlt={photoAlt(
+                        { ...photo, alt: '' },
+                        albumPhotoAlt(album.title, i + 1),
+                      )}
                       onSave={(changes) => updatePhoto(photo.id, changes)}
                     />
                   </div>
@@ -530,7 +537,16 @@ export default function AlbumEditor({
 type TextChanges = Partial<Pick<DbPhoto, 'title' | 'description' | 'alt'>>;
 
 /** Title and alt text, beside the thumbnail. Each saves when you leave the field. */
-function PhotoFields({ photo, onSave }: { photo: Photo; onSave: (changes: TextChanges) => void }) {
+function PhotoFields({
+  photo,
+  fallbackAlt,
+  onSave,
+}: {
+  photo: Photo;
+  /** What the site says instead while the alt text is blank. */
+  fallbackAlt: string;
+  onSave: (changes: TextChanges) => void;
+}) {
   const [values, setValues] = useState({ title: photo.title, alt: photo.alt });
   const save = (key: keyof typeof values) => {
     if (values[key] !== photo[key]) onSave({ [key]: values[key] });
@@ -545,6 +561,7 @@ function PhotoFields({ photo, onSave }: { photo: Photo; onSave: (changes: TextCh
       />
       <TextField
         label="Alt text"
+        placeholder={`Blank: "${fallbackAlt}"`}
         value={values.alt}
         onChange={(e) => setValues((v) => ({ ...v, alt: e.target.value }))}
         onBlur={() => save('alt')}

@@ -6,6 +6,7 @@
  */
 import type { Photo } from '@/db/schema';
 import { photoUrl } from '@/lib/photo-url';
+import { albumCoverAlt, photoAlt } from '@/lib/alt-text';
 
 interface Props {
   title: string;
@@ -49,7 +50,7 @@ const back = [
     {cover ? (
       <img
         src={photoUrl(cover, 'sm')}
-        alt={cover.alt || cover.title}
+        alt={photoAlt(cover, albumCoverAlt(title))}
         loading="lazy"
         draggable="false"
         data-protected
