@@ -132,94 +132,71 @@ html.lenis body {
 
 /*
  * Sunlit page titles: a small sun peeks out from behind the first letter, a
- * grass-green glow sits low on the right, and a crisp outline runs gold on the
- * lit side and green on the shaded side. Every stop of the fill stays a light
- * tone, so contrast on the dark page is unchanged. Static, no motion.
+ * soft grass-green glow sits low on the right, and the letters carry a gold
+ * outline in the same gold as "Photo" in the logo. The fill stays light, so
+ * contrast on the dark page is unchanged. Static, no motion.
  */
 @layer components {
   .title-sunlit {
     position: relative;
     isolation: isolate;
     width: fit-content;
+    --title-outline: #ecbf4c; /* the logo's "Photo" gold */
   }
 
-  /*
-   * The words themselves. They sit in a span so the outline filter wraps only
-   * the letters and not the sun and grass behind them.
-   */
+  /* The words themselves, kept apart from the sun and grass behind them. */
   .title-sunlit > span {
     display: inline-block;
-    /* Room for descenders (the y in "Say hello") inside the clipped fill. */
-    padding-block: 0.06em 0.14em;
-    margin-block: -0.06em -0.14em;
-    color: var(--color-paper);
-    /* One pixel each way, so the edge is a solid line rather than a blur. */
-    filter: drop-shadow(-1px 0 0 var(--title-edge-lit)) drop-shadow(0 -1px 0 var(--title-edge-lit))
-      drop-shadow(1px 0 0 var(--title-edge-shade)) drop-shadow(0 1px 0 var(--title-edge-shade));
-    --title-edge-lit: #d9b061;
-    --title-edge-shade: #6f9a48;
+    color: #f6efe2;
+    /* Stroke drawn under the fill, so the gold sits outside the letters. */
+    -webkit-text-stroke: 0.06em var(--title-outline);
+    paint-order: stroke fill;
   }
 
-  /* The sun, behind the top-left corner of the first letter. */
   .title-sunlit::before,
   .title-sunlit::after {
     content: '';
     position: absolute;
     z-index: -1;
     pointer-events: none;
+    border-radius: 50%;
   }
 
+  /* The sun, behind the top-left corner of the first letter. */
   .title-sunlit::before {
-    top: -0.3em;
-    left: -0.32em;
-    width: 0.9em;
-    height: 0.9em;
-    border-radius: 50%;
+    top: -0.5em;
+    left: -0.5em;
+    width: 1.3em;
+    height: 1.3em;
     background: radial-gradient(
       circle,
       #fffbe8 0%,
-      color-mix(in oklab, #ffe3a0 85%, transparent) 9%,
-      color-mix(in oklab, #f2c869 45%, transparent) 24%,
-      color-mix(in oklab, var(--color-gold) 18%, transparent) 46%,
-      transparent 70%
-    );
-  }
-
-  /* The grass, glowing up from below the last letters. */
-  .title-sunlit::after {
-    right: -0.4em;
-    bottom: -0.05em;
-    width: min(70%, 4em);
-    height: 0.75em;
-    border-radius: 50%;
-    background: radial-gradient(
-      ellipse at 60% 60%,
-      color-mix(in oklab, #7fb04f 34%, transparent) 0%,
-      color-mix(in oklab, #5f8f3a 14%, transparent) 45%,
+      color-mix(in oklab, #ffe3a0 80%, transparent) 6%,
+      color-mix(in oklab, #f2c869 40%, transparent) 18%,
+      color-mix(in oklab, var(--color-gold) 16%, transparent) 36%,
+      color-mix(in oklab, var(--color-gold) 5%, transparent) 54%,
       transparent 72%
     );
   }
 
-  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .title-sunlit > span {
-      background-image: linear-gradient(
-        135deg,
-        #fff6dc 0%,
-        var(--color-paper) 28%,
-        var(--color-paper) 70%,
-        color-mix(in oklab, var(--color-paper) 82%, #8fb36a) 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+  /* The grass, glowing up softly from below the last letters. */
+  .title-sunlit::after {
+    right: -0.6em;
+    bottom: -0.25em;
+    width: min(85%, 5em);
+    height: 1em;
+    background: radial-gradient(
+      ellipse at 60% 55%,
+      color-mix(in oklab, #8cc152 55%, transparent) 0%,
+      color-mix(in oklab, #6fa03f 25%, transparent) 40%,
+      transparent 70%
+    );
+    filter: blur(0.18em);
   }
 
   @media (forced-colors: active) {
     .title-sunlit > span {
-      filter: none;
-      background-image: none;
-      -webkit-text-fill-color: currentColor;
+      -webkit-text-stroke: 0;
     }
 
     .title-sunlit::before,
