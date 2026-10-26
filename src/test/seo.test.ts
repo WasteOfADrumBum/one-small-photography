@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { nav } from '@/lib/site';
-import { GET as robots } from './robots.txt';
-import { GET as sitemap } from './sitemap.xml';
+import { GET as robots } from '@/pages/robots.txt';
+import { GET as sitemap } from '@/pages/sitemap.xml';
 
 const site = new URL('https://photo.example');
 const call = (handler: typeof robots) => Promise.resolve(handler({ site } as never));

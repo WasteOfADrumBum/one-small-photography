@@ -1,6 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { describe, expect, it } from 'vitest';
-import AlbumPage from './[slug].astro';
+import AlbumPage from '@/pages/portfolio/[slug].astro';
 
 describe('album page', () => {
   it('answers 404 with the not-found message when the album does not exist', async () => {
