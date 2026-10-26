@@ -8,7 +8,7 @@ import { Button, SaveToast, useSaveStatus } from './ui';
 type Item = { id: string; name: string };
 
 const field =
-  'w-full min-w-0 rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper focus:border-gold';
+  'w-full min-w-0 rounded-md border border-sand/60 bg-espresso px-3 py-2 text-paper focus:border-gold';
 
 /** Cameras and lenses to pick from on each photo. */
 export default function GearManager({
@@ -29,6 +29,7 @@ export default function GearManager({
         <GearList
           kind="cameras"
           title="Cameras"
+          noun="camera"
           icon={<Camera aria-hidden size={20} strokeWidth={1.5} />}
           placeholder="Nikon Z 7II"
           initial={initialCameras}
@@ -37,6 +38,7 @@ export default function GearManager({
         <GearList
           kind="lenses"
           title="Lenses"
+          noun="lens"
           icon={<LensIcon size={20} />}
           placeholder="NIKKOR Z 50mm f/1.8 S"
           initial={initialLenses}
@@ -51,12 +53,15 @@ function GearList({
   kind,
   title,
   icon,
+  noun,
   placeholder,
   initial,
   track,
 }: {
   kind: GearKind;
   title: string;
+  /** One of them, for labels: "camera", "lens". */
+  noun: string;
   icon: React.ReactNode;
   placeholder: string;
   initial: Item[];
@@ -103,10 +108,10 @@ function GearList({
 
   return (
     <div className="rounded-xl border border-sand/20 bg-moss p-5">
-      <h3 className="flex items-center gap-2 font-serif text-xl">
+      <h2 className="flex items-center gap-2 font-serif text-xl">
         {icon}
         {title}
-      </h3>
+      </h2>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-sand">None yet.</p>
       ) : (
@@ -114,7 +119,7 @@ function GearList({
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-2">
               <input
-                aria-label={`${title} name`}
+                aria-label={`Rename ${item.name}`}
                 defaultValue={item.name}
                 maxLength={120}
                 onBlur={(e) => rename(item, e.target.value)}
@@ -134,7 +139,7 @@ function GearList({
       )}
       <form onSubmit={add} className="mt-4 flex items-center gap-2 border-t border-sand/15 pt-4">
         <input
-          aria-label={`New ${title.toLowerCase().replace(/s$/, '')}`}
+          aria-label={`New ${noun}`}
           placeholder={placeholder}
           value={name}
           maxLength={120}

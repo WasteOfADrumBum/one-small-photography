@@ -2,7 +2,7 @@ import { useState, type SubmitEvent } from 'react';
 import { Check, LoaderCircle, Send } from 'lucide-react';
 
 const field =
-  'mt-1 w-full rounded-md border border-sand/30 bg-espresso px-3 py-2 text-paper focus:border-gold';
+  'mt-1 w-full rounded-md border border-sand/60 bg-espresso px-3 py-2 text-paper focus:border-gold';
 
 type Status =
   { kind: 'idle' } | { kind: 'sending' } | { kind: 'sent' } | { kind: 'error'; message: string };

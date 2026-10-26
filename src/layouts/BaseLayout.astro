@@ -3,21 +3,26 @@ import '@/styles/global.css';
 import Nav from '@/components/Nav.astro';
 import Footer from '@/components/Footer.astro';
 import { site } from '@/lib/site';
+import { photoUrl } from '@/lib/photo-url';
 
 interface Props {
   title?: string;
   description?: string;
   /** Keep private pages (login, setup) out of search results. */
   noindex?: boolean;
+  /** The picture shown when the page is shared: a photo, or a path under public/. */
+  image?: { id: string; format: string } | string | undefined;
 }
 
 const {
   title,
   description = `${site.owner}'s photography portfolio, made in the North Carolina Triad.`,
   noindex = false,
+  image = '/dusty-1600.jpg',
 } = Astro.props;
 const pageTitle = title ? `${title} | ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const shareImage = new URL(typeof image === 'string' ? image : photoUrl(image, 'md'), Astro.site);
 ---
 
 <!doctype html>
@@ -35,6 +40,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImage} />
+    <meta name="twitter:card" content="summary_large_image" />
     <script is:inline>
       document.documentElement.classList.add('js');
     </script>

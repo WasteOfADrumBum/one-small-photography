@@ -6,11 +6,9 @@ import {
 } from '@aws-sdk/client-s3';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { PHOTO_SIZES, type PhotoSize } from '@/lib/photo-url';
 
-/** Photo sizes stored per photo, by longest edge in pixels. */
-export const PHOTO_SIZES = { sm: 480, md: 1280, lg: 2400 } as const;
-export type PhotoSize = keyof typeof PHOTO_SIZES;
-export const isPhotoSize = (value: string): value is PhotoSize => value in PHOTO_SIZES;
+export { PHOTO_SIZES, isPhotoSize, type PhotoSize } from '@/lib/photo-url';
 
 export const photoKey = (photoId: string, size: PhotoSize, format: string) =>
   `photos/${photoId}/${size}.${format}`;

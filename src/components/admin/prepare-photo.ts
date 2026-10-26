@@ -1,8 +1,6 @@
 import exifr from 'exifr';
 import type { PhotoExif } from '@/db/schema';
-
-export const SIZES = { sm: 480, md: 1280, lg: 2400 } as const;
-type Size = keyof typeof SIZES;
+import { PHOTO_SIZES as SIZES, type PhotoSize as Size } from '@/lib/photo-url';
 
 export type PreparedPhoto = {
   files: Record<Size, Blob>;

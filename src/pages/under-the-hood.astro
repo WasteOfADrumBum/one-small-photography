@@ -14,7 +14,10 @@ const stack = [
   ['Camera data', "Read from each photo's EXIF on upload, then shown under the photo"],
   ['Admin', 'Email and password sign-in with scrypt-hashed passwords; every edit saves as you go'],
   ['Messages', 'Contact notes are saved to the database, with no third-party email service'],
-  ['CI', 'GitHub Actions: type checks, linting, formatting and a production build'],
+  [
+    'CI',
+    'GitHub Actions: type checks, linting, formatting, tests against a real Postgres, and a production build',
+  ],
 ] as const;
 ---
 

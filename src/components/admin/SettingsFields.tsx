@@ -23,7 +23,7 @@ export type GearOptions = {
 };
 
 const select =
-  'mt-1 w-full rounded-md border border-sand/30 bg-espresso px-2 py-2 text-sm text-paper focus:border-gold';
+  'mt-1 w-full rounded-md border border-sand/60 bg-espresso px-2 py-2 text-sm text-paper focus:border-gold';
 
 export type Gear = Pick<Settings, 'cameraId' | 'lensId'>;
 

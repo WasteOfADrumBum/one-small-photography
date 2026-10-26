@@ -1,4 +1,7 @@
-import type { PhotoSize } from '@/lib/storage';
+/** Photo sizes stored per photo, by longest edge in pixels. Safe to import in the browser. */
+export const PHOTO_SIZES = { sm: 480, md: 1280, lg: 2400 } as const;
+export type PhotoSize = keyof typeof PHOTO_SIZES;
+export const isPhotoSize = (value: string): value is PhotoSize => value in PHOTO_SIZES;
 
 type PhotoRef = { id: string; format: string };
 
