@@ -33,8 +33,10 @@ describe('page titles', () => {
     ['/the-triad', TriadPage],
     ['/under-the-hood', UnderTheHoodPage],
     ['/contact', ContactPage],
-  ] as const)('%s has the sunlit title', async (path, page) => {
-    expect(await render(page, path)).toMatch(/<h1 class="title-sunlit[ "]/);
+  ] as const)('%s has the sunlit title, with the words in their own span', async (path, page) => {
+    expect(await render(page, path)).toMatch(
+      /<h1 class="title-sunlit[ "][^>]*>\s*<span[^>]*>[^<]+<\/span>\s*<\/h1>/,
+    );
   });
 });
 
@@ -47,10 +49,10 @@ describe('home page', () => {
     expect(letter).toMatch(/<p class="[^"]*text-right[^"]*"[^>]*>Joshua<\/p>\s*<\/div>$/);
   });
 
-  it('left-aligns the albums heading like the rest of the page', async () => {
+  it('keeps the albums heading centered', async () => {
     const html = await render(HomePage, '/');
     const heading = html.match(/<h2[^>]*>\s*Albums\s*<\/h2>/)?.[0];
     expect(heading).toBeDefined();
-    expect(heading).not.toContain('text-center');
+    expect(heading).toContain('text-center');
   });
 });

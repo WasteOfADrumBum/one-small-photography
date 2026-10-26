@@ -56,17 +56,17 @@ const years = new Date().getFullYear() - site.shootingSince;
   </section>
 
   <section class="bg-moss/60">
-    <div class="mx-auto grid max-w-6xl items-start gap-8 px-4 py-24 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-12 sm:px-6">
+    <div class="mx-auto grid max-w-6xl items-start gap-8 px-4 py-24 sm:px-6 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-12">
       <div data-reveal>
         <h2 class="text-4xl leading-tight">
           Why <strong class="font-semibold text-gold">One Small</strong> Photo
         </h2>
-        <figure class="mt-10 max-w-sm -rotate-2 rounded-sm bg-polaroid p-3 pb-2 shadow-2xl shadow-black/50">
+        <figure class="mt-10 max-w-xl -rotate-2 rounded-sm bg-polaroid p-3 pb-2 shadow-2xl shadow-black/50">
           <picture>
             <source
               type="image/webp"
               srcset="/dusty-800.webp 800w, /dusty-1200.webp 1200w"
-              sizes="(min-width: 640px) 24rem, 100vw"
+              sizes="(min-width: 48rem) 36rem, 100vw"
             />
             <img
               src="/dusty-1600.jpg"
@@ -86,7 +86,7 @@ const years = new Date().getFullYear() - site.shootingSince;
         </figure>
       </div>
       <div
-        class="letter space-y-5 rounded-sm border border-gold/20 bg-espresso/35 p-6 font-serif text-lg leading-relaxed text-sand shadow-xl shadow-black/30 sm:p-10"
+        class="letter space-y-4 rounded-sm border border-gold/20 bg-espresso/35 p-6 font-serif leading-relaxed text-sand shadow-xl shadow-black/30 sm:p-8"
         data-reveal
       >
         <p>
@@ -107,13 +107,13 @@ const years = new Date().getFullYear() - site.shootingSince;
           camera still comes out, just for the pictures I want to make. This is where that work
           lives.
         </p>
-        <p class="pt-2 text-right font-hand text-4xl leading-none text-gold">Joshua</p>
+        <p class="pt-1 text-right font-hand text-3xl leading-none text-gold">Joshua</p>
       </div>
     </div>
   </section>
 
   <section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-    <h2 class="mb-16 text-4xl" data-reveal>
+    <h2 class="mb-16 text-center text-4xl" data-reveal>
       Albums
     </h2>
     <div class="grid gap-20 sm:grid-cols-3" data-reveal>
@@ -131,7 +131,7 @@ const years = new Date().getFullYear() - site.shootingSince;
             <PolaroidStack title={title} tone={tones[i % tones.length]} />
           ))}
     </div>
-    <p class="mt-16" data-reveal>
+    <p class="mt-16 text-center" data-reveal>
       <a href="/portfolio" class="btn-gilt px-6 py-3">
         See every album →
       </a>

@@ -131,22 +131,77 @@ html.lenis body {
 }
 
 /*
- * Sunlit page titles: light catches the top-left corner and a soft grass-green
- * glow sits low on the right, as if the sun were behind the words. A hairline
- * edge runs gold on the lit side and green on the shaded side. Every stop of
- * the fill stays a light tone, so contrast on the dark page is unchanged.
+ * Sunlit page titles: a small sun peeks out from behind the first letter, a
+ * grass-green glow sits low on the right, and a crisp outline runs gold on the
+ * lit side and green on the shaded side. Every stop of the fill stays a light
+ * tone, so contrast on the dark page is unchanged. Static, no motion.
  */
 @layer components {
   .title-sunlit {
+    position: relative;
+    isolation: isolate;
+    width: fit-content;
+  }
+
+  /*
+   * The words themselves. They sit in a span so the outline filter wraps only
+   * the letters and not the sun and grass behind them.
+   */
+  .title-sunlit > span {
+    display: inline-block;
+    /* Room for descenders (the y in "Say hello") inside the clipped fill. */
+    padding-block: 0.06em 0.14em;
+    margin-block: -0.06em -0.14em;
     color: var(--color-paper);
-    /* Glow first, so the hairline edges below don't cast it a second time. */
-    filter: drop-shadow(0.08em 0.1em 0.18em color-mix(in oklab, #7fae55 40%, transparent))
-      drop-shadow(-0.5px -0.5px 0 color-mix(in oklab, var(--color-gold) 75%, transparent))
-      drop-shadow(0.5px 0.5px 0 color-mix(in oklab, #7fae55 65%, transparent));
+    /* One pixel each way, so the edge is a solid line rather than a blur. */
+    filter: drop-shadow(-1px 0 0 var(--title-edge-lit)) drop-shadow(0 -1px 0 var(--title-edge-lit))
+      drop-shadow(1px 0 0 var(--title-edge-shade)) drop-shadow(0 1px 0 var(--title-edge-shade));
+    --title-edge-lit: #d9b061;
+    --title-edge-shade: #6f9a48;
+  }
+
+  /* The sun, behind the top-left corner of the first letter. */
+  .title-sunlit::before,
+  .title-sunlit::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .title-sunlit::before {
+    top: -0.3em;
+    left: -0.32em;
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      #fffbe8 0%,
+      color-mix(in oklab, #ffe3a0 85%, transparent) 9%,
+      color-mix(in oklab, #f2c869 45%, transparent) 24%,
+      color-mix(in oklab, var(--color-gold) 18%, transparent) 46%,
+      transparent 70%
+    );
+  }
+
+  /* The grass, glowing up from below the last letters. */
+  .title-sunlit::after {
+    right: -0.4em;
+    bottom: -0.05em;
+    width: min(70%, 4em);
+    height: 0.75em;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at 60% 60%,
+      color-mix(in oklab, #7fb04f 34%, transparent) 0%,
+      color-mix(in oklab, #5f8f3a 14%, transparent) 45%,
+      transparent 72%
+    );
   }
 
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .title-sunlit {
+    .title-sunlit > span {
       background-image: linear-gradient(
         135deg,
         #fff6dc 0%,
@@ -161,10 +216,15 @@ html.lenis body {
   }
 
   @media (forced-colors: active) {
-    .title-sunlit {
+    .title-sunlit > span {
       filter: none;
       background-image: none;
       -webkit-text-fill-color: currentColor;
+    }
+
+    .title-sunlit::before,
+    .title-sunlit::after {
+      display: none;
     }
   }
 
