@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db/client';
-import { albums, photos, type PhotoExif } from '@/db/schema';
+import { albums, photos } from '@/db/schema';
 import { nextPhotoOrder, photosInAlbum, setOrder } from '@/lib/albums';
 import { PhotoSettings, missingGear } from '@/lib/gear';
 import { fail, json, readJson } from '@/lib/http';
@@ -13,6 +13,20 @@ export const prerender = false;
 /** Vercel functions accept bodies up to 4.5 MB, so all three sizes together must fit. */
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const FORMATS = { 'image/webp': 'webp', 'image/jpeg': 'jpg' } as const;
+
+/** The camera details read in the browser. Anything else, or anything malformed, is dropped. */
+const text = z.string().max(200).optional().catch(undefined);
+const positive = z.number().positive().finite().optional().catch(undefined);
+const Exif = z.object({
+  make: text,
+  model: text,
+  lens: text,
+  focalLength: positive,
+  fNumber: positive,
+  exposureTime: positive,
+  iso: positive,
+  takenAt: z.iso.datetime().optional().catch(undefined),
+});
 
 const Meta = z.object({
   title: z.string().trim().max(200).default(''),
@@ -42,7 +56,7 @@ const Meta = z.object({
     .default('{}')
     .transform((s, ctx) => {
       try {
-        return JSON.parse(s) as PhotoExif;
+        return Exif.parse(JSON.parse(s));
       } catch {
         ctx.addIssue({ code: 'custom', message: 'Invalid EXIF data.' });
         return z.NEVER;

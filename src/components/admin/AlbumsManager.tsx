@@ -224,7 +224,7 @@ function AlbumRow({
             {album.photoCount} {album.photoCount === 1 ? 'photo' : 'photos'}
           </span>
           {album.description && (
-            <span className="mt-1 line-clamp-2 text-sm text-sand/80">{album.description}</span>
+            <span className="mt-1 line-clamp-2 text-sm text-sand">{album.description}</span>
           )}
         </span>
       </a>

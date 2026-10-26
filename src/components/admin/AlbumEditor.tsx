@@ -308,7 +308,8 @@ export default function AlbumEditor({
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
-          className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
+          // The file input is visually hidden, so the drop zone shows its keyboard focus.
+          className={`mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors has-focus-visible:border-gold has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-gold ${
             dragging ? 'border-gold bg-gold/10' : 'border-sand/30 hover:border-gold'
           }`}
         >
@@ -347,7 +348,7 @@ export default function AlbumEditor({
                     )}
                   </div>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <p className="truncate text-xs text-sand">
+                    <p className="truncate text-xs text-sand" aria-live="polite">
                       {item.fileName} ·{' '}
                       {item.status === 'preparing'
                         ? 'resizing…'
@@ -388,6 +389,7 @@ export default function AlbumEditor({
                     />
                     <Button
                       variant="quiet"
+                      aria-label={`Remove ${item.fileName} from the upload`}
                       onClick={() => setPending((list) => list.filter((p) => p.key !== item.key))}
                     >
                       Remove
@@ -491,8 +493,8 @@ export default function AlbumEditor({
                     </Button>
                     {otherAlbums.length > 0 && (
                       <select
-                        aria-label="Move to another album"
-                        className="min-w-0 flex-1 rounded-full border border-sand/30 bg-espresso px-3 py-1.5 text-sm text-paper"
+                        aria-label={`Move ${photo.title || 'this photo'} to another album`}
+                        className="min-w-0 flex-1 rounded-full border border-sand/60 bg-espresso px-3 py-1.5 text-sm text-paper"
                         value=""
                         onChange={(e) =>
                           e.target.value && updatePhoto(photo.id, { albumId: e.target.value })
@@ -509,7 +511,7 @@ export default function AlbumEditor({
                     <Button
                       variant="danger"
                       icon={Trash2}
-                      aria-label="Delete photo"
+                      aria-label={`Delete ${photo.title || 'this photo'}`}
                       title="Delete photo"
                       onClick={() => deletePhoto(photo)}
                       className="ml-auto px-3 py-1.5"

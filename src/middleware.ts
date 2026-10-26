@@ -3,6 +3,14 @@ import { getSessionUser } from '@/lib/auth';
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
+/** Sent with every page the server renders: no framing (clickjacking), no MIME sniffing. */
+export const SECURITY_HEADERS = {
+  'Content-Security-Policy': "frame-ancestors 'none'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+} as const;
+
 const isProtected = (path: string) =>
   path === '/admin' || path.startsWith('/admin/') || path.startsWith('/api/admin/');
 
@@ -29,6 +37,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const response = await next();
-  if (isProtected(pathname)) response.headers.set('Cache-Control', 'private, no-store');
+  try {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) response.headers.set(name, value);
+    if (isProtected(pathname)) response.headers.set('Cache-Control', 'private, no-store');
+  } catch {
+    // Some responses (redirects made with Response.redirect) have read-only headers.
+  }
   return response;
 });

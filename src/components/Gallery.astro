@@ -19,7 +19,8 @@ const { photos } = Astro.props;
       data-title={photo.title}
       data-description={photo.description}
       data-alt={photo.alt || photo.title}
-      aria-label={`Open ${photo.title || 'photo'} full screen`}
+      aria-label={`${photo.alt || photo.title || 'Photo'}. Open full screen.`}
+      aria-haspopup="dialog"
       data-protected
     >
       <img
@@ -94,6 +95,7 @@ const { photos } = Astro.props;
         class="min-h-0 max-w-full flex-1 object-contain"
       />
       <figcaption class="max-w-2xl text-center">
+        <p data-position class="sr-only" aria-live="polite"></p>
         <p data-title class="font-serif text-2xl"></p>
         <p data-description class="mt-1 text-sand"></p>
         <div data-settings class="mt-4"></div>
@@ -103,48 +105,6 @@ const { photos } = Astro.props;
 </dialog>
 
 <script>
-  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]');
-  const items = [...document.querySelectorAll<HTMLButtonElement>('[data-gallery-item]')];
-
-  if (dialog && items.length > 0) {
-    const image = dialog.querySelector<HTMLImageElement>('[data-image]')!;
-    const text = (name: string) => dialog.querySelector<HTMLElement>(`[data-${name}]`)!;
-    let current = 0;
-
-    const show = (index: number) => {
-      current = (index + items.length) % items.length;
-      const { src = '', title = '', description = '', alt = '' } = items[current]!.dataset;
-      image.src = src;
-      image.alt = alt;
-      text('title').textContent = title;
-      text('description').textContent = description;
-      text('settings').innerHTML =
-        document.querySelector(`[data-settings-for="${current}"]`)?.innerHTML ?? '';
-    };
-
-    items.forEach((item, index) =>
-      item.addEventListener('click', () => {
-        show(index);
-        dialog.showModal();
-      }),
-    );
-    text('prev').addEventListener('click', () => show(current - 1));
-    text('next').addEventListener('click', () => show(current + 1));
-    text('close').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('close', () => items[current]?.focus());
-    dialog.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') show(current - 1);
-      if (e.key === 'ArrowRight') show(current + 1);
-    });
-
-    // Swipe on phones.
-    let startX = 0;
-    dialog.addEventListener('touchstart', (e) => (startX = e.touches[0]!.clientX), {
-      passive: true,
-    });
-    dialog.addEventListener('touchend', (e) => {
-      const dx = e.changedTouches[0]!.clientX - startX;
-      if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
-    });
-  }
+  import { initLightbox } from '@/scripts/lightbox';
+  initLightbox();
 </script>

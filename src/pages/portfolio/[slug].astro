@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Gallery from '@/components/Gallery.astro';
+import NotFound from '@/components/NotFound.astro';
 import { getPublishedAlbumBySlug } from '@/lib/albums';
 import { hasDatabase } from '@/db/client';
 import { copyright } from '@/lib/copyright';
@@ -11,11 +12,13 @@ export const prerender = false;
 
 const album =
   hasDatabase() && Astro.params.slug ? await getPublishedAlbumBySlug(Astro.params.slug) : undefined;
-if (!album) return Astro.rewrite('/404');
 
 // Never cache album pages on the CDN or in the browser, so edits from the admin
 // panel show up on the next page load. Photos themselves are still cached by /img.
 Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+// A missing or hidden album answers 404 with the not-found message. (Astro can't
+// rewrite an on-demand page to the prerendered /404, so it's rendered here.)
+if (!album) Astro.response.status = 404;
 
 // Copyright and credit for search engines (Google shows it beside image results).
 const absolute = (path: string) => new URL(path, Astro.site).href;
@@ -26,7 +29,7 @@ const rights = {
   creditText: copyright.holder,
   acquireLicensePage: absolute('/contact'),
 };
-const structuredData = {
+const structuredData = album && {
   '@context': 'https://schema.org',
   '@type': 'ImageGallery',
   name: album.title,
@@ -42,27 +45,34 @@ const structuredData = {
 };
 ---
 
-<BaseLayout
-  title={album.title}
-  description={album.description || `${album.title}: a photo album by Joshua Small.`}
->
-  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-    <a href="/portfolio" class="text-sm">
-      ← All albums
-    </a>
-    <h1 class="mt-6 text-5xl" data-reveal>
-      {album.title}
-    </h1>
-    {album.description && (
-      <p class="mt-4 max-w-2xl text-lg text-sand" data-reveal>
-        {album.description}
-      </p>
-    )}
-    <Gallery photos={album.photos} />
-  </section>
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
-  />
-</BaseLayout>
+{!album ? (
+  <BaseLayout title="Not found" noindex>
+    <NotFound />
+  </BaseLayout>
+) : (
+  <BaseLayout
+    title={album.title}
+    description={album.description || `${album.title}: a photo album by ${site.owner}.`}
+    image={album.photos.find((p) => p.id === album.coverPhotoId) ?? album.photos[0]}
+  >
+    <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <a href="/portfolio" class="text-sm">
+        ← All albums
+      </a>
+      <h1 class="mt-6 text-5xl" data-reveal>
+        {album.title}
+      </h1>
+      {album.description && (
+        <p class="mt-4 max-w-2xl text-lg text-sand" data-reveal>
+          {album.description}
+        </p>
+      )}
+      <Gallery photos={album.photos} />
+    </section>
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')}
+    />
+  </BaseLayout>
+)}
