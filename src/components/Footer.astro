@@ -1,5 +1,6 @@
 ---
 import { copyright } from '@/lib/copyright';
+import { footerNav } from '@/lib/site';
 
 const year = new Date().getFullYear();
 ---
@@ -9,8 +10,13 @@ const year = new Date().getFullYear();
     <p>
       &copy; {year} {copyright.holder}. All rights reserved.
     </p>
-    <p class="flex gap-5">
+    <p class="flex flex-wrap gap-x-5 gap-y-2">
       <span>Made in the NC Triad, shot on Nikon.</span>
+      {footerNav.map((item) => (
+        <a href={item.href} class="text-sand/70 no-underline hover:text-gold">
+          {item.label}
+        </a>
+      ))}
       <a href="/login" class="text-sand/70 no-underline hover:text-gold">
         Log in
       </a>

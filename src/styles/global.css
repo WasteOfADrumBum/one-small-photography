@@ -2,6 +2,7 @@
 @import '@fontsource-variable/fraunces';
 @import '@fontsource-variable/inter';
 @import '@fontsource/caveat/500.css';
+@import '@fontsource/cinzel-decorative/latin-700.css';
 
 /*
  * OneSmallPhoto palette: dark first, warmed with golds, greens and beiges.
@@ -19,6 +20,7 @@
   --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-hand: 'Caveat', 'Segoe Print', cursive;
+  --font-initial: 'Cinzel Decorative', var(--font-serif);
 }
 
 @layer base {
@@ -125,6 +127,71 @@ html.lenis body {
   .btn-gilt-nav[aria-current='page'] {
     color: var(--color-paper);
     border-color: var(--color-gold);
+  }
+}
+
+/*
+ * Sunlit page titles: light catches the top-left corner and a soft grass-green
+ * glow sits low on the right, as if the sun were behind the words. A hairline
+ * edge runs gold on the lit side and green on the shaded side. Every stop of
+ * the fill stays a light tone, so contrast on the dark page is unchanged.
+ */
+@layer components {
+  .title-sunlit {
+    color: var(--color-paper);
+    /* Glow first, so the hairline edges below don't cast it a second time. */
+    filter: drop-shadow(0.08em 0.1em 0.18em color-mix(in oklab, #7fae55 40%, transparent))
+      drop-shadow(-0.5px -0.5px 0 color-mix(in oklab, var(--color-gold) 75%, transparent))
+      drop-shadow(0.5px 0.5px 0 color-mix(in oklab, #7fae55 65%, transparent));
+  }
+
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .title-sunlit {
+      background-image: linear-gradient(
+        135deg,
+        #fff6dc 0%,
+        var(--color-paper) 28%,
+        var(--color-paper) 70%,
+        color-mix(in oklab, var(--color-paper) 82%, #8fb36a) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .title-sunlit {
+      filter: none;
+      background-image: none;
+      -webkit-text-fill-color: currentColor;
+    }
+  }
+
+  /*
+   * "Why One Small Photo" reads as a letter: an illuminated initial on the
+   * first paragraph and a handwritten signature. ::first-letter keeps the
+   * first word whole for screen readers and copy and paste.
+   */
+  .letter > p:first-of-type::first-letter {
+    float: left;
+    margin: 0.3rem 0.75rem 0 0;
+    border: 1px solid color-mix(in oklab, var(--color-gold) 60%, transparent);
+    outline: 1px solid color-mix(in oklab, var(--color-gold) 25%, transparent);
+    outline-offset: 3px;
+    border-radius: 2px;
+    background-image: radial-gradient(
+      circle at 30% 25%,
+      color-mix(in oklab, var(--color-sage) 45%, var(--color-moss)),
+      var(--color-espresso)
+    );
+    padding: 0.4rem 0.55rem 0.3rem;
+    color: var(--color-gold);
+    font-family: var(--font-initial);
+    font-size: 3.6em;
+    font-weight: 700;
+    line-height: 0.85;
+    text-shadow: 0 0 12px color-mix(in oklab, var(--color-gold) 35%, transparent);
   }
 }
 

@@ -85,7 +85,10 @@ const years = new Date().getFullYear() - site.shootingSince;
           </figcaption>
         </figure>
       </div>
-      <div class="space-y-5 text-lg text-sand" data-reveal>
+      <div
+        class="letter space-y-5 rounded-sm border border-gold/20 bg-espresso/35 p-6 font-serif text-lg leading-relaxed text-sand shadow-xl shadow-black/30 sm:p-10"
+        data-reveal
+      >
         <p>
           Small is the family name. One Small Family, One Small Studio, One Small Photo: everything
           made here carries it.
@@ -104,12 +107,13 @@ const years = new Date().getFullYear() - site.shootingSince;
           camera still comes out, just for the pictures I want to make. This is where that work
           lives.
         </p>
+        <p class="pt-2 text-right font-hand text-4xl leading-none text-gold">Joshua</p>
       </div>
     </div>
   </section>
 
   <section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-    <h2 class="mb-16 text-center text-4xl" data-reveal>
+    <h2 class="mb-16 text-4xl" data-reveal>
       Albums
     </h2>
     <div class="grid gap-20 sm:grid-cols-3" data-reveal>
@@ -127,7 +131,7 @@ const years = new Date().getFullYear() - site.shootingSince;
             <PolaroidStack title={title} tone={tones[i % tones.length]} />
           ))}
     </div>
-    <p class="mt-16 text-center" data-reveal>
+    <p class="mt-16" data-reveal>
       <a href="/portfolio" class="btn-gilt px-6 py-3">
         See every album →
       </a>

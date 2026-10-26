@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { hasDatabase } from '@/db/client';
 import { listPublishedAlbums } from '@/lib/albums';
-import { nav } from '@/lib/site';
+import { footerNav, nav } from '@/lib/site';
 
 export const prerender = false;
 
@@ -9,7 +9,7 @@ const escapeXml = (value: string) => value.replace(/[<>&"']/g, (c) => `&#${c.cha
 
 /** Every public page, including each visible album, for search engines. */
 export const GET: APIRoute = async ({ site }) => {
-  const paths: string[] = ['/', ...nav.map((item) => item.href)];
+  const paths: string[] = ['/', ...[...nav, ...footerNav].map((item) => item.href)];
   if (hasDatabase()) {
     try {
       for (const album of await listPublishedAlbums()) paths.push(`/portfolio/${album.slug}`);
