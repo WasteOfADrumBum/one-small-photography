@@ -141,13 +141,18 @@ html.lenis body {
     position: relative;
     isolation: isolate;
     width: fit-content;
-    --title-outline: #ecbf4c; /* the logo's "Photo" gold */
+    /* The logo's "Photo" gold, deepened and softened so it parts the light
+       letters from the dark page without glaring against either. */
+    --title-outline: color-mix(in oklab, #c99a3c 80%, transparent);
   }
 
   /* The words themselves, kept apart from the sun and grass behind them. */
   .title-sunlit > span {
     display: inline-block;
-    color: #f6efe2;
+    color: #f3eadb;
+    /* The outline adds about 0.03em outside each letter; open the spacing
+       by the same so the letters don't crowd. */
+    letter-spacing: 0.03em;
     /* Stroke drawn under the fill, so the gold sits outside the letters. */
     -webkit-text-stroke: 0.06em var(--title-outline);
     paint-order: stroke fill;
