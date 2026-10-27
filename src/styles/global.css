@@ -141,9 +141,9 @@ html.lenis body {
     position: relative;
     isolation: isolate;
     width: fit-content;
-    /* The logo's "Photo" gold, deepened and softened so it parts the light
-       letters from the dark page without glaring against either. */
-    --title-outline: color-mix(in oklab, #c99a3c 80%, transparent);
+    /* The logo's "Photo" gold, deepened and faded right down: a hint of an
+       edge rather than a visible line. */
+    --title-outline: color-mix(in oklab, #c99a3c 15%, transparent);
   }
 
   /* The words themselves, kept apart from the sun and grass behind them. */
@@ -175,8 +175,8 @@ html.lenis body {
     height: 1.6em;
     background: radial-gradient(
       ellipse at 40% 45%,
-      color-mix(in oklab, #ffd36e 40%, transparent) 0%,
-      color-mix(in oklab, #e9b448 18%, transparent) 40%,
+      color-mix(in oklab, #ffd36e 14%, transparent) 0%,
+      color-mix(in oklab, #e9b448 6%, transparent) 40%,
       transparent 70%
     );
     filter: blur(0.2em);
@@ -190,8 +190,8 @@ html.lenis body {
     height: 1em;
     background: radial-gradient(
       ellipse at 60% 55%,
-      color-mix(in oklab, #8cc152 55%, transparent) 0%,
-      color-mix(in oklab, #6fa03f 25%, transparent) 40%,
+      color-mix(in oklab, #8cc152 15%, transparent) 0%,
+      color-mix(in oklab, #6fa03f 7%, transparent) 40%,
       transparent 70%
     );
     filter: blur(0.18em);
