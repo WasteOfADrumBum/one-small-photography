@@ -46,8 +46,12 @@ describe('contact form email', () => {
     expect(notifyNewMessage).not.toHaveBeenCalled();
   });
 
-  it('sends no email when the note is invalid', async () => {
-    expect((await send({ ...note, email: 'nope' })).status).toBe(400);
+  it('needs a valid email from the sender before it saves or emails', async () => {
+    const noEmail = { name: note.name, body: note.body };
+    for (const body of [noEmail, { ...note, email: '' }, { ...note, email: 'nope' }]) {
+      expect((await send(body)).status).toBe(400);
+    }
+    expect(addMessage).not.toHaveBeenCalled();
     expect(notifyNewMessage).not.toHaveBeenCalled();
   });
 

@@ -2,13 +2,18 @@
  * Emails Joshua when someone sends a note from /contact, through Resend's API.
  *
  * The note is always saved to the database first; this is only a heads-up, so
- * it never throws. Without RESEND_API_KEY, CONTACT_TO_EMAIL and
- * CONTACT_FROM_EMAIL it does nothing, which keeps local dev and tests quiet.
+ * it never throws. Without RESEND_API_KEY and CONTACT_TO_EMAIL it does nothing,
+ * which keeps local dev and tests quiet.
+ *
+ * The visitor's own address can't be the From (mail providers reject mail
+ * "from" a domain the sender doesn't own), so it goes in Reply-To and the body.
+ * From defaults to Resend's shared sender until a domain is verified there.
  */
 import { site } from '@/lib/site';
 
 const RESEND_URL = 'https://api.resend.com/emails';
 const TIMEOUT_MS = 5000;
+export const DEFAULT_FROM = `${site.name} <onboarding@resend.dev>`;
 
 export type ContactNote = { name: string; email: string; body: string };
 
@@ -44,8 +49,8 @@ export function contactEmail(note: ContactNote, siteUrl?: string) {
 export async function notifyNewMessage(note: ContactNote, siteUrl?: string): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_TO_EMAIL;
-  const from = process.env.CONTACT_FROM_EMAIL;
-  if (!apiKey || !to || !from) return false;
+  const from = process.env.CONTACT_FROM_EMAIL || DEFAULT_FROM;
+  if (!apiKey || !to) return false;
 
   const email = contactEmail(note, siteUrl);
   try {

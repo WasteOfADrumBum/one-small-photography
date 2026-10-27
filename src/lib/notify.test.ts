@@ -44,8 +44,16 @@ describe('the contact email', () => {
     expect(sentBody().to).toEqual(['a@example.com', 'b@example.com']);
   });
 
-  it('does nothing until all three settings exist', async () => {
-    for (const name of ['RESEND_API_KEY', 'CONTACT_TO_EMAIL', 'CONTACT_FROM_EMAIL']) {
+  it("sends from Resend's shared address when no From is set", async () => {
+    vi.stubEnv('CONTACT_FROM_EMAIL', '');
+    expect(await notifyNewMessage(note)).toBe(true);
+    expect(sentBody().from).toBe('OneSmallPhoto <onboarding@resend.dev>');
+    expect(sentBody().reply_to).toBe('ada@example.com');
+    expect(sentBody().text).toContain('From: Ada <ada@example.com>');
+  });
+
+  it('does nothing without an API key and a recipient', async () => {
+    for (const name of ['RESEND_API_KEY', 'CONTACT_TO_EMAIL']) {
       vi.stubEnv(name, '');
       expect(await notifyNewMessage(note)).toBe(false);
       vi.stubEnv(name, 'x');
