@@ -6,10 +6,10 @@ const current = Astro.url.pathname;
 
 <header class="sticky top-0 z-40 border-b border-sand/15 bg-espresso/85 backdrop-blur">
   <nav
-    class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-2 px-4 py-3 sm:px-6"
+    class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3 sm:gap-x-3 sm:px-6"
     aria-label="Main"
   >
-    <a href="/" class="block shrink-0 no-underline">
+    <a href="/" class="mr-auto block shrink-0 no-underline">
       <img
         src="/logo-480.webp"
         srcset="/logo-240.webp 240w, /logo-480.webp 480w, /logo-720.webp 720w"
@@ -21,6 +21,34 @@ const current = Astro.url.pathname;
         class="h-10 w-auto sm:h-14"
       />
     </a>
+    <!--
+      Log in: an icon with a tooltip. Beside the menu button on phones, and
+      after the links on wider screens. /login sends you on to /admin when
+      you're already signed in.
+    -->
+    <span class="icon-tip sm:order-last" data-icon-tip>
+      <a href="/login" class="icon-link" aria-label="Log in" aria-describedby="login-tip">
+        <svg
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <path d="m10 17 5-5-5-5" />
+          <path d="M15 12H3" />
+        </svg>
+      </a>
+      <span id="login-tip" role="tooltip" class="icon-tip__label">
+        Log in
+      </span>
+    </span>
     <!-- Phones only, and only once JS runs: without it the links show as before. -->
     <button
       type="button"
@@ -54,5 +82,7 @@ const current = Astro.url.pathname;
 
 <script>
   import { initSiteMenu } from '@/scripts/site-menu';
+  import { initIconTips } from '@/scripts/icon-tip';
   initSiteMenu();
+  initIconTips();
 </script>

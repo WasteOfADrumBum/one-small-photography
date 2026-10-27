@@ -15,6 +15,11 @@ export const site = {
 export const nav = [
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/the-triad', label: 'The Triad' },
-  { href: '/under-the-hood', label: 'Under the hood' },
   { href: '/contact', label: 'Contact' },
 ] as const;
+
+/**
+ * Pages linked from the footer only. Under the hood shows how the site is
+ * built, which is for people curious about the code, not the photographs.
+ */
+export const footerNav = [{ href: '/under-the-hood', label: 'Under the hood' }] as const;

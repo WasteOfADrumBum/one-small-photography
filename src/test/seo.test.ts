@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nav } from '@/lib/site';
+import { footerNav, nav } from '@/lib/site';
 import { GET as robots } from '@/pages/robots.txt';
 import { GET as sitemap } from '@/pages/sitemap.xml';
 
@@ -22,6 +22,7 @@ describe('sitemap.xml', () => {
     expect(res.headers.get('Content-Type')).toContain('application/xml');
     const xml = await res.text();
     expect(xml).toContain('<loc>https://photo.example/</loc>');
-    for (const item of nav) expect(xml).toContain(`<loc>https://photo.example${item.href}</loc>`);
+    for (const item of [...nav, ...footerNav])
+      expect(xml).toContain(`<loc>https://photo.example${item.href}</loc>`);
   });
 });
