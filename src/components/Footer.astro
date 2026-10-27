@@ -6,20 +6,17 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="border-t border-sand/15">
-  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-sand sm:flex-row sm:items-center sm:justify-between sm:px-6">
-    <p>
+  <div class="mx-auto grid max-w-6xl gap-3 px-4 py-8 text-center text-sm text-sand sm:grid-cols-3 sm:items-center sm:px-6">
+    <p class="sm:text-left">
       &copy; {year} {copyright.holder}. All rights reserved.
     </p>
-    <p class="flex flex-wrap gap-x-5 gap-y-2">
-      <span>Made in the NC Triad, shot on Nikon.</span>
+    <p>
       {footerNav.map((item) => (
-        <a href={item.href} class="text-sand/70 no-underline hover:text-gold">
+        <a href={item.href} class="text-sand/80 no-underline hover:text-gold">
           {item.label}
         </a>
       ))}
-      <a href="/login" class="text-sand/70 no-underline hover:text-gold">
-        Log in
-      </a>
     </p>
+    <p class="sm:text-right">Made in the NC Triad, shot on Nikon.</p>
   </div>
 </footer>

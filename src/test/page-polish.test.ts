@@ -19,11 +19,26 @@ const render = async (component: Parameters<AstroContainer['renderToString']>[0]
 };
 
 describe('Under the hood', () => {
-  it('is linked from the footer, not the header', async () => {
+  it('is linked from the middle of the footer, not the header', async () => {
     expect(await render(Nav, '/')).not.toContain('href="/under-the-hood"');
-    expect(await render(Footer, '/')).toMatch(
-      /<a href="\/under-the-hood"[^>]*>\s*Under the hood\s*<\/a>/,
-    );
+    const footer = await render(Footer, '/');
+    const columns = [...footer.matchAll(/<p[^>]*>[\s\S]*?<\/p>/g)].map((m) => m[0]);
+    expect(columns).toHaveLength(3);
+    expect(columns[0]).toContain('All rights reserved');
+    expect(columns[1]).toMatch(/<a href="\/under-the-hood"[^>]*>\s*Under the hood\s*<\/a>/);
+    expect(columns[2]).toContain('Made in the NC Triad');
+  });
+});
+
+describe('Log in', () => {
+  it('is an icon link in the header with a name and a tooltip, not in the footer', async () => {
+    const nav = await render(Nav, '/');
+    const link = nav.match(/<a href="\/login"[^>]*>/)?.[0];
+    expect(link).toBeDefined();
+    expect(link).toContain('aria-label="Log in"');
+    expect(link).toContain('aria-describedby="login-tip"');
+    expect(nav).toMatch(/<span id="login-tip" role="tooltip"[^>]*>Log in<\/span>/);
+    expect(await render(Footer, '/')).not.toContain('href="/login"');
   });
 });
 
