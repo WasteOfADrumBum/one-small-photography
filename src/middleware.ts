@@ -3,9 +3,15 @@ import { getSessionUser } from '@/lib/auth';
 
 const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** Sent with every page the server renders: no framing (clickjacking), no MIME sniffing. */
+/**
+ * Sent with every page the server renders: no framing (clickjacking), no MIME sniffing.
+ * The CSP also blocks plugins, <base> hijacking and forms posting off-site, which would
+ * limit the damage if markup ever slipped through. Scripts aren't restricted yet: Astro
+ * inlines some of its own, so that needs hashes first.
+ */
 export const SECURITY_HEADERS = {
-  'Content-Security-Policy': "frame-ancestors 'none'",
+  'Content-Security-Policy':
+    "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
