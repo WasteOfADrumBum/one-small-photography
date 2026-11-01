@@ -27,12 +27,12 @@ describe('XSS', () => {
   it('shows markup in titles, descriptions, alt text and gear names as text, in the viewer too', async () => {
     const container = await AstroContainer.create();
     container.addServerRenderer({ renderer: reactRenderer });
-    const { document } = new Window();
+    const document = new Window().document as unknown as Document;
     document.body.innerHTML = await container.renderToString(Gallery, {
       props: { photos: [photo], albumTitle: ATTACK },
     });
 
-    initLightbox(document as unknown as Document);
+    initLightbox(document);
     document.querySelector<HTMLButtonElement>('[data-gallery-item]')!.click();
 
     const viewer = document.querySelector('[data-lightbox]')!;
