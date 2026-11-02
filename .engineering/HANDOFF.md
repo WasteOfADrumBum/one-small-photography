@@ -1,11 +1,11 @@
-<!-- generated from .engineering/state.json (revision 3) -->
+<!-- generated from .engineering/state.json (revision 4) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 3, `why-line-2026-11-02`, 2026-11-02T19:10:00Z by Claude (claude.ai project thread 'Reword the "Why One Small" line')
-- Written by: agent, committed on branch `claude/project-thread-s3ukro` (based on `main` @ `9db5526`)
+- Checkpoint: revision 4, `why-line-v2-2026-11-02`, 2026-11-02T19:35:00Z by Claude (claude.ai project thread 'Reword the "Why One Small" line')
+- Written by: agent, committed on branch `claude/project-thread-s3ukro` (based on `main` @ `ad5a8b2`)
 - Uncommitted work outside this checkpoint: **none**
 - Links: [ROADMAP.md](../ROADMAP.md), [release record](../docs/RELEASE.md), [recovery runbook](../docs/RECOVERY.md)
 
@@ -19,7 +19,7 @@ Joshua is doing UI updates on a separate branch; this PR touches only the home h
 
 ## Blockers
 
-- Owner must merge the Why One Small Photo PR (repo rule)
+- Owner must merge the Why One Small Photo follow-up PR (repo rule)
 - Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check
 
 ## Decisions

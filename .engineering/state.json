@@ -1,27 +1,27 @@
 {
   "stateVersion": 1,
-  "revision": 3,
-  "checkpointId": "why-line-2026-11-02",
+  "revision": 4,
+  "checkpointId": "why-line-v2-2026-11-02",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
   "recorded": {
     "branch": "claude/project-thread-s3ukro",
-    "commit": "9db552625ad69797cb5e8a3494457d047902d58c",
-    "recordedAt": "2026-11-02T19:10:00Z"
+    "commit": "ad5a8b2fadc74cdb933900b9a45bf2afad8875b5",
+    "recordedAt": "2026-11-02T19:35:00Z"
   },
   "development": {
     "milestone": "Post-release polish: home page copy",
-    "activeTask": "\"Why One Small Photo\" reword PR awaiting owner review (branch claude/project-thread-s3ukro, based on main 9db5526)",
+    "activeTask": "Follow-up to PR #25: white \"Why\" and a letter that opens with a P (branch claude/project-thread-s3ukro, based on main ad5a8b2)",
     "workingBranch": "claude/project-thread-s3ukro",
-    "activePr": "Why One Small Photo reword PR from claude/project-thread-s3ukro (opened 2026-11-02)",
+    "activePr": "Why One Small Photo follow-up PR from claude/project-thread-s3ukro (opened 2026-11-02)",
     "lastCompleted": [
-      "Share card PR #24 merged to main (9db5526), per GitHub",
-      "Home page letter: first line no longer mentions the family name or One Small Family/Studio; it now reads 'One Small Photo is about the single frame: one moment, seen clearly and kept.' (per Joshua)",
-      "Home page heading: 'Why' in sand, 'One Small' in paper and 'Photo' in gold, both semibold, matching the logo wordmark"
+      "PR #25 merged to main (ad5a8b2), per GitHub",
+      "Heading: 'Why One Small' in paper/white, 'Photo' in gold (Joshua: the sand 'Why' looked odd)",
+      "Letter now opens 'Photography, for me, comes down to one small photo: a single frame, one moment, seen clearly and kept.' (Joshua wanted a P drop cap; the O looked too square)"
     ],
     "inProgress": [],
-    "nextAction": "Joshua reviews the wording and merges the PR (he may want his own sentence). Release owner checklist in docs/RELEASE.md section 5 still applies."
+    "nextAction": "Joshua reviews and merges the follow-up PR. Release owner checklist in docs/RELEASE.md section 5 still applies."
   },
   "decisions": {
     "made": [
@@ -47,13 +47,13 @@
       {
         "command": "npm run lint && npm run check && npm test && npm run build",
         "result": "pass (125 passed, 24 skipped: DB tests skipped, no local Postgres)",
-        "at": "2026-11-02T19:10:00Z",
+        "at": "2026-11-02T19:35:00Z",
         "by": "agent"
       },
       {
         "command": "astro dev + Playwright screenshots of the home 'Why One Small Photo' section at 1280 and 390 wide",
         "result": "heading and letter render as intended; before/after attached to the PR",
-        "at": "2026-11-02T19:10:00Z",
+        "at": "2026-11-02T19:35:00Z",
         "by": "agent"
       }
     ],
@@ -63,10 +63,10 @@
   },
   "handoff": {
     "lastAgent": "Claude (claude.ai project thread 'Reword the \"Why One Small\" line')",
-    "checkpointedAt": "2026-11-02T19:10:00Z",
+    "checkpointedAt": "2026-11-02T19:35:00Z",
     "unfinished": ["Owner checklist in docs/RELEASE.md section 5 (carried over, not re-verified)"],
     "blockers": [
-      "Owner must merge the Why One Small Photo PR (repo rule)",
+      "Owner must merge the Why One Small Photo follow-up PR (repo rule)",
       "Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check"
     ],
     "continuation": "Joshua is doing UI updates on a separate branch; this PR touches only the home heading, the letter's first paragraph and its test, so expect at most a small conflict in src/pages/index.astro.",
