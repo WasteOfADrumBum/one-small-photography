@@ -75,7 +75,11 @@ export function GearSelects({
 
 export const NoGearHint = () => (
   <p className="mt-2 text-xs text-sand">
-    Add your cameras and lenses on the <a href="/admin#gear">Gear tab</a> to pick them here.
+    Add your cameras and lenses on the{' '}
+    <a href="/admin#gear" className="underline">
+      Gear tab
+    </a>{' '}
+    to pick them here.
   </p>
 );
 

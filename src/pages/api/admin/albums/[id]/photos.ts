@@ -6,6 +6,7 @@ import { albums, photos } from '@/db/schema';
 import { nextPhotoOrder, photosInAlbum, setOrder } from '@/lib/albums';
 import { PhotoSettings, missingGear } from '@/lib/gear';
 import { fail, json, readJson } from '@/lib/http';
+import { sniffImageFormat } from '@/lib/image-type';
 import { PHOTO_SIZES, photoKey, putPhoto, type PhotoSize } from '@/lib/storage';
 
 export const prerender = false;
@@ -80,7 +81,7 @@ export const POST: APIRoute = async ({ params, request }) => {
   );
   if (!meta.success) return fail(meta.error.issues[0]?.message ?? 'Invalid photo details.');
 
-  const files = {} as Record<PhotoSize, File>;
+  const files = {} as Record<PhotoSize, { bytes: Uint8Array; type: string }>;
   let format: string | undefined;
   for (const size of Object.keys(PHOTO_SIZES) as PhotoSize[]) {
     const file = form.get(size);
@@ -88,8 +89,11 @@ export const POST: APIRoute = async ({ params, request }) => {
     if (file.size > MAX_FILE_BYTES) return fail('Photo file is too large.');
     const ext = FORMATS[file.type as keyof typeof FORMATS];
     if (!ext || (format && ext !== format)) return fail('Photos must be WebP or JPEG.');
+    // The declared type comes from the browser; the bytes must agree with it.
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (sniffImageFormat(bytes) !== ext) return fail('Photos must be WebP or JPEG.');
     format = ext;
-    files[size] = file;
+    files[size] = { bytes, type: file.type };
   }
 
   const { settings, ...details } = meta.data;
@@ -108,12 +112,8 @@ export const POST: APIRoute = async ({ params, request }) => {
 
   try {
     await Promise.all(
-      (Object.keys(files) as PhotoSize[]).map(async (size) =>
-        putPhoto(
-          photoKey(photo!.id, size, format!),
-          new Uint8Array(await files[size].arrayBuffer()),
-          files[size].type,
-        ),
+      (Object.keys(files) as PhotoSize[]).map((size) =>
+        putPhoto(photoKey(photo!.id, size, format!), files[size].bytes, files[size].type),
       ),
     );
   } catch (err) {
