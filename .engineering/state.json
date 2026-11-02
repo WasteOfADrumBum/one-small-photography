@@ -1,41 +1,88 @@
 {
   "stateVersion": 1,
-  "revision": 0,
-  "checkpointId": "init-0000000",
+  "revision": 1,
+  "checkpointId": "closeout-2026-11-02-photo",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
   "recorded": {
     "branch": "main",
-    "commit": null,
-    "recordedAt": null
+    "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
+    "recordedAt": "2026-11-02T17:06:51Z"
   },
   "development": {
-    "milestone": null,
-    "activeTask": null,
-    "workingBranch": null,
+    "milestone": "1.0.0 first accepted release of the live site (scope draft awaiting owner approval)",
+    "activeTask": {
+      "id": "photo-1.0.0-acceptance",
+      "title": "Owner acceptance of Photography 1.0.0 under the hub Showcase Definition of Done"
+    },
+    "workingBranch": "claude/closeout-roadmap",
     "activePr": null,
-    "lastCompleted": [],
+    "lastCompleted": [
+      "Phone header menu (#17), title and footer polish (#18), contact notes emailed through Resend (#19), CSP and XSS regression test (#20), continuity contract (#21)",
+      "Branch claude/closeout-roadmap: docs/release-scope-1.0.0.md draft (database and B2 storage in scope as shipped), ROADMAP.md, README rollback and release links, CI token limited to contents: read",
+      "Owner reported (Joshua Small, project chat 2026-11-02): contact emails arrive and galleries work live. Recorded as owner-reported evidence in the hub acceptance record; not gate verifications"
+    ],
     "inProgress": [],
-    "nextAction": null
+    "nextAction": "Owner: review and merge the closeout PR (approves docs/release-scope-1.0.0.md), then record gate verifications with verify:record in the hub as listed in docs/acceptance/closeout-2026-11-02.md. Future optional work is in ROADMAP.md and never reopens 1.0.0."
   },
   "decisions": {
-    "made": [],
-    "constraints": [],
-    "unresolved": []
+    "made": [
+      {
+        "id": "photo-version-1-0-0",
+        "summary": "Proposed 1.0.0 as the first release name for the live site; Neon Postgres and B2 storage are in scope as already shipped; no new features. Owner approval pending.",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-02T17:20:00Z"
+      }
+    ],
+    "constraints": [
+      "Release approval, tags and gate verification belong to Joshua Small.",
+      "Enhancements live in ROADMAP.md and never block or reopen an accepted release.",
+      "Secrets (database URL, B2 keys, RESEND_API_KEY, SETUP_TOKEN) stay in Vercel environment variables."
+    ],
+    "unresolved": [
+      "Owner approval of the 1.0.0 scope draft.",
+      "4 moderate advisories via @astrojs/vercel -> @vercel/nft (build-time file tracing) need an owner disposition under security-privacy-review; none high or critical."
+    ]
   },
   "verification": {
-    "testsRun": [],
-    "unverifiedChanges": []
+    "testsRun": [
+      {
+        "command": "npm run format:check, lint, check (astro check)",
+        "result": "pass",
+        "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
+        "at": "2026-11-02T17:20:00Z",
+        "ciRunUrl": null
+      },
+      {
+        "command": "npm test (119 passed, 21 database tests skipped without TEST_DATABASE_URL)",
+        "result": "pass",
+        "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
+        "at": "2026-11-02T17:20:00Z",
+        "ciRunUrl": null
+      }
+    ],
+    "unverifiedChanges": [
+      "Database tests run only in CI (throwaway Postgres); not run locally in this session.",
+      "No manual keyboard, screen-reader or responsive pass recorded by the verifier yet."
+    ]
   },
   "handoff": {
-    "lastAgent": null,
-    "checkpointedAt": null,
-    "unfinished": [],
-    "blockers": [],
-    "continuation": null,
-    "uncommittedWorkOutsideCheckpoint": "unknown",
-    "persistedBy": "github-api"
+    "lastAgent": {
+      "tool": "Claude Code",
+      "model": null
+    },
+    "checkpointedAt": "2026-11-02T17:06:51Z",
+    "unfinished": [
+      "Owner scope approval, advisory disposition and gate verifications (hub acceptance record)."
+    ],
+    "blockers": [
+      "scope-document-missing stays open in the hub until the owner approves the scope."
+    ],
+    "continuation": "Read docs/release-scope-1.0.0.md and ROADMAP.md, then the hub acceptance record docs/acceptance/closeout-2026-11-02.md. Do not add roadmap items to 1.0.0.",
+    "uncommittedWorkOutsideCheckpoint": "none",
+    "persistedBy": "local-file"
   },
   "provenance": {
     "claims": "agent_reported",

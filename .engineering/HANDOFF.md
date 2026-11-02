@@ -1,33 +1,36 @@
-<!-- generated from .engineering/state.json (revision 0) -->
+<!-- generated from .engineering/state.json (revision 1) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 0, `init-0000000`, never by unknown
-- Written by: the hub writer (committed through the GitHub API)
-- Uncommitted work outside this checkpoint: **unknown** (do not assume it exists anywhere you can read)
+- Checkpoint: revision 1, `closeout-2026-11-02-photo`, 2026-11-02T17:06:51Z by Claude Code
+- Written by: a local edit that the agent then pushed; confirm the branch head matches
+- Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-_no instructions recorded_
+Read docs/release-scope-1.0.0.md and ROADMAP.md, then the hub acceptance record docs/acceptance/closeout-2026-11-02.md. Do not add roadmap items to 1.0.0.
 
 ## Unfinished
 
-_none recorded_
+- Owner scope approval, advisory disposition and gate verifications (hub acceptance record).
 
 ## Blockers
 
-_none recorded_
+- scope-document-missing stays open in the hub until the owner approves the scope.
 
 ## Decisions
 
-_none recorded_
+- [agent] Proposed 1.0.0 as the first release name for the live site; Neon Postgres and B2 storage are in scope as already shipped; no new features. Owner approval pending.
 
 ## Constraints
 
-_none recorded_
+- Release approval, tags and gate verification belong to Joshua Small.
+- Enhancements live in ROADMAP.md and never block or reopen an accepted release.
+- Secrets (database URL, B2 keys, RESEND_API_KEY, SETUP_TOKEN) stay in Vercel environment variables.
 
 ## Unresolved decisions
 
-_none recorded_
+- Owner approval of the 1.0.0 scope draft.
+- 4 moderate advisories via @astrojs/vercel -> @vercel/nft (build-time file tracing) need an owner disposition under security-privacy-review; none high or critical.

@@ -53,3 +53,19 @@ see `.env.example` for the names. Never commit them.
 
 Migrations in `drizzle/` run on production deploys only. After the first deploy, add
 `SETUP_TOKEN`, redeploy, and visit `/setup` once to create the admin login.
+
+Production is [photo.onesmall.company](https://photo.onesmall.company);
+`one-small-photography.vercel.app` is also attached to the Vercel project. To roll back, promote
+the previous production deployment in Vercel (Deployments, the deployment, Promote to Production)
+or revert the merge on `main`. A rollback does not undo a database migration that already ran:
+check `drizzle/` before promoting an older deployment across a migration.
+
+## Release and roadmap
+
+- Release scope: [docs/release-scope-1.0.0.md](docs/release-scope-1.0.0.md) (draft until the owner
+  approves it).
+- Future work: [ROADMAP.md](ROADMAP.md). Roadmap items are optional and never reopen a completed
+  release.
+- Release status, gates and evidence live in the
+  [One Small Engineering hub](https://github.com/WasteOfADrumBum/one-small-engineering) registry;
+  development state for agents lives in [.engineering/](.engineering/STATUS.md).
