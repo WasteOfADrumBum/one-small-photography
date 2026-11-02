@@ -1,39 +1,35 @@
 {
   "stateVersion": 1,
-  "revision": 1,
-  "checkpointId": "release-closure-2026-11-02",
+  "revision": 2,
+  "checkpointId": "share-card-2026-11-02",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
   "recorded": {
-    "branch": "claude/project-thread-hwo1nn",
-    "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
-    "recordedAt": "2026-11-02T18:00:00Z"
+    "branch": "claude/project-thread-j083m5",
+    "commit": "c850853c0ffd16042941c5030e273b47f17a0cdf",
+    "recordedAt": "2026-11-02T18:25:00Z"
   },
   "development": {
-    "milestone": "Photography showcase v1 release closure",
-    "activeTask": "Release closure PR awaiting owner review (branch claude/project-thread-hwo1nn, based on main d926563)",
-    "workingBranch": "claude/project-thread-hwo1nn",
-    "activePr": "Release closure PR from claude/project-thread-hwo1nn (number in the PR list; opened 2026-11-02)",
+    "milestone": "Post-release polish: social share card",
+    "activeTask": "Share card PR awaiting owner review (branch claude/project-thread-j083m5, based on main c850853)",
+    "workingBranch": "claude/project-thread-j083m5",
+    "activePr": "Share card PR from claude/project-thread-j083m5 (opened 2026-11-02)",
     "lastCompleted": [
-      "Reconciled site/WCAG audit (PR #16) and XSS audit (PR #20) against current code; both merged and deployed",
-      "Verified admin auth, CSRF, sessions, lockout, setup protection, private content and error handling (tests + local browser run)",
-      "Added upload byte-signature check (src/lib/image-type.ts)",
-      "Added vercel.json security headers for prerendered pages with a sync test",
-      "Fixed phone horizontal overflow (WCAG 1.4.10) and an indistinguishable admin link (1.4.1); axe 0 violations on 10 pages x 2 widths",
-      "Restore drill on disposable Neon branch: all tables matched production checksums; branch deleted",
-      "Added owner scripts: reset-admin-password, db-backup, db-restore, photo-audit, smoke; Production smoke workflow",
-      "Wrote docs/RECOVERY.md, docs/RELEASE.md (acceptance record), ROADMAP.md; linked from README"
+      "Release closure PR #23 merged to main (c850853), per GitHub",
+      "Added public/og-card.jpg (1200x630 branded share card: Dusty in a Polaroid, logo, tagline, Triad cities, domain)",
+      "BaseLayout uses the card as the default og:image with width/height/alt; added og:site_name and twitter:title/description/image; album pages still share their cover photo"
     ],
     "inProgress": [],
-    "nextAction": "Joshua reviews and merges the release PR, then runs the owner checklist in docs/RELEASE.md section 5 and records approval in section 6"
+    "nextAction": "Joshua reviews and merges the share card PR; then paste a page URL into a link preview tool (e.g. opengraph.xyz) to confirm the card shows. Release owner checklist in docs/RELEASE.md section 5 still applies."
   },
   "decisions": {
     "made": [
       "Password recovery is an owner-run script against the database; no public reset or registration (per Joshua's brief)",
       "Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2",
       "Sessions are excluded from backups; a restored site requires logging in again",
-      "In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories"
+      "In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories",
+      "Default share image is a branded card (public/og-card.jpg); album pages keep their own cover photo"
     ],
     "constraints": [
       "Non-commercial showcase: no prices, packages, booking or sales",
@@ -49,40 +45,32 @@
   "verification": {
     "testsRun": [
       {
-        "command": "npm run format:check && npm run lint && npm run check && npm test && npm run build",
-        "result": "pass (149 tests, 23 files, DB tests on local Postgres 16)",
-        "at": "2026-11-02T18:00:00Z",
+        "command": "npm run lint && npm run check && npm test && npm run build",
+        "result": "pass (125 passed, 24 skipped: DB tests skipped, no local Postgres)",
+        "at": "2026-11-02T18:25:00Z",
         "by": "agent"
       },
       {
-        "command": "Playwright + axe-core 4.10 on local dev server, 10 pages at 375x812 and 1280x800",
-        "result": "0 violations, no horizontal overflow after fixes",
-        "at": "2026-11-02T18:00:00Z",
-        "by": "agent"
-      },
-      {
-        "command": "Neon restore drill via Neon API (disposable branch, json_agg -> json_populate_recordset)",
-        "result": "counts and md5 per table identical to production",
-        "at": "2026-11-02T17:03:00Z",
+        "command": "astro dev, curl /the-triad, grep og:/twitter: meta",
+        "result": "og:image and twitter:image point at https://photo.onesmall.company/og-card.jpg with 1200x630",
+        "at": "2026-11-02T18:25:00Z",
         "by": "agent"
       }
     ],
     "unverifiedChanges": [
-      "vercel.json headers on live prerendered pages (confirm with Production smoke after deploy)",
-      "scripts/photo-audit.mjs against the real B2 bucket (no B2 access from the agent)",
-      "Real-device and screen reader checks"
+      "Share card rendering in real Facebook/LinkedIn/X/iMessage previews (needs the deployed site)",
+      "Carried over: vercel.json headers on live pages, photo-audit against B2, real-device and screen reader checks"
     ]
   },
   "handoff": {
-    "lastAgent": "Claude (claude.ai project thread 'Close the photography release')",
-    "checkpointedAt": "2026-11-02T18:00:00Z",
-    "unfinished": ["Owner checklist in docs/RELEASE.md section 5"],
+    "lastAgent": "Claude (claude.ai project thread 'Make a social share card')",
+    "checkpointedAt": "2026-11-02T18:25:00Z",
+    "unfinished": ["Owner checklist in docs/RELEASE.md section 5 (carried over, not re-verified)"],
     "blockers": [
-      "Owner must merge the release PR (repo rule)",
-      "Owner must run Production smoke after deploy and take the first off-site DB backup",
-      "Owner must check B2 bucket lifecycle keeps prior versions"
+      "Owner must merge the share card PR (repo rule)",
+      "Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check"
     ],
-    "continuation": "Read docs/RELEASE.md section 5. After merge: GitHub Actions > Production smoke > Run workflow; expect 10/10. Then DATABASE_URL=<prod> node scripts/db-backup.mjs <private path>.",
+    "continuation": "After merge and deploy, check a shared link preview. Share card source HTML lives in the project files (share-card/og-card.html), rendered with Playwright at 1200x630.",
     "uncommittedWorkOutsideCheckpoint": "none",
     "persistedBy": "git-commit"
   },
