@@ -1,17 +1,17 @@
-<!-- generated from .engineering/state.json (revision 2) -->
+<!-- generated from .engineering/state.json (revision 3) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 2, `share-card-2026-11-02`, 2026-11-02T18:25:00Z by Claude (claude.ai project thread 'Make a social share card')
-- Written by: agent, committed on branch `claude/project-thread-j083m5` (based on `main` @ `c850853`)
+- Checkpoint: revision 3, `why-line-2026-11-02`, 2026-11-02T19:10:00Z by Claude (claude.ai project thread 'Reword the "Why One Small" line')
+- Written by: agent, committed on branch `claude/project-thread-s3ukro` (based on `main` @ `9db5526`)
 - Uncommitted work outside this checkpoint: **none**
 - Links: [ROADMAP.md](../ROADMAP.md), [release record](../docs/RELEASE.md), [recovery runbook](../docs/RECOVERY.md)
 
 ## Continue with
 
-After merge and deploy, check a shared link preview. Share card source HTML lives in the project files (share-card/og-card.html), rendered with Playwright at 1200x630.
+Joshua is doing UI updates on a separate branch; this PR touches only the home heading, the letter's first paragraph and its test, so expect at most a small conflict in src/pages/index.astro.
 
 ## Unfinished
 
@@ -19,7 +19,7 @@ After merge and deploy, check a shared link preview. Share card source HTML live
 
 ## Blockers
 
-- Owner must merge the share card PR (repo rule)
+- Owner must merge the Why One Small Photo PR (repo rule)
 - Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check
 
 ## Decisions

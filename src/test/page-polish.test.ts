@@ -60,7 +60,7 @@ describe('home page', () => {
     const html = await render(HomePage, '/');
     const letter = html.match(/<div[^>]*class="letter[\s\S]*?<\/div>/)?.[0];
     expect(letter).toBeDefined();
-    expect(letter).toMatch(/<p[^>]*>\s*Small is the family name\./);
+    expect(letter).toMatch(/<p[^>]*>\s*One Small Photo is about the single frame:/);
     expect(letter).toMatch(/<p class="[^"]*text-right[^"]*"[^>]*>Joshua<\/p>\s*<\/div>$/);
   });
 
