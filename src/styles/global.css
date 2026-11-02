@@ -32,6 +32,14 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Soft glows (like the title's grass) may reach past the screen edge; clip them
+     so phones never get a sideways scroll (WCAG reflow). On <main> rather than
+     <body>, whose overflow would pass to the whole window; clip, unlike hidden,
+     doesn't make a scroll container, so sticky elements still work. */
+  main {
+    overflow-x: clip;
+  }
+
   h1,
   h2,
   h3 {

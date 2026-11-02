@@ -4,21 +4,27 @@
 
 All values are **agent-reported**, not independently verified. Check GitHub before relying on them.
 
-- Milestone: 1.0.0 first accepted release of the live site (scope draft awaiting owner approval)
-- Active task: photo-1.0.0-acceptance: Owner acceptance of Photography 1.0.0 under the hub Showcase Definition of Done
-- Branch: `claude/closeout-roadmap`
-- Recorded commit: `d926563` on `main`
-- Last checkpoint: 2026-11-02T17:06:51Z by Claude Code
+- Milestone: Photography showcase v1 release closure
+- Active task: Release closure PR awaiting owner review (branch claude/project-thread-hwo1nn, based on main d926563)
+- Branch: `claude/project-thread-hwo1nn`
+- Recorded commit: `d926563` (base on `main`)
+- Last checkpoint: 2026-11-02T18:00:00Z by Claude (claude.ai project thread 'Close the photography release')
+- Roadmap: [ROADMAP.md](../ROADMAP.md) · Release record: [docs/RELEASE.md](../docs/RELEASE.md)
 
 ## Next action
 
-Owner: review and merge the closeout PR (approves docs/release-scope-1.0.0.md), then record gate verifications with verify:record in the hub as listed in docs/acceptance/closeout-2026-11-02.md. Future optional work is in ROADMAP.md and never reopens 1.0.0.
+Joshua reviews and merges the release PR, then runs the owner checklist in docs/RELEASE.md section 5 and records approval in section 6
 
 ## Completed
 
-- Phone header menu (#17), title and footer polish (#18), contact notes emailed through Resend (#19), CSP and XSS regression test (#20), continuity contract (#21)
-- Branch claude/closeout-roadmap: docs/release-scope-1.0.0.md draft (database and B2 storage in scope as shipped), ROADMAP.md, README rollback and release links, CI token limited to contents: read
-- Owner reported (Joshua Small, project chat 2026-11-02): contact emails arrive and galleries work live. Recorded as owner-reported evidence in the hub acceptance record; not gate verifications
+- Reconciled site/WCAG audit (PR #16) and XSS audit (PR #20) against current code; both merged and deployed
+- Verified admin auth, CSRF, sessions, lockout, setup protection, private content and error handling (tests + local browser run)
+- Added upload byte-signature check (src/lib/image-type.ts)
+- Added vercel.json security headers for prerendered pages with a sync test
+- Fixed phone horizontal overflow (WCAG 1.4.10) and an indistinguishable admin link (1.4.1); axe 0 violations on 10 pages x 2 widths
+- Restore drill on disposable Neon branch: all tables matched production checksums; branch deleted
+- Added owner scripts: reset-admin-password, db-backup, db-restore, photo-audit, smoke; Production smoke workflow
+- Wrote docs/RECOVERY.md, docs/RELEASE.md (acceptance record), ROADMAP.md; linked from README
 
 ## In progress
 
@@ -26,10 +32,12 @@ _none recorded_
 
 ## Tests (agent-reported)
 
-- `npm run format:check, lint, check (astro check)`: pass at `d926563`, 2026-11-02T17:20:00Z
-- `npm test (119 passed, 21 database tests skipped without TEST_DATABASE_URL)`: pass at `d926563`, 2026-11-02T17:20:00Z
+- `npm run format:check && npm run lint && npm run check && npm test && npm run build`: pass (149 tests, 23 files, DB tests on local Postgres 16) (2026-11-02T18:00:00Z)
+- `Playwright + axe-core 4.10 on local dev server, 10 pages at 375x812 and 1280x800`: 0 violations, no horizontal overflow after fixes (2026-11-02T18:00:00Z)
+- `Neon restore drill via Neon API (disposable branch, json_agg -> json_populate_recordset)`: counts and md5 per table identical to production (2026-11-02T17:03:00Z)
 
 ## Unverified changes
 
-- Database tests run only in CI (throwaway Postgres); not run locally in this session.
-- No manual keyboard, screen-reader or responsive pass recorded by the verifier yet.
+- vercel.json headers on live prerendered pages (confirm with Production smoke after deploy)
+- scripts/photo-audit.mjs against the real B2 bucket (no B2 access from the agent)
+- Real-device and screen reader checks

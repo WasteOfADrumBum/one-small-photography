@@ -6,6 +6,10 @@ Point and Winston-Salem).
 This is a personal, non-commercial site: no prices, packages or booking offers. It runs entirely
 on free tiers with no card on file.
 
+- [ROADMAP.md](ROADMAP.md): future work, kept separate from release blockers.
+- [docs/RELEASE.md](docs/RELEASE.md): release record and evidence for the current release.
+- [docs/RECOVERY.md](docs/RECOVERY.md): password recovery, backups, restore, photo files, rollback.
+
 ## Stack
 
 | Layer     | Tool                                                     |
@@ -54,18 +58,15 @@ see `.env.example` for the names. Never commit them.
 Migrations in `drizzle/` run on production deploys only. After the first deploy, add
 `SETUP_TOKEN`, redeploy, and visit `/setup` once to create the admin login.
 
-Production is [photo.onesmall.company](https://photo.onesmall.company);
-`one-small-photography.vercel.app` is also attached to the Vercel project. To roll back, promote
-the previous production deployment in Vercel (Deployments, the deployment, Promote to Production)
-or revert the merge on `main`. A rollback does not undo a database migration that already ran:
-check `drizzle/` before promoting an older deployment across a migration.
+## Owner scripts
 
-## Release and roadmap
+Run from your own computer with the database URL from Neon. See
+[docs/RECOVERY.md](docs/RECOVERY.md).
 
-- Release scope: [docs/release-scope-1.0.0.md](docs/release-scope-1.0.0.md) (draft until the owner
-  approves it).
-- Future work: [ROADMAP.md](ROADMAP.md). Roadmap items are optional and never reopen a completed
-  release.
-- Release status, gates and evidence live in the
-  [One Small Engineering hub](https://github.com/WasteOfADrumBum/one-small-engineering) registry;
-  development state for agents lives in [.engineering/](.engineering/STATUS.md).
+| Command                                         | What it does                                         |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| `node scripts/reset-admin-password.mjs <email>` | Set a new admin password, clear lockout, sign out    |
+| `node scripts/db-backup.mjs [file]`             | Save the database to a private JSON file (read-only) |
+| `node scripts/db-restore.mjs <file>`            | Load a backup into a new, empty database             |
+| `node scripts/photo-audit.mjs`                  | Compare photo rows with bucket files (read-only)     |
+| `node scripts/smoke.mjs`                        | Read-only health check of the live site              |

@@ -38,6 +38,9 @@ import * as photoRoute from '@/pages/api/admin/photos/[id]';
 import * as contactRoute from '@/pages/api/contact';
 import * as imgRoute from '@/pages/img/[id]/[file]';
 import AlbumPage from '@/pages/portfolio/[slug].astro';
+import { resetAdminPassword } from '../../scripts/lib/admin-password.mjs';
+import { assertEmpty, createBackup, restoreBackup } from '../../scripts/lib/backup.mjs';
+import { applyMigrations, openDatabase } from '../../scripts/lib/db.mjs';
 
 const url = process.env.TEST_DATABASE_URL;
 const ORIGIN = 'http://localhost';
@@ -288,6 +291,24 @@ describe.skipIf(!url)('with a database', () => {
       expect(saved!.coverPhotoId).toBe(photo.id);
     });
 
+    it('rejects files whose bytes are not the image type they claim', async () => {
+      const album = await createAlbum('Sneaky');
+      const stored = async () => (await readdir(storage, { recursive: true })).length;
+      const before = await stored();
+      const form = uploadForm('Sneaky');
+      const html = new TextEncoder().encode('<!doctype html><script>alert(1)</script>');
+      form.set('md', new File([html], 'md.webp', { type: 'image/webp' }));
+      const res = await call(albumPhotosRoute.POST, {
+        method: 'POST',
+        params: { id: album.id },
+        body: form,
+      });
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: 'Photos must be WebP or JPEG.' });
+      expect(await db().select().from(photos)).toHaveLength(0);
+      expect(await stored()).toBe(before);
+    });
+
     it('rejects settings that are not on the lists', async () => {
       const album = await createAlbum('Bad');
       const { res } = await upload(album.id, 'Bad', { settings: JSON.stringify({ iso: 123 }) });
@@ -411,6 +432,71 @@ describe.skipIf(!url)('with a database', () => {
       expect((await send(note)).status).toBe(201);
       expect(await tooManyRecent()).toBe(true);
       expect((await send(note)).status).toBe(429);
+    });
+  });
+
+  describe('owner recovery scripts', () => {
+    const scriptDb = () => openDatabase(url!);
+
+    it('resets the admin password, clears a lockout and signs out every session', async () => {
+      for (let i = 0; i < 5; i++) await attemptLogin('admin@example.com', 'x');
+      await startSession(admin.id, asCookies(cookieJar()));
+      const client = scriptDb();
+      try {
+        expect(
+          await resetAdminPassword(client, ' Admin@Example.com ', 'a brand new password'),
+        ).toBe(true);
+        expect(await resetAdminPassword(client, 'nobody@example.com', 'a brand new password')).toBe(
+          false,
+        );
+        await expect(resetAdminPassword(client, 'admin@example.com', 'short')).rejects.toThrow(
+          /at least 12/,
+        );
+      } finally {
+        await client.end();
+      }
+      expect(await db().select().from(sessions)).toHaveLength(0);
+      expect((await attemptLogin('admin@example.com', 'a long enough password')).ok).toBe(false);
+      expect((await attemptLogin('admin@example.com', 'a brand new password')).ok).toBe(true);
+    });
+
+    it('backs up every table and restores it only into an empty database', async () => {
+      const album = await createAlbum('Kept', true);
+      await upload(album.id, 'Dusty', { settings: JSON.stringify({ aperture: '2.8', iso: 100 }) });
+      await addMessage({ name: 'Ada', email: 'ada@example.com', body: 'Hello' });
+      await startSession(admin.id, asCookies(cookieJar()));
+
+      const source = scriptDb();
+      const backup = await createBackup(source, { source: 'test' });
+      await expect(assertEmpty(source)).rejects.toThrow(/already has data/);
+      await expect(restoreBackup(source, backup)).rejects.toThrow(/already has data/);
+      await source.end();
+      expect(backup.counts).toMatchObject({ users: 1, albums: 1, photos: 1, messages: 1 });
+      expect(backup.tables).not.toHaveProperty('sessions');
+
+      // A second, throwaway database on the same server.
+      const targetUrl = new URL(url!);
+      targetUrl.pathname = '/osp_restore_check';
+      const server = new pg.Client({ connectionString: url });
+      await server.connect();
+      await server.query('drop database if exists osp_restore_check');
+      await server.query('create database osp_restore_check');
+      try {
+        await applyMigrations(targetUrl.href);
+        const target = openDatabase(targetUrl.href);
+        try {
+          const counts = await restoreBackup(target, JSON.parse(JSON.stringify(backup)));
+          expect(counts).toMatchObject({ ...backup.counts, sessions: 0 });
+          const again = await createBackup(target, { source: 'restored' });
+          expect(again.tables).toEqual(backup.tables);
+          await expect(restoreBackup(target, backup)).rejects.toThrow(/already has data/);
+        } finally {
+          await target.end();
+        }
+      } finally {
+        await server.query('drop database if exists osp_restore_check with (force)');
+        await server.end();
+      }
     });
   });
 });

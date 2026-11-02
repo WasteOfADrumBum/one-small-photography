@@ -4,33 +4,40 @@
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 1, `closeout-2026-11-02-photo`, 2026-11-02T17:06:51Z by Claude Code
-- Written by: a local edit that the agent then pushed; confirm the branch head matches
+- Checkpoint: revision 1, `release-closure-2026-11-02`, 2026-11-02T18:00:00Z by Claude (claude.ai project thread 'Close the photography release')
+- Written by: agent, committed on branch `claude/project-thread-hwo1nn` (based on `main` @ `d926563`)
 - Uncommitted work outside this checkpoint: **none**
+- Links: [ROADMAP.md](../ROADMAP.md), [release record](../docs/RELEASE.md), [recovery runbook](../docs/RECOVERY.md)
 
 ## Continue with
 
-Read docs/release-scope-1.0.0.md and ROADMAP.md, then the hub acceptance record docs/acceptance/closeout-2026-11-02.md. Do not add roadmap items to 1.0.0.
+Read docs/RELEASE.md section 5. After merge: GitHub Actions > Production smoke > Run workflow; expect 10/10. Then DATABASE_URL=<prod> node scripts/db-backup.mjs <private path>.
 
 ## Unfinished
 
-- Owner scope approval, advisory disposition and gate verifications (hub acceptance record).
+- Owner checklist in docs/RELEASE.md section 5
 
 ## Blockers
 
-- scope-document-missing stays open in the hub until the owner approves the scope.
+- Owner must merge the release PR (repo rule)
+- Owner must run Production smoke after deploy and take the first off-site DB backup
+- Owner must check B2 bucket lifecycle keeps prior versions
 
 ## Decisions
 
-- [agent] Proposed 1.0.0 as the first release name for the live site; Neon Postgres and B2 storage are in scope as already shipped; no new features. Owner approval pending.
+- Password recovery is an owner-run script against the database; no public reset or registration (per Joshua's brief)
+- Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2
+- Sessions are excluded from backups; a restored site requires logging in again
+- In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories
 
 ## Constraints
 
-- Release approval, tags and gate verification belong to Joshua Small.
-- Enhancements live in ROADMAP.md and never block or reopen an accepted release.
-- Secrets (database URL, B2 keys, RESEND_API_KEY, SETUP_TOKEN) stay in Vercel environment variables.
+- Non-commercial showcase: no prices, packages, booking or sales
+- Free tiers only, no card on file (Vercel Hobby, Neon Free, B2 free, Resend free)
+- Never run destructive tests against production; restores only into new empty databases
+- Release approval belongs to Joshua Small
 
 ## Unresolved decisions
 
-- Owner approval of the 1.0.0 scope draft.
-- 4 moderate advisories via @astrojs/vercel -> @vercel/nft (build-time file tracing) need an owner disposition under security-privacy-review; none high or critical.
+- Keep or drop the proposed contact-page privacy sentence
+- Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge

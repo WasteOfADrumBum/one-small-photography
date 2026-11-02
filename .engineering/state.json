@@ -1,91 +1,98 @@
 {
   "stateVersion": 1,
   "revision": 1,
-  "checkpointId": "closeout-2026-11-02-photo",
+  "checkpointId": "release-closure-2026-11-02",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
   "recorded": {
-    "branch": "main",
+    "branch": "claude/project-thread-hwo1nn",
     "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
-    "recordedAt": "2026-11-02T17:06:51Z"
+    "recordedAt": "2026-11-02T18:00:00Z"
   },
   "development": {
-    "milestone": "1.0.0 first accepted release of the live site (scope draft awaiting owner approval)",
-    "activeTask": {
-      "id": "photo-1.0.0-acceptance",
-      "title": "Owner acceptance of Photography 1.0.0 under the hub Showcase Definition of Done"
-    },
-    "workingBranch": "claude/closeout-roadmap",
-    "activePr": null,
+    "milestone": "Photography showcase v1 release closure",
+    "activeTask": "Release closure PR awaiting owner review (branch claude/project-thread-hwo1nn, based on main d926563)",
+    "workingBranch": "claude/project-thread-hwo1nn",
+    "activePr": "Release closure PR from claude/project-thread-hwo1nn (number in the PR list; opened 2026-11-02)",
     "lastCompleted": [
-      "Phone header menu (#17), title and footer polish (#18), contact notes emailed through Resend (#19), CSP and XSS regression test (#20), continuity contract (#21)",
-      "Branch claude/closeout-roadmap: docs/release-scope-1.0.0.md draft (database and B2 storage in scope as shipped), ROADMAP.md, README rollback and release links, CI token limited to contents: read",
-      "Owner reported (Joshua Small, project chat 2026-11-02): contact emails arrive and galleries work live. Recorded as owner-reported evidence in the hub acceptance record; not gate verifications"
+      "Reconciled site/WCAG audit (PR #16) and XSS audit (PR #20) against current code; both merged and deployed",
+      "Verified admin auth, CSRF, sessions, lockout, setup protection, private content and error handling (tests + local browser run)",
+      "Added upload byte-signature check (src/lib/image-type.ts)",
+      "Added vercel.json security headers for prerendered pages with a sync test",
+      "Fixed phone horizontal overflow (WCAG 1.4.10) and an indistinguishable admin link (1.4.1); axe 0 violations on 10 pages x 2 widths",
+      "Restore drill on disposable Neon branch: all tables matched production checksums; branch deleted",
+      "Added owner scripts: reset-admin-password, db-backup, db-restore, photo-audit, smoke; Production smoke workflow",
+      "Wrote docs/RECOVERY.md, docs/RELEASE.md (acceptance record), ROADMAP.md; linked from README"
     ],
     "inProgress": [],
-    "nextAction": "Owner: review and merge the closeout PR (approves docs/release-scope-1.0.0.md), then record gate verifications with verify:record in the hub as listed in docs/acceptance/closeout-2026-11-02.md. Future optional work is in ROADMAP.md and never reopens 1.0.0."
+    "nextAction": "Joshua reviews and merges the release PR, then runs the owner checklist in docs/RELEASE.md section 5 and records approval in section 6"
   },
   "decisions": {
     "made": [
-      {
-        "id": "photo-version-1-0-0",
-        "summary": "Proposed 1.0.0 as the first release name for the live site; Neon Postgres and B2 storage are in scope as already shipped; no new features. Owner approval pending.",
-        "decidedBy": "agent",
-        "humanRef": null,
-        "recordedAt": "2026-11-02T17:20:00Z"
-      }
+      "Password recovery is an owner-run script against the database; no public reset or registration (per Joshua's brief)",
+      "Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2",
+      "Sessions are excluded from backups; a restored site requires logging in again",
+      "In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories"
     ],
     "constraints": [
-      "Release approval, tags and gate verification belong to Joshua Small.",
-      "Enhancements live in ROADMAP.md and never block or reopen an accepted release.",
-      "Secrets (database URL, B2 keys, RESEND_API_KEY, SETUP_TOKEN) stay in Vercel environment variables."
+      "Non-commercial showcase: no prices, packages, booking or sales",
+      "Free tiers only, no card on file (Vercel Hobby, Neon Free, B2 free, Resend free)",
+      "Never run destructive tests against production; restores only into new empty databases",
+      "Release approval belongs to Joshua Small"
     ],
     "unresolved": [
-      "Owner approval of the 1.0.0 scope draft.",
-      "4 moderate advisories via @astrojs/vercel -> @vercel/nft (build-time file tracing) need an owner disposition under security-privacy-review; none high or critical."
+      "Keep or drop the proposed contact-page privacy sentence",
+      "Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge"
     ]
   },
   "verification": {
     "testsRun": [
       {
-        "command": "npm run format:check, lint, check (astro check)",
-        "result": "pass",
-        "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
-        "at": "2026-11-02T17:20:00Z",
-        "ciRunUrl": null
+        "command": "npm run format:check && npm run lint && npm run check && npm test && npm run build",
+        "result": "pass (149 tests, 23 files, DB tests on local Postgres 16)",
+        "at": "2026-11-02T18:00:00Z",
+        "by": "agent"
       },
       {
-        "command": "npm test (119 passed, 21 database tests skipped without TEST_DATABASE_URL)",
-        "result": "pass",
-        "commit": "d9265638467e9c1cfe7e3dca9e48783a758dda7b",
-        "at": "2026-11-02T17:20:00Z",
-        "ciRunUrl": null
+        "command": "Playwright + axe-core 4.10 on local dev server, 10 pages at 375x812 and 1280x800",
+        "result": "0 violations, no horizontal overflow after fixes",
+        "at": "2026-11-02T18:00:00Z",
+        "by": "agent"
+      },
+      {
+        "command": "Neon restore drill via Neon API (disposable branch, json_agg -> json_populate_recordset)",
+        "result": "counts and md5 per table identical to production",
+        "at": "2026-11-02T17:03:00Z",
+        "by": "agent"
       }
     ],
     "unverifiedChanges": [
-      "Database tests run only in CI (throwaway Postgres); not run locally in this session.",
-      "No manual keyboard, screen-reader or responsive pass recorded by the verifier yet."
+      "vercel.json headers on live prerendered pages (confirm with Production smoke after deploy)",
+      "scripts/photo-audit.mjs against the real B2 bucket (no B2 access from the agent)",
+      "Real-device and screen reader checks"
     ]
   },
   "handoff": {
-    "lastAgent": {
-      "tool": "Claude Code",
-      "model": null
-    },
-    "checkpointedAt": "2026-11-02T17:06:51Z",
-    "unfinished": [
-      "Owner scope approval, advisory disposition and gate verifications (hub acceptance record)."
-    ],
+    "lastAgent": "Claude (claude.ai project thread 'Close the photography release')",
+    "checkpointedAt": "2026-11-02T18:00:00Z",
+    "unfinished": ["Owner checklist in docs/RELEASE.md section 5"],
     "blockers": [
-      "scope-document-missing stays open in the hub until the owner approves the scope."
+      "Owner must merge the release PR (repo rule)",
+      "Owner must run Production smoke after deploy and take the first off-site DB backup",
+      "Owner must check B2 bucket lifecycle keeps prior versions"
     ],
-    "continuation": "Read docs/release-scope-1.0.0.md and ROADMAP.md, then the hub acceptance record docs/acceptance/closeout-2026-11-02.md. Do not add roadmap items to 1.0.0.",
+    "continuation": "Read docs/RELEASE.md section 5. After merge: GitHub Actions > Production smoke > Run workflow; expect 10/10. Then DATABASE_URL=<prod> node scripts/db-backup.mjs <private path>.",
     "uncommittedWorkOutsideCheckpoint": "none",
-    "persistedBy": "local-file"
+    "persistedBy": "git-commit"
   },
   "provenance": {
     "claims": "agent_reported",
     "independentVerification": "none"
+  },
+  "links": {
+    "roadmap": "ROADMAP.md",
+    "releaseRecord": "docs/RELEASE.md",
+    "recovery": "docs/RECOVERY.md"
   }
 }
