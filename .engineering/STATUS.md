@@ -18,7 +18,7 @@ Joshua reviews and merges the share card PR; then paste a page URL into a link p
 ## Completed
 
 - Release closure PR #23 merged to main (c850853), per GitHub
-- Added public/og-card.jpg (1200x630 branded share card: Dusty in a Polaroid, logo, tagline, Triad cities, domain)
+- Added public/og-card.jpg (1200x630 branded share card: logo, tagline, Triad cities and domain; no photo, per Joshua)
 - BaseLayout uses the card as the default og:image with width/height/alt; added og:site_name and twitter:title/description/image; album pages still share their cover photo
 
 ## In progress
