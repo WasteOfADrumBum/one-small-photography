@@ -1,35 +1,71 @@
 {
   "stateVersion": 1,
-  "revision": 4,
-  "checkpointId": "why-line-v2-2026-11-02",
+  "revision": 5,
+  "checkpointId": "ckpt-0005-contract-v1-shape",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
+  "provenance": {
+    "claims": "agent_reported",
+    "independentVerification": "none"
+  },
   "recorded": {
-    "branch": "claude/project-thread-s3ukro",
-    "commit": "ad5a8b2fadc74cdb933900b9a45bf2afad8875b5",
-    "recordedAt": "2026-11-02T19:35:00Z"
+    "branch": "main",
+    "commit": "e3bc6d20844f460eeb0ec6159e8946cda7bcd2ed",
+    "recordedAt": "2026-11-02T23:10:00Z"
   },
   "development": {
-    "milestone": "Post-release polish: home page copy",
-    "activeTask": "Follow-up to PR #25: white \"Why\" and a letter that opens with a P (branch claude/project-thread-s3ukro, based on main ad5a8b2)",
-    "workingBranch": "claude/project-thread-s3ukro",
-    "activePr": "Why One Small Photo follow-up PR from claude/project-thread-s3ukro (opened 2026-11-02)",
+    "milestone": "Photography release (owner decision pending in docs/RELEASE.md section 6)",
+    "activeTask": null,
+    "workingBranch": null,
+    "activePr": null,
     "lastCompleted": [
+      "PR #22 merged by Joshua Small as e3bc6d2: CI workflow token limited to contents: read; CI green on main",
+      "PR #26 merged (48efb13): white \"Why One Small\" heading and a letter that opens with a P",
       "PR #25 merged to main (ad5a8b2), per GitHub",
       "Heading: 'Why One Small' in paper/white, 'Photo' in gold (Joshua: the sand 'Why' looked odd)",
       "Letter now opens 'Photography, for me, comes down to one small photo: a single frame, one moment, seen clearly and kept.' (Joshua wanted a P drop cap; the O looked too square)"
     ],
     "inProgress": [],
-    "nextAction": "Joshua reviews and merges the follow-up PR. Release owner checklist in docs/RELEASE.md section 5 still applies."
+    "nextAction": "Owner: complete docs/RELEASE.md section 6 (scope approval, first off-site backup, B2 version lifecycle, the 4 moderate build-time advisories). Optional work in ROADMAP.md."
   },
   "decisions": {
     "made": [
-      "Password recovery is an owner-run script against the database; no public reset or registration (per Joshua's brief)",
-      "Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2",
-      "Sessions are excluded from backups; a restored site requires logging in again",
-      "In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories",
-      "Default share image is a branded card (public/og-card.jpg); album pages keep their own cover photo"
+      {
+        "id": "password-recovery",
+        "summary": "Password recovery is an owner-run script against the database; no public reset or registration",
+        "decidedBy": "human",
+        "humanRef": "Joshua Small's brief for the release",
+        "recordedAt": "2026-11-02T00:00:00Z"
+      },
+      {
+        "id": "offsite-backup-manual",
+        "summary": "Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-02T00:00:00Z"
+      },
+      {
+        "id": "sessions-not-backed-up",
+        "summary": "Sessions are excluded from backups; a restored site requires logging in again",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-02T00:00:00Z"
+      },
+      {
+        "id": "no-in-range-updates",
+        "summary": "In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-02T00:00:00Z"
+      },
+      {
+        "id": "share-card",
+        "summary": "Default share image is a branded card (public/og-card.jpg); album pages keep their own cover photo",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-02T00:00:00Z"
+      }
     ],
     "constraints": [
       "Non-commercial showcase: no prices, packages, booking or sales",
@@ -39,22 +75,32 @@
     ],
     "unresolved": [
       "Keep or drop the proposed contact-page privacy sentence",
-      "Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge"
+      "Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge",
+      "Release approval and scope (docs/RELEASE.md section 6, owner)"
     ]
   },
   "verification": {
     "testsRun": [
       {
-        "command": "npm run lint && npm run check && npm test && npm run build",
-        "result": "pass (125 passed, 24 skipped: DB tests skipped, no local Postgres)",
+        "command": "npm run lint && npm run check && npm test && npm run build (125 passed, 24 DB tests skipped locally)",
+        "result": "pass",
+        "commit": null,
         "at": "2026-11-02T19:35:00Z",
-        "by": "agent"
+        "ciRunUrl": null
       },
       {
-        "command": "astro dev + Playwright screenshots of the home 'Why One Small Photo' section at 1280 and 390 wide",
-        "result": "heading and letter render as intended; before/after attached to the PR",
-        "at": "2026-11-02T19:35:00Z",
-        "by": "agent"
+        "command": "GitHub CI on main (push, read-only token)",
+        "result": "pass",
+        "commit": "e3bc6d20844f460eeb0ec6159e8946cda7bcd2ed",
+        "at": "2026-11-02T22:16:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41535743335"
+      },
+      {
+        "command": "Production smoke (manual dispatch after the release merge)",
+        "result": "pass",
+        "commit": "c850853c0ffd16042941c5030e273b47f17a0cdf",
+        "at": "2026-11-02T18:15:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41498801968"
       }
     ],
     "unverifiedChanges": [
@@ -62,24 +108,15 @@
     ]
   },
   "handoff": {
-    "lastAgent": "Claude (claude.ai project thread 'Reword the \"Why One Small\" line')",
-    "checkpointedAt": "2026-11-02T19:35:00Z",
-    "unfinished": ["Owner checklist in docs/RELEASE.md section 5 (carried over, not re-verified)"],
-    "blockers": [
-      "Owner must merge the Why One Small Photo follow-up PR (repo rule)",
-      "Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check"
-    ],
-    "continuation": "Joshua is doing UI updates on a separate branch; this PR touches only the home heading, the letter's first paragraph and its test, so expect at most a small conflict in src/pages/index.astro.",
+    "lastAgent": {
+      "tool": "Claude Code",
+      "model": null
+    },
+    "checkpointedAt": "2026-11-02T23:10:00Z",
+    "unfinished": ["Owner checklist in docs/RELEASE.md sections 5 and 6"],
+    "blockers": ["Owner release decision (docs/RELEASE.md section 6)"],
+    "continuation": "No pull request is open. The release record is docs/RELEASE.md; recovery is docs/RECOVERY.md; optional work is ROADMAP.md. Checkpoint re-recorded in the continuity contract v1 shape (the previous revision failed hub validation and showed as invalid in the hub aggregate); content carried over, nothing new claimed.",
     "uncommittedWorkOutsideCheckpoint": "none",
-    "persistedBy": "git-commit"
-  },
-  "provenance": {
-    "claims": "agent_reported",
-    "independentVerification": "none"
-  },
-  "links": {
-    "roadmap": "ROADMAP.md",
-    "releaseRecord": "docs/RELEASE.md",
-    "recovery": "docs/RECOVERY.md"
+    "persistedBy": "local-file"
   }
 }

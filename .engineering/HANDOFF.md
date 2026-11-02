@@ -1,34 +1,32 @@
-<!-- generated from .engineering/state.json (revision 4) -->
+<!-- generated from .engineering/state.json (revision 5) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 4, `why-line-v2-2026-11-02`, 2026-11-02T19:35:00Z by Claude (claude.ai project thread 'Reword the "Why One Small" line')
-- Written by: agent, committed on branch `claude/project-thread-s3ukro` (based on `main` @ `ad5a8b2`)
+- Checkpoint: revision 5, `ckpt-0005-contract-v1-shape`, 2026-11-02T23:10:00Z by Claude Code
+- Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
-- Links: [ROADMAP.md](../ROADMAP.md), [release record](../docs/RELEASE.md), [recovery runbook](../docs/RECOVERY.md)
 
 ## Continue with
 
-Joshua is doing UI updates on a separate branch; this PR touches only the home heading, the letter's first paragraph and its test, so expect at most a small conflict in src/pages/index.astro.
+No pull request is open. The release record is docs/RELEASE.md; recovery is docs/RECOVERY.md; optional work is ROADMAP.md. Checkpoint re-recorded in the continuity contract v1 shape (the previous revision failed hub validation and showed as invalid in the hub aggregate); content carried over, nothing new claimed.
 
 ## Unfinished
 
-- Owner checklist in docs/RELEASE.md section 5 (carried over, not re-verified)
+- Owner checklist in docs/RELEASE.md sections 5 and 6
 
 ## Blockers
 
-- Owner must merge the Why One Small Photo follow-up PR (repo rule)
-- Carried over: owner runs Production smoke, first off-site DB backup, and B2 lifecycle check
+- Owner release decision (docs/RELEASE.md section 6)
 
 ## Decisions
 
-- Password recovery is an owner-run script against the database; no public reset or registration (per Joshua's brief)
-- Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2
-- Sessions are excluded from backups; a restored site requires logging in again
-- In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories
-- Default share image is a branded card (public/og-card.jpg); album pages keep their own cover photo
+- [human] Password recovery is an owner-run script against the database; no public reset or registration (Joshua Small's brief for the release)
+- [agent] Off-site DB backup is a manual monthly owner step for v1; scheduled encrypted backup is ROADMAP R-2
+- [agent] Sessions are excluded from backups; a restored site requires logging in again
+- [agent] In-range dependency updates were not applied: they did not fix the build-time-only moderate advisories
+- [agent] Default share image is a branded card (public/og-card.jpg); album pages keep their own cover photo
 
 ## Constraints
 
@@ -41,3 +39,4 @@ Joshua is doing UI updates on a separate branch; this PR touches only the home h
 
 - Keep or drop the proposed contact-page privacy sentence
 - Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge
+- Release approval and scope (docs/RELEASE.md section 6, owner)
