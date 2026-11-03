@@ -1,7 +1,7 @@
 {
   "stateVersion": 1,
-  "revision": 6,
-  "checkpointId": "ckpt-0006-remaining-release-requirements",
+  "revision": 7,
+  "checkpointId": "ckpt-0007-pr28-ci-green",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
@@ -11,8 +11,8 @@
   },
   "recorded": {
     "branch": "claude/project-thread-svwmjb",
-    "commit": "d39790f3bfe9b0db7fe95b96009ee967abc33018",
-    "recordedAt": "2026-11-03T13:55:00Z"
+    "commit": "d1bc89e2c721b204106c75bbc1f0dde7cbff6a79",
+    "recordedAt": "2026-11-03T13:50:00Z"
   },
   "development": {
     "milestone": "Photography release (owner decision pending in docs/RELEASE.md section 6)",
@@ -111,6 +111,13 @@
         "ciRunUrl": null
       },
       {
+        "command": "GitHub CI on PR #28 (pull_request), Postgres 16 service, 0 unhandled errors",
+        "result": "pass",
+        "commit": "d1bc89e2c721b204106c75bbc1f0dde7cbff6a79",
+        "at": "2026-11-03T13:45:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41646892427"
+      },
+      {
         "command": "GitHub CI on main @ 153eee0 (push)",
         "result": "fail",
         "commit": "153eee0484003d2150508a858c372cd80960645f",
@@ -129,7 +136,6 @@
       "scripts/first-backup.ps1 was never run under PowerShell (none available to the agent); its Node steps were run",
       "Backblaze bucket lifecycle and keys were not inspected (no B2 access)",
       "No screen reader (NVDA, JAWS, VoiceOver, TalkBack) or real-device test; accessibility checks were Chromium only",
-      "CI on the PR branch has not yet run at the time of this checkpoint",
       "Carried over: share card in real link previews, photo-audit against B2"
     ]
   },
@@ -138,7 +144,7 @@
       "tool": "Claude Code",
       "model": null
     },
-    "checkpointedAt": "2026-11-03T13:55:00Z",
+    "checkpointedAt": "2026-11-03T13:50:00Z",
     "unfinished": [
       "Owner checklist in docs/RELEASE.md sections 5 and 6",
       "First off-site backup",
@@ -149,7 +155,7 @@
       "Owner release decision (docs/RELEASE.md section 6)",
       "No PowerShell or B2 access in the agent environment"
     ],
-    "continuation": "A pull request for branch claude/project-thread-svwmjb carries the CI fix, accessibility fixes, backup tooling and the reconciled release record. Wait for its CI, then the owner reviews and merges. Do not record approval.",
+    "continuation": "Pull request #28 (branch claude/project-thread-svwmjb) has green CI on d1bc89e. The owner reviews and merges. Do not record approval.",
     "uncommittedWorkOutsideCheckpoint": "none",
     "persistedBy": "local-file"
   }

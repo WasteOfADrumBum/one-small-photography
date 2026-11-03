@@ -1,16 +1,16 @@
-<!-- generated from .engineering/state.json (revision 6) -->
+<!-- generated from .engineering/state.json (revision 7) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 6, `ckpt-0006-remaining-release-requirements`, 2026-11-03T13:55:00Z by Claude Code
+- Checkpoint: revision 7, `ckpt-0007-pr28-ci-green`, 2026-11-03T13:50:00Z by Claude Code
 - Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-A pull request for branch claude/project-thread-svwmjb carries the CI fix, accessibility fixes, backup tooling and the reconciled release record. Wait for its CI, then the owner reviews and merges. Do not record approval.
+Pull request #28 (branch claude/project-thread-svwmjb) has green CI on d1bc89e. The owner reviews and merges. Do not record approval.
 
 ## Unfinished
 

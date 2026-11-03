@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 6); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 7); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -7,8 +7,8 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
 - Branch: claude/project-thread-svwmjb
-- Recorded commit: `d39790f` on `claude/project-thread-svwmjb`
-- Last checkpoint: 2026-11-03T13:55:00Z by Claude Code
+- Recorded commit: `d1bc89e` on `claude/project-thread-svwmjb`
+- Last checkpoint: 2026-11-03T13:50:00Z by Claude Code
 
 ## Next action
 
@@ -30,6 +30,7 @@ _none recorded_
 ## Tests (agent-reported)
 
 - `npm run format:check && npm run lint && npm run check && npm test (160 tests in 25 files, Postgres 16 locally, 3 consecutive runs of the integration file clean) && npm run build`: pass at `d39790f`, 2026-11-03T13:42:00Z
+- `GitHub CI on PR #28 (pull_request), Postgres 16 service, 0 unhandled errors`: pass at `d1bc89e`, 2026-11-03T13:45:00Z
 - `GitHub CI on main @ 153eee0 (push)`: fail at `153eee0`, 2026-11-03T03:42:00Z
 - `Production smoke (manual dispatch after the release merge), 10/10 checks`: pass at `c850853`, 2026-11-02T18:15:00Z
 
@@ -38,5 +39,4 @@ _none recorded_
 - scripts/first-backup.ps1 was never run under PowerShell (none available to the agent); its Node steps were run
 - Backblaze bucket lifecycle and keys were not inspected (no B2 access)
 - No screen reader (NVDA, JAWS, VoiceOver, TalkBack) or real-device test; accessibility checks were Chromium only
-- CI on the PR branch has not yet run at the time of this checkpoint
 - Carried over: share card in real link previews, photo-audit against B2
