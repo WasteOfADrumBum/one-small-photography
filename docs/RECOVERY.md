@@ -78,7 +78,7 @@ OneSmallPhoto → Dashboard → Connect → branch production**. The script fini
 file path, row counts and a SHA-256. Then:
 
 1. Copy the `.json` and its `.sha256` to a second private place (an encrypted or BitLocker
-   external drive). Do not use email, a shared folder or the repo (`.gitignore` also blocks it).
+   external drive is best; an unencrypted private drive is a risk the owner has accepted). Do not use email, a shared folder or the repo (`.gitignore` also blocks it).
 2. On the copy run `Get-FileHash <file> -Algorithm SHA256` and compare with the `.sha256` file.
 3. Optional proof it restores: follow section 3 into a throwaway Neon branch.
 4. Write the date and location in `docs/RELEASE.md` section 6.
@@ -86,8 +86,9 @@ file path, row counts and a SHA-256. Then:
 Check any backup file at any time without a database: `node scripts/verify-backup.mjs <file>`.
 
 **Status:** Owner-reported 2026-11-03: `first-backup.ps1` ran successfully under PowerShell 7.6.9,
-the backup passed verification, and its copy on `K:\` matched the SHA-256. Encryption of `K:\` is
-not yet confirmed; until it is, the copy is a private but unencrypted file. The agent itself never
+the backup passed verification, and its copy on `K:\` matched the SHA-256. The `K:\` copy is **not
+encrypted**; on 2026-11-03 Joshua Small accepted in writing the risk that contact data and the admin
+password hash are exposed if someone accesses that drive. The agent itself never
 ran the script under PowerShell (none available); it ran everything the script calls (backup,
 verify, restore against Postgres), and a test proves a failed connection prints no password.
 
