@@ -85,10 +85,11 @@ file path, row counts and a SHA-256. Then:
 
 Check any backup file at any time without a database: `node scripts/verify-backup.mjs <file>`.
 
-**Status:** `first-backup.ps1` has not been run under PowerShell by the agent (no PowerShell in the
-build environment). Everything it calls was run: backup, verify and restore against Postgres,
-and a test proves a failed connection prints no password. `-CheckOnly` is the safe first run
-that exercises the PowerShell part itself.
+**Status:** Owner-reported 2026-11-03: `first-backup.ps1` ran successfully under PowerShell 7.6.9,
+the backup passed verification, and its copy on `K:\` matched the SHA-256. Encryption of `K:\` is
+not yet confirmed; until it is, the copy is a private but unencrypted file. The agent itself never
+ran the script under PowerShell (none available); it ran everything the script calls (backup,
+verify, restore against Postgres), and a test proves a failed connection prints no password.
 
 ## 3. Restoring the database
 
@@ -170,7 +171,15 @@ What to do with the result:
    it.
 
 The agent could not read your B2 account (no B2 connector or key was available to it), so none of
-this is verified from its side.
+this is verified from its side. **Owner-reported 2026-11-03:** the bucket is private with "Keep all
+versions" enabled, and after deleting a disposable photo through the site its original versions
+remained in B2 and the retained `sm.webp` opened.
+
+**What an undelete does and does not recover.** Un-hiding or downloading the retained files
+recovers the _images_. Deleting a photo in the admin also deletes its database row (title,
+description, camera settings, position, album). That row comes back only from a backup file
+(restore into a new database, section 3, then switch) or by uploading the original again and
+re-entering the details. The 2026-11-03 test covered the files, not the row.
 
 **Copy of the bucket (recommended monthly):** B2 lets you download up to 3× your stored data per
 day free. With [rclone](https://rclone.org/b2/) (free):
