@@ -58,6 +58,38 @@ messages and the password hash, so keep it private: not in the repo, not in a sh
 If you prefer the standard tool, `pg_dump` 18 or newer works too:
 `pg_dump "$DATABASE_URL" -Fc -f onesmallphoto.dump`.
 
+### Your first off-site backup (Windows PowerShell)
+
+Uses the repo's own scripts (`db-backup.mjs`, then `verify-backup.mjs`). The database address is
+typed at a hidden prompt, held only in that one PowerShell process while the backup runs, and any
+output is scrubbed of it. The file is saved outside the repo in a folder only your Windows
+account can open.
+
+```powershell
+cd path\to\one-small-photography
+npm ci                                   # once
+.\scripts\first-backup.ps1 -CheckOnly    # safe dry run: checks Node, repo, folder; touches nothing
+.\scripts\first-backup.ps1               # asks for the Neon connection string (hidden), then backs up
+```
+
+If PowerShell refuses to run the script, run `Set-ExecutionPolicy -Scope Process Bypass` in that
+window first (it lasts only for that window). Get the connection string in Neon: **Project
+OneSmallPhoto → Dashboard → Connect → branch production**. The script finishes by printing the
+file path, row counts and a SHA-256. Then:
+
+1. Copy the `.json` and its `.sha256` to a second private place (an encrypted or BitLocker
+   external drive). Do not use email, a shared folder or the repo (`.gitignore` also blocks it).
+2. On the copy run `Get-FileHash <file> -Algorithm SHA256` and compare with the `.sha256` file.
+3. Optional proof it restores: follow section 3 into a throwaway Neon branch.
+4. Write the date and location in `docs/RELEASE.md` section 6.
+
+Check any backup file at any time without a database: `node scripts/verify-backup.mjs <file>`.
+
+**Status:** `first-backup.ps1` has not been run under PowerShell by the agent (no PowerShell in the
+build environment). Everything it calls was run: backup, verify and restore against Postgres,
+and a test proves a failed connection prints no password. `-CheckOnly` is the safe first run
+that exercises the PowerShell part itself.
+
 ## 3. Restoring the database
 
 Never restore over the live database. Restore into a new, empty database, check it, then switch.
@@ -115,6 +147,30 @@ What to do with the result:
   broken one.
 - **Album cover gone:** open the album in the admin and pick a cover; the site falls back to the
   first photo meanwhile.
+
+**Backblaze recovery settings (check once, in the B2 web console):**
+
+1. Sign in at backblaze.com → **B2 Cloud Storage → Buckets**. Find the bucket named in
+   Vercel's `B2_BUCKET`.
+2. **Files are private:** the bucket's **Files in Bucket are: Private** (the site serves photos
+   through `/img`, so the bucket never needs to be public).
+3. **Lifecycle Settings:** click the bucket's **Lifecycle Settings** and choose **Keep all versions
+   of the file (default)**. This is what lets a hidden or deleted photo be un-hidden. Do not pick
+   "Keep only the last version". Versions count toward the free 10 GB, so deleted photos still use
+   space until you remove them in **Browse Files** with **Show hidden files / versions** on.
+4. **Object Lock:** leave off (not needed, and it would block deletes you ask for).
+5. **Application key:** **App Keys** → the key in Vercel should list only this bucket, with read,
+   write and delete. For `photo-audit.mjs` and rclone make a second key limited to this bucket with
+   **Read Only**.
+6. **Caps & Alerts:** open **Caps & Alerts** and keep the daily storage, download and transaction
+   caps at or below the free allowance, so a spike stops service instead of billing. Keep no card
+   on file.
+7. **Test an undelete once:** upload a throwaway photo in the admin, delete it, find
+   `photos/<id>/` in **Browse Files** with **Show hidden files** on, and confirm you can **Unhide**
+   it.
+
+The agent could not read your B2 account (no B2 connector or key was available to it), so none of
+this is verified from its side.
 
 **Copy of the bucket (recommended monthly):** B2 lets you download up to 3× your stored data per
 day free. With [rclone](https://rclone.org/b2/) (free):

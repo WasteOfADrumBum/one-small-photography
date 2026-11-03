@@ -15,10 +15,12 @@ import { ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
+  MoveButtons,
   SaveToast,
   TextArea,
   TextField,
   VisibilityToggle,
+  moveBy,
   useSaveStatus,
 } from './ui';
 
@@ -279,7 +281,7 @@ export default function AlbumEditor({
               href={`/portfolio/${album.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm"
+              className="inline-flex min-h-6 items-center gap-1 text-sm"
             >
               View on the site <ExternalLink aria-hidden size={14} />
             </a>
@@ -440,7 +442,7 @@ export default function AlbumEditor({
                 <li
                   key={photo.id}
                   id={`photo-${photo.id}`}
-                  className="scroll-mt-24 space-y-3 rounded-xl border border-sand/20 bg-moss p-4"
+                  className="min-w-0 scroll-mt-24 space-y-3 rounded-xl border border-sand/20 bg-moss p-4"
                 >
                   <div className="flex gap-4">
                     <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded bg-espresso">
@@ -515,13 +517,23 @@ export default function AlbumEditor({
                         ))}
                       </select>
                     )}
+                    <MoveButtons
+                      name={photo.title || `photo ${i + 1}`}
+                      index={i}
+                      count={photos.length}
+                      onMove={(delta) => {
+                        const next = moveBy(photos, i, delta);
+                        if (next) reorderPhotos(next);
+                      }}
+                      className="ml-auto"
+                    />
                     <Button
                       variant="danger"
                       icon={Trash2}
                       aria-label={`Delete ${photo.title || 'this photo'}`}
                       title="Delete photo"
                       onClick={() => deletePhoto(photo)}
-                      className="ml-auto px-3 py-1.5"
+                      className="px-3 py-1.5"
                     />
                   </div>
                 </li>

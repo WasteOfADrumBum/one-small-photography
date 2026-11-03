@@ -7,7 +7,7 @@
 // so keep it private: not in the repo, not in a shared folder. See docs/RECOVERY.md.
 import { writeFile } from 'node:fs/promises';
 import { createBackup } from './lib/backup.mjs';
-import { describeDatabase, openDatabase } from './lib/db.mjs';
+import { describeDatabase, openDatabase, redact } from './lib/db.mjs';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -24,6 +24,10 @@ try {
   console.log(`Backed up ${describeDatabase(url)} to ${out}`);
   console.log(`Rows: ${JSON.stringify(backup.counts)}; migrations: ${backup.migrations.length}`);
   console.log('This file contains private data (messages, password hash). Keep it private.');
+} catch (err) {
+  // Never print the connection string: some errors carry it.
+  console.error(`Backup failed: ${redact(err?.message ?? err, url)}`);
+  process.exitCode = 1;
 } finally {
   await db.end();
 }

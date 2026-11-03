@@ -7,7 +7,7 @@
 // See docs/RECOVERY.md for when and how to point the site at the restored copy.
 import { readFile } from 'node:fs/promises';
 import { assertEmpty, restoreBackup } from './lib/backup.mjs';
-import { applyMigrations, describeDatabase, openDatabase } from './lib/db.mjs';
+import { applyMigrations, describeDatabase, openDatabase, redact } from './lib/db.mjs';
 
 const url = process.env.DATABASE_URL;
 const file = process.argv[2];
@@ -26,7 +26,7 @@ try {
   const counts = await restoreBackup(db, backup);
   console.log(`Restored. Rows now: ${JSON.stringify(counts)}`);
 } catch (err) {
-  console.error(`Restore failed: ${err.message}`);
+  console.error(`Restore failed: ${redact(err.message, url)}`);
   process.exitCode = 1;
 } finally {
   await db.end();

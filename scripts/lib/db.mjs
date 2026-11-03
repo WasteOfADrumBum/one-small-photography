@@ -19,14 +19,61 @@ export function describeDatabase(url) {
   }
 }
 
+/**
+ * A node-postgres pool whose `close()` resolves only once every connection's
+ * socket has closed. `pool.end()` alone resolves as soon as it has *asked* its
+ * clients to disconnect, so a caller that then drops or terminates the
+ * database can kill a backend that is still saying goodbye; the server's
+ * FATAL 57P01 then reaches a client nobody listens to any more and crashes
+ * the process ("terminating connection due to administrator command").
+ */
+export function openPool(url) {
+  const pool = new pg.Pool({ connectionString: url });
+  let open = 0;
+  const waiters = [];
+  pool.on('connect', () => {
+    open += 1;
+  });
+  pool.on('remove', () => {
+    open -= 1;
+    if (open === 0) waiters.splice(0).forEach((resolve) => resolve());
+  });
+  const allClosed = () =>
+    open === 0 ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve));
+  return {
+    pool,
+    async close() {
+      const closed = allClosed();
+      await pool.end();
+      await closed;
+    },
+  };
+}
+
+/** Blanks the database address (and its password) out of text that is about to be printed. */
+export function redact(text, url) {
+  let out = String(text);
+  if (!url) return out;
+  const secrets = [url];
+  try {
+    const u = new URL(url);
+    if (u.password) secrets.push(u.password, decodeURIComponent(u.password));
+  } catch {
+    const m = /^[a-z]+:\/\/[^:/@]+:([^@]+)@/i.exec(url);
+    if (m) secrets.push(m[1]);
+  }
+  for (const secret of secrets) if (secret) out = out.split(secret).join('***');
+  return out;
+}
+
 /** A minimal client: `query(text, params)` resolves to rows; `end()` closes it. */
 export function openDatabase(url) {
   if (!url) throw new Error('No database URL given.');
   if (isLocalDatabase(url)) {
-    const pool = new pg.Pool({ connectionString: url });
+    const { pool, close } = openPool(url);
     return {
       query: async (text, params = []) => (await pool.query(text, params)).rows,
-      end: () => pool.end(),
+      end: close,
     };
   }
   const sql = neon(url);
@@ -36,9 +83,12 @@ export function openDatabase(url) {
 /** Applies the migrations in ./drizzle, the same way production deploys do. */
 export async function applyMigrations(url, migrationsFolder = './drizzle') {
   if (isLocalDatabase(url)) {
-    const pool = new pg.Pool({ connectionString: url });
-    await migratePg(drizzlePg(pool), { migrationsFolder });
-    await pool.end();
+    const { pool, close } = openPool(url);
+    try {
+      await migratePg(drizzlePg(pool), { migrationsFolder });
+    } finally {
+      await close();
+    }
   } else {
     await migrateNeon(drizzleNeon(neon(url)), { migrationsFolder });
   }
