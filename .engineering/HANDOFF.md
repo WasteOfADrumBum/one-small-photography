@@ -1,28 +1,26 @@
-<!-- generated from .engineering/state.json (revision 7) -->
+<!-- generated from .engineering/state.json (revision 8) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 7, `ckpt-0007-pr28-ci-green`, 2026-11-03T13:50:00Z by Claude Code
+- Checkpoint: revision 8, `ckpt-0008-owner-reported-nov3`, 2026-11-03T15:40:00Z by Claude Code
 - Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-Pull request #28 (branch claude/project-thread-svwmjb) has green CI on d1bc89e. The owner reviews and merges. Do not record approval.
+A documentation pull request records the owner-reported 2026-11-03 results and the post-merge CI and smoke results. Wait for the owner to review and merge it. Do not record approval.
 
 ## Unfinished
 
-- Owner checklist in docs/RELEASE.md sections 5 and 6
-- First off-site backup
-- B2 lifecycle check
-- Screen reader and real-device pass
+- Confirm K:\ encryption
+- Owner approval decision in docs/RELEASE.md section 6
 
 ## Blockers
 
 - Owner release decision (docs/RELEASE.md section 6)
-- No PowerShell or B2 access in the agent environment
+- K:\ encryption unconfirmed
 
 ## Decisions
 
