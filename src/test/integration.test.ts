@@ -460,6 +460,38 @@ describe.skipIf(!url)('with a database', () => {
       expect((await attemptLogin('admin@example.com', 'a brand new password')).ok).toBe(true);
     });
 
+    it('closes every database connection before end() resolves', async () => {
+      // pg's pool.end() resolves before its sockets close. If end() returned
+      // that early, dropping the database straight after (as the restore test
+      // below does) killed a closing backend and crashed the run with an
+      // unhandled 57P01 "terminating connection due to administrator command".
+      const checkUrl = new URL(url!);
+      checkUrl.pathname = '/osp_close_check';
+      const server = new pg.Client({ connectionString: url });
+      await server.connect();
+      await server.query('drop database if exists osp_close_check');
+      await server.query('create database osp_close_check');
+      try {
+        let leftOpen = 0;
+        for (let i = 0; i < 20; i++) {
+          await applyMigrations(checkUrl.href);
+          const client = openDatabase(checkUrl.href);
+          await Promise.all([1, 2, 3].map(() => client.query('select 1')));
+          await client.end();
+          const [row] = (
+            await server.query(
+              "select count(*)::int as n from pg_stat_activity where datname = 'osp_close_check'",
+            )
+          ).rows;
+          leftOpen += row.n;
+        }
+        expect(leftOpen).toBe(0);
+      } finally {
+        await server.query('drop database if exists osp_close_check');
+        await server.end();
+      }
+    });
+
     it('backs up every table and restores it only into an empty database', async () => {
       const album = await createAlbum('Kept', true);
       await upload(album.id, 'Dusty', { settings: JSON.stringify({ aperture: '2.8', iso: 100 }) });
