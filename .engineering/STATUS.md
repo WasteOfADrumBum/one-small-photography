@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 5); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 6); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -6,21 +6,22 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
-- Branch: unknown
-- Recorded commit: `e3bc6d2` on `main`
-- Last checkpoint: 2026-11-02T23:10:00Z by Claude Code
+- Branch: claude/project-thread-svwmjb
+- Recorded commit: `d39790f` on `claude/project-thread-svwmjb`
+- Last checkpoint: 2026-11-03T13:55:00Z by Claude Code
 
 ## Next action
 
-Owner: complete docs/RELEASE.md section 6 (scope approval, first off-site backup, B2 version lifecycle, the 4 moderate build-time advisories). Optional work in ROADMAP.md.
+Owner: review and merge the follow-up PR for branch claude/project-thread-svwmjb; run scripts/first-backup.ps1 -CheckOnly then without it; check the B2 lifecycle (RECOVERY.md section 4); complete docs/RELEASE.md section 6 yourself.
 
 ## Completed
 
-- PR #22 merged by Joshua Small as e3bc6d2: CI workflow token limited to contents: read; CI green on main
-- PR #26 merged (48efb13): white "Why One Small" heading and a letter that opens with a P
-- PR #25 merged to main (ad5a8b2), per GitHub
-- Heading: 'Why One Small' in paper/white, 'Photo' in gold (Joshua: the sand 'Why' looked odd)
-- Letter now opens 'Photography, for me, comes down to one small photo: a single frame, one moment, seen clearly and kept.' (Joshua wanted a P drop cap; the O looked too square)
+- Fixed the CI unhandled Postgres 57P01 error seen on main run 75: pool.end() resolved before sockets closed; openPool() now waits; regression test added
+- WCAG 2.2 pass (axe 4.10 A/AA/2.2 at 5 viewports incl. 200% zoom and 320px reflow, Tab walk, text spacing): fixed clipped admin photo cards on phones, added non-drag reorder buttons, 24px admin link targets. No screen reader run.
+- Reconciled docs/RELEASE.md: production smoke run 41498801968 passed 10/10 (read from its logs)
+- Reviewed 20 moderate npm advisories (0 high): none in the deployed function bundle, no non-downgrade fix; recovery requirements table added (RELEASE.md 3a)
+- Added scripts/verify-backup.mjs, password redaction in db-backup/db-restore, scripts/first-backup.ps1 and backup entries in .gitignore
+- B2 recovery settings: no B2 access from the agent; exact console steps written in docs/RECOVERY.md section 4
 
 ## In progress
 
@@ -28,10 +29,14 @@ _none recorded_
 
 ## Tests (agent-reported)
 
-- `npm run lint && npm run check && npm test && npm run build (125 passed, 24 DB tests skipped locally)`: pass, 2026-11-02T19:35:00Z
-- `GitHub CI on main (push, read-only token)`: pass at `e3bc6d2`, 2026-11-02T22:16:00Z
-- `Production smoke (manual dispatch after the release merge)`: pass at `c850853`, 2026-11-02T18:15:00Z
+- `npm run format:check && npm run lint && npm run check && npm test (160 tests in 25 files, Postgres 16 locally, 3 consecutive runs of the integration file clean) && npm run build`: pass at `d39790f`, 2026-11-03T13:42:00Z
+- `GitHub CI on main @ 153eee0 (push)`: fail at `153eee0`, 2026-11-03T03:42:00Z
+- `Production smoke (manual dispatch after the release merge), 10/10 checks`: pass at `c850853`, 2026-11-02T18:15:00Z
 
 ## Unverified changes
 
-- Carried over: share card in real link previews, vercel.json headers on live pages, photo-audit against B2, real-device and screen reader checks
+- scripts/first-backup.ps1 was never run under PowerShell (none available to the agent); its Node steps were run
+- Backblaze bucket lifecycle and keys were not inspected (no B2 access)
+- No screen reader (NVDA, JAWS, VoiceOver, TalkBack) or real-device test; accessibility checks were Chromium only
+- CI on the PR branch has not yet run at the time of this checkpoint
+- Carried over: share card in real link previews, photo-audit against B2
