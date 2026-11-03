@@ -1,26 +1,24 @@
-<!-- generated from .engineering/state.json (revision 8) -->
+<!-- generated from .engineering/state.json (revision 9) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 8, `ckpt-0008-owner-reported-nov3`, 2026-11-03T15:40:00Z by Claude Code
+- Checkpoint: revision 9, `ckpt-0009-backup-risk-accepted`, 2026-11-03T16:30:00Z by Claude Code
 - Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-A documentation pull request records the owner-reported 2026-11-03 results and the post-merge CI and smoke results. Wait for the owner to review and merge it. Do not record approval.
+Docs pull request #29 records the owner-reported 2026-11-03 results and the owner's acceptance of the unencrypted K:\ backup risk. The owner reviews and merges it. Do not record approval.
 
 ## Unfinished
 
-- Confirm K:\ encryption
 - Owner approval decision in docs/RELEASE.md section 6
 
 ## Blockers
 
 - Owner release decision (docs/RELEASE.md section 6)
-- K:\ encryption unconfirmed
 
 ## Decisions
 
@@ -32,6 +30,7 @@ A documentation pull request records the owner-reported 2026-11-03 results and t
 - [agent] Owner scripts print only a redacted message on failure, because Node's own error output can echo the database password
 - [agent] Photos and albums get Move earlier/later buttons so reordering does not require dragging (WCAG 2.5.7)
 - [agent] 20 moderate advisories are build or dev time only and have no non-downgrade fix; recorded as accepted risk pending the owner's decision
+- [human] The verified database backup copy on K:\ stays unencrypted; the owner accepts the risk of exposing contact data and the admin password hash if someone accesses that drive (Joshua Small, project thread, 2026-11-03T16:10:42Z)
 
 ## Constraints
 

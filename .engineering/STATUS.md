@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 8); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 9); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -7,15 +7,16 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
 - Branch: claude/project-thread-svwmjb
-- Recorded commit: `083627e` on `claude/project-thread-svwmjb`
-- Last checkpoint: 2026-11-03T15:40:00Z by Claude Code
+- Recorded commit: `3555985` on `claude/project-thread-svwmjb`
+- Last checkpoint: 2026-11-03T16:30:00Z by Claude Code
 
 ## Next action
 
-Owner: confirm K:\ encryption, then decide on docs/RELEASE.md section 6 yourself. No agent step remains.
+Owner: review and merge the docs PR (#29), then make the release decision in docs/RELEASE.md section 6 yourself. No agent step remains.
 
 ## Completed
 
+- Recorded Joshua Small's 2026-11-03 acceptance of the unencrypted K:\ backup copy risk (owner-stated, in his words) in docs/RELEASE.md section 2; the copy is not described as encrypted
 - PR #28 merged as a1227ca; main CI run 78 green (per GitHub)
 - Production deployment dpl_7xGuAn2vCBEnj1ag4ET6J3J4LSXU READY at a1227ca (per Vercel API)
 - Production smoke run 41664171346 passed 10/10 after that deployment (read from its log)
@@ -37,6 +38,6 @@ _none recorded_
 
 - Owner-reported 2026-11-03, not verified by the agent: keyboard, Narrator and phone checks passed; first-backup.ps1 ran under PowerShell 7.6.9; backup verified and its copy on K:\ matched the SHA-256; B2 bucket private with Keep all versions; retained sm.webp opened after deleting a disposable photo
 - File recovery only: restoring a deleted photo's database record, and restoring the real backup file into a new database, have not been tested
-- Encryption of K:\ is not confirmed
+- The K:\ backup copy is not encrypted (owner-accepted risk, 2026-11-03); owner-stated, not verified by the agent
 - The agent never ran first-backup.ps1 under PowerShell and has no B2 access
 - Carried over: share card in real link previews, photo-audit against B2
