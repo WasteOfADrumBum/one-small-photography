@@ -7,7 +7,17 @@ import {
   type ReactNode,
   type TextareaHTMLAttributes,
 } from 'react';
-import { CircleAlert, Check, Eye, EyeOff, LoaderCircle, X, type LucideIcon } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  CircleAlert,
+  Check,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 
 const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' ');
 
@@ -192,5 +202,60 @@ export function SaveToast({ state, onDismiss }: { state: SaveState; onDismiss: (
         </button>
       )}
     </div>
+  );
+}
+
+/** The new order after moving `index` by `delta` places, or null when it can't move that way. */
+export function moveBy<T>(items: readonly T[], index: number, delta: -1 | 1): T[] | null {
+  const to = index + delta;
+  if (index < 0 || to < 0 || to >= items.length) return null;
+  const next = items.slice();
+  const [item] = next.splice(index, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
+/**
+ * Earlier / later buttons: a single-click alternative to dragging (WCAG 2.2 criterion 2.5.7).
+ * The buttons are 32 px square, above the 24 px minimum target size.
+ */
+export function MoveButtons({
+  name,
+  index,
+  count,
+  onMove,
+  className,
+}: {
+  name: string;
+  index: number;
+  count: number;
+  onMove: (delta: -1 | 1) => void;
+  className?: string;
+}) {
+  const base =
+    'inline-flex h-8 w-8 items-center justify-center rounded-full border border-sand/30 text-paper transition-colors hover:border-gold disabled:cursor-not-allowed disabled:opacity-40';
+  return (
+    <span className={cx('inline-flex shrink-0 gap-1', className)}>
+      <button
+        type="button"
+        className={base}
+        disabled={index <= 0}
+        aria-label={`Move ${name} earlier`}
+        title="Move earlier"
+        onClick={() => onMove(-1)}
+      >
+        <ArrowUp aria-hidden size={16} strokeWidth={1.75} />
+      </button>
+      <button
+        type="button"
+        className={base}
+        disabled={index >= count - 1}
+        aria-label={`Move ${name} later`}
+        title="Move later"
+        onClick={() => onMove(1)}
+      >
+        <ArrowDown aria-hidden size={16} strokeWidth={1.75} />
+      </button>
+    </span>
   );
 }

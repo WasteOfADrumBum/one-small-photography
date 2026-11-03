@@ -8,10 +8,12 @@ import { Sortable, useSortableItem } from './sortable';
 import {
   Button,
   ErrorNote,
+  MoveButtons,
   SaveToast,
   TextArea,
   TextField,
   VisibilityToggle,
+  moveBy,
   useSaveStatus,
 } from './ui';
 
@@ -116,7 +118,7 @@ export default function AlbumsManager({ initialAlbums }: { initialAlbums: Album[
         <p className="mt-1 text-sm text-sand">
           This is the order of the Polaroid stacks on the portfolio page. The first{' '}
           {FEATURED_ALBUM_COUNT} are also featured on your home page, marked with a gold star. Drag
-          an album by its handle to move it.
+          an album by its handle, or use the arrow buttons, to move it.
         </p>
         <AlbumList
           albums={visible}
@@ -161,12 +163,18 @@ function AlbumList({
   return (
     <Sortable items={albums} onReorder={onReorder}>
       <ol className="mt-6 divide-y divide-sand/15 rounded-xl border border-sand/20 bg-moss">
-        {albums.map((album) => (
+        {albums.map((album, index) => (
           <AlbumRow
             key={album.id}
             album={album}
             featured={featuredIds.has(album.id)}
             onToggle={() => onToggle(album)}
+            index={index}
+            count={albums.length}
+            onMove={(delta) => {
+              const next = moveBy(albums, index, delta);
+              if (next) onReorder(next);
+            }}
           />
         ))}
       </ol>
@@ -178,10 +186,16 @@ function AlbumRow({
   album,
   featured,
   onToggle,
+  index,
+  count,
+  onMove,
 }: {
   album: Album;
   featured: boolean;
   onToggle: () => void;
+  index: number;
+  count: number;
+  onMove: (delta: -1 | 1) => void;
 }) {
   const { ref, style, handle, isDragging } = useSortableItem(album.id);
   return (
@@ -237,6 +251,7 @@ function AlbumRow({
           Featured
         </span>
       )}
+      <MoveButtons name={album.title} index={index} count={count} onMove={onMove} />
       <VisibilityToggle
         noun="album"
         visible={album.published}

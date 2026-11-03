@@ -50,6 +50,22 @@ export function openPool(url) {
   };
 }
 
+/** Blanks the database address (and its password) out of text that is about to be printed. */
+export function redact(text, url) {
+  let out = String(text);
+  if (!url) return out;
+  const secrets = [url];
+  try {
+    const u = new URL(url);
+    if (u.password) secrets.push(u.password, decodeURIComponent(u.password));
+  } catch {
+    const m = /^[a-z]+:\/\/[^:/@]+:([^@]+)@/i.exec(url);
+    if (m) secrets.push(m[1]);
+  }
+  for (const secret of secrets) if (secret) out = out.split(secret).join('***');
+  return out;
+}
+
 /** A minimal client: `query(text, params)` resolves to rows; `end()` closes it. */
 export function openDatabase(url) {
   if (!url) throw new Error('No database URL given.');

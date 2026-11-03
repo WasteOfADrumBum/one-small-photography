@@ -119,3 +119,51 @@ export async function restoreBackup(db, backup, { chunkSize = 200 } = {}) {
   }
   return after;
 }
+
+/**
+ * Checks a parsed backup file for internal consistency, without any database.
+ * Returns a list of problems; an empty list means the file is complete and
+ * its references agree. Used by scripts/verify-backup.mjs.
+ */
+export function verifyBackup(backup) {
+  const problems = [];
+  if (backup?.format !== BACKUP_FORMAT || backup.version !== BACKUP_VERSION) {
+    return ['This file is not a OneSmallPhoto database backup (wrong format or version).'];
+  }
+  if (!backup.tables || typeof backup.tables !== 'object') return ['The file has no tables.'];
+  for (const table of BACKUP_TABLES) {
+    const rows = backup.tables[table];
+    if (!Array.isArray(rows)) {
+      problems.push(`Table "${table}" is missing.`);
+    } else if (backup.counts?.[table] !== rows.length) {
+      problems.push(
+        `Table "${table}" has ${rows.length} rows but the file says ${backup.counts?.[table]}.`,
+      );
+    }
+  }
+  for (const table of SKIPPED_TABLES) {
+    if (backup.tables[table]) problems.push(`Table "${table}" should not be in a backup.`);
+  }
+  if (problems.length) return problems;
+
+  const ids = (table) => new Set(backup.tables[table].map((row) => row.id));
+  const albums = ids('albums');
+  const photos = ids('photos');
+  const cameras = ids('cameras');
+  const lenses = ids('lenses');
+  if (backup.tables.users.length === 0) problems.push('No admin account in the backup.');
+  for (const p of backup.tables.photos) {
+    if (!albums.has(p.album_id)) problems.push(`Photo ${p.id} points at a missing album.`);
+    if (p.camera_id && !cameras.has(p.camera_id)) problems.push(`Photo ${p.id}: missing camera.`);
+    if (p.lens_id && !lenses.has(p.lens_id)) problems.push(`Photo ${p.id}: missing lens.`);
+  }
+  for (const a of backup.tables.albums) {
+    if (a.cover_photo_id && !photos.has(a.cover_photo_id)) {
+      problems.push(`Album "${a.title}" has a cover photo that is not in the backup.`);
+    }
+  }
+  if (!Array.isArray(backup.migrations) || backup.migrations.length === 0) {
+    problems.push('The backup does not record which migrations the schema had.');
+  }
+  return problems;
+}

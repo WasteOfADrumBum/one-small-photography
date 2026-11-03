@@ -20,3 +20,9 @@ npm-debug.log*
 .idea/
 .DS_Store
 .photos/
+
+# database backups hold private data: never commit them
+onesmallphoto-db-*.json
+onesmallphoto-db-*.json.sha256
+*-backup.json
+OneSmallPhoto-Backups/
