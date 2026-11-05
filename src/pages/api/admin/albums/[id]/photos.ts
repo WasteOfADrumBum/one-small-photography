@@ -7,7 +7,8 @@ import { nextPhotoOrder, photosInAlbum, setOrder } from '@/lib/albums';
 import { PhotoSettings, missingGear } from '@/lib/gear';
 import { fail, json, readJson } from '@/lib/http';
 import { sniffImageFormat } from '@/lib/image-type';
-import { PHOTO_SIZES, photoKey, putPhoto, type PhotoSize } from '@/lib/storage';
+import { PHOTO_SIZES, deletePhotoFiles, photoKey, putPhoto, type PhotoSize } from '@/lib/storage';
+import { stripMetadata } from '@/lib/strip-metadata';
 
 export const prerender = false;
 
@@ -93,7 +94,14 @@ export const POST: APIRoute = async ({ params, request }) => {
     const bytes = new Uint8Array(await file.arrayBuffer());
     if (sniffImageFormat(bytes) !== ext) return fail('Photos must be WebP or JPEG.');
     format = ext;
-    files[size] = { bytes, type: file.type };
+    // Camera tags, GPS position included, never reach storage, whatever sent the file.
+    let clean: Uint8Array;
+    try {
+      clean = stripMetadata(bytes, ext);
+    } catch {
+      return fail('That photo file is damaged.');
+    }
+    files[size] = { bytes: clean, type: file.type };
   }
 
   const { settings, ...details } = meta.data;
@@ -117,8 +125,10 @@ export const POST: APIRoute = async ({ params, request }) => {
       ),
     );
   } catch (err) {
+    // Undo everything: the record, and any size that did reach storage before the failure.
     await db().delete(photos).where(eq(photos.id, photo!.id));
-    console.error('Photo upload to B2 failed', err);
+    await deletePhotoFiles(photo!.id, format!).catch(() => {});
+    console.error('Photo upload to storage failed', err);
     return fail('Could not store the photo. Try again.', 502);
   }
 

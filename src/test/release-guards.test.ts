@@ -34,8 +34,21 @@ describe('production smoke checks', () => {
       const path = url.pathname;
       if (broken[path]) return broken[path];
       const page = (body: string, status = 200) => new Response(body, { status, headers: secure });
-      if (path === '/') return page('<title>OneSmallPhoto</title>');
+      if (path === '/')
+        return page(
+          '<title>OneSmallPhoto</title><link rel="canonical" href="https://photo.onesmall.company/">',
+        );
       if (path === '/portfolio') return page(`<a href="/portfolio/dusty"><img src="${photo}"></a>`);
+      if (path === '/portfolio/dusty')
+        return new Response(
+          '<link rel="canonical" href="https://photo.onesmall.company/portfolio/dusty"><button data-gallery-item>',
+          { headers: { ...secure, 'cache-control': 'no-cache, no-store, must-revalidate' } },
+        );
+      if (path === '/version.json') return new Response('{"commit":"abc123"}');
+      if (path === '/api/contact')
+        return new Response('{"error":"Add your name."}', {
+          status: init.method === 'POST' ? 400 : 404,
+        });
       if (path === photo)
         return new Response('x', {
           headers: { 'content-type': 'image/webp', 'cache-control': 'public, max-age=86400' },
@@ -54,10 +67,32 @@ describe('production smoke checks', () => {
 
   it('passes against a healthy site and only reads, apart from one refused POST', async () => {
     const { fetchImpl, methods } = site();
-    const results = await runSmoke('https://photo.example', fetchImpl);
+    const results = await runSmoke('https://photo.example', fetchImpl, {
+      expectedCommit: 'abc123',
+      hiddenPaths: ['/portfolio/a-hidden-album'],
+    });
     expect(results.filter((r) => !r.ok)).toEqual([]);
-    expect(results).toHaveLength(10);
-    expect(methods.filter((m) => m !== 'GET')).toEqual(['POST']);
+    expect(results).toHaveLength(14);
+    // Two POSTs, both refused before anything is saved: a cross-site admin write and an empty note.
+    expect(methods.filter((m) => m !== 'GET')).toEqual(['POST', 'POST']);
+  });
+
+  it('fails when the live site is a different build than the one deployed', async () => {
+    const { fetchImpl } = site();
+    const results = await runSmoke('https://photo.example', fetchImpl, {
+      expectedCommit: 'def456',
+    });
+    expect(results.find((r) => !r.ok)?.name).toBe('the live site is the expected build');
+  });
+
+  it('fails when a known hidden address is served', async () => {
+    const { fetchImpl } = site({ '/portfolio/oops': new Response('<html>', { status: 200 }) });
+    const results = await runSmoke('https://photo.example', fetchImpl, {
+      hiddenPaths: ['/portfolio/oops'],
+    });
+    expect(results.filter((r) => !r.ok).map((r) => r.name)).toEqual([
+      'unknown and known-hidden addresses answer 404, never publicly cached',
+    ]);
   });
 
   it('reports an open admin API, missing headers and a hidden-photo style 404', async () => {

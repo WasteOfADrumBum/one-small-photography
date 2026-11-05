@@ -1,0 +1,8 @@
+name: one-small-photography CodeQL
+paths:
+  - src
+  - scripts
+paths-ignore:
+  - src/test
+  - '**/*.test.ts'
+  - '**/*.test.tsx'

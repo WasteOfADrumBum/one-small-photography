@@ -45,6 +45,7 @@ const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'E
                 tone={tones[i % tones.length]}
                 photos={stackPhotos(album).slice(0, 3)}
                 subtitle={`${album.photos.length} ${album.photos.length === 1 ? 'photo' : 'photos'}`}
+                inLink
               />
             </a>
           ))

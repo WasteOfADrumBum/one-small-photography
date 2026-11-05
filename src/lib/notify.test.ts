@@ -93,3 +93,23 @@ describe('what a sender can put in the email', () => {
     expect(escapeHtml(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
   });
 });
+
+describe('resendUrl', () => {
+  it('uses the real API unless a local stand-in is named', async () => {
+    const { resendUrl } = await import('@/lib/notify');
+    expect(resendUrl(undefined)).toBe('https://api.resend.com/emails');
+    expect(resendUrl('http://127.0.0.1:4010/emails')).toBe('http://127.0.0.1:4010/emails');
+    expect(resendUrl('http://localhost:4010/emails')).toBe('http://localhost:4010/emails');
+  });
+
+  it('never sends notes or the API key to any other server', async () => {
+    const { resendUrl } = await import('@/lib/notify');
+    for (const url of [
+      'https://evil.example/emails',
+      'http://10.0.0.5/x',
+      'not a url',
+      'https://localhost/x',
+    ])
+      expect(resendUrl(url)).toBe('https://api.resend.com/emails');
+  });
+});

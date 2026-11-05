@@ -12,6 +12,23 @@
 import { site } from '@/lib/site';
 
 const RESEND_URL = 'https://api.resend.com/emails';
+
+/**
+ * Where the email goes. Tests point RESEND_API_URL at a local stand-in so no real
+ * email is ever sent; anything other than this machine is ignored, so the setting
+ * can't send notes (and the API key) to another server.
+ */
+export function resendUrl(override = process.env.RESEND_API_URL): string {
+  if (!override) return RESEND_URL;
+  try {
+    const url = new URL(override);
+    if (url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname))
+      return url.href;
+  } catch {
+    // Fall through to the real API.
+  }
+  return RESEND_URL;
+}
 const TIMEOUT_MS = 5000;
 export const DEFAULT_FROM = `${site.name} <onboarding@resend.dev>`;
 
@@ -54,7 +71,7 @@ export async function notifyNewMessage(note: ContactNote, siteUrl?: string): Pro
 
   const email = contactEmail(note, siteUrl);
   try {
-    const res = await fetch(RESEND_URL, {
+    const res = await fetch(resendUrl(), {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({

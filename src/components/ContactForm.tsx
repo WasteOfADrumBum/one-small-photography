@@ -16,8 +16,9 @@ export default function ContactForm() {
     const data = new FormData(e.currentTarget);
     const value = (key: string) => String(data.get(key) ?? '').trim();
     setStatus({ kind: 'sending' });
+    let res: Response;
     try {
-      const res = await fetch('/api/contact', {
+      res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -27,14 +28,24 @@ export default function ContactForm() {
           website: value('website'),
         }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? 'That did not go through. Try again in a moment.');
-      }
-      setStatus({ kind: 'sent' });
-    } catch (err) {
-      setStatus({ kind: 'error', message: (err as Error).message });
+    } catch {
+      // The browser's own network errors ("Failed to fetch") mean nothing to a visitor.
+      setStatus({
+        kind: 'error',
+        message:
+          'That did not go through. Check your connection and try again; what you wrote is still here.',
+      });
+      return;
     }
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      setStatus({
+        kind: 'error',
+        message: body.error ?? 'That did not go through. Try again in a moment.',
+      });
+      return;
+    }
+    setStatus({ kind: 'sent' });
   }
 
   if (status.kind === 'sent') {

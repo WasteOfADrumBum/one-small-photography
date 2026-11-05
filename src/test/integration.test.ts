@@ -3,7 +3,8 @@
  * (CI starts a throwaway database), and they empty every table first, so never
  * point it at the real one. Photos go to a temporary folder instead of B2.
  */
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import exifr from 'exifr';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { sql } from 'drizzle-orm';
@@ -41,8 +42,12 @@ import AlbumPage from '@/pages/portfolio/[slug].astro';
 import { resetAdminPassword } from '../../scripts/lib/admin-password.mjs';
 import { assertEmpty, createBackup, restoreBackup } from '../../scripts/lib/backup.mjs';
 import { applyMigrations, openDatabase } from '../../scripts/lib/db.mjs';
+import { assertDisposableDatabaseUrl } from '../../scripts/lib/test-safety.mjs';
+import { JPEG_WITH_GPS } from './fixtures/images';
 
 const url = process.env.TEST_DATABASE_URL;
+// These tests empty every table: refuse anything but a Postgres on this machine.
+if (url) assertDisposableDatabaseUrl(url);
 const ORIGIN = 'http://localhost';
 
 /** A stand-in for Astro's cookie jar. */
@@ -307,6 +312,59 @@ describe.skipIf(!url)('with a database', () => {
       expect(await res.json()).toEqual({ error: 'Photos must be WebP or JPEG.' });
       expect(await db().select().from(photos)).toHaveLength(0);
       expect(await stored()).toBe(before);
+    });
+
+    it('strips camera tags and the GPS position from uploaded files before storing them', async () => {
+      const album = await createAlbum('Located');
+      const form = uploadForm('Located');
+      for (const size of ['sm', 'md', 'lg'])
+        form.set(size, new File([JPEG_WITH_GPS], `${size}.jpg`, { type: 'image/jpeg' }));
+      const res = await call(albumPhotosRoute.POST, {
+        method: 'POST',
+        params: { id: album.id },
+        body: form,
+      });
+      expect(res.status).toBe(201);
+      const { id } = (await res.json()) as { id: string };
+      for (const size of ['sm', 'md', 'lg']) {
+        const stored = await readFile(join(storage, 'photos', id, `${size}.jpg`));
+        expect(await exifr.gps(stored).catch(() => undefined)).toBeUndefined();
+        expect(stored.includes(Buffer.from('SyntheticCam'))).toBe(false);
+      }
+    });
+
+    it('refuses a damaged file that only starts like a JPEG', async () => {
+      const album = await createAlbum('Damaged');
+      const form = uploadForm('Damaged');
+      const broken = Uint8Array.from([0xff, 0xd8, 0xff, 0xe1, 0xff, 0xff, 1, 2, 3]);
+      for (const size of ['sm', 'md', 'lg'])
+        form.set(size, new File([broken], `${size}.jpg`, { type: 'image/jpeg' }));
+      const res = await call(albumPhotosRoute.POST, {
+        method: 'POST',
+        params: { id: album.id },
+        body: form,
+      });
+      expect(res.status).toBe(400);
+      expect(await db().select().from(photos)).toHaveLength(0);
+    });
+
+    it('reports a storage failure instead of a false success and keeps no record', async () => {
+      const album = await createAlbum('Flaky storage');
+      // A file where the photos folder should be makes every write fail.
+      const broken = await mkdtemp(join(tmpdir(), 'osp-broken-storage-'));
+      await writeFile(join(broken, 'photos'), 'not a folder');
+      process.env.STORAGE_DIR = broken;
+      try {
+        const { res, photo } = await upload(album.id, 'Lost');
+        expect(res.status).toBe(502);
+        expect(photo.error).toMatch(/Could not store the photo/);
+      } finally {
+        process.env.STORAGE_DIR = storage;
+        await rm(broken, { recursive: true, force: true });
+      }
+      expect(await db().select().from(photos)).toHaveLength(0);
+      const [saved] = await db().select().from(albums);
+      expect(saved!.coverPhotoId).toBeNull();
     });
 
     it('rejects settings that are not on the lists', async () => {
