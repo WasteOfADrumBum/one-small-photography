@@ -133,3 +133,34 @@ jobs:
             "Vercel reported the production deployment of $SHA as $STATE. The live site keeps serving the previous deployment. Build log: $LOG_URL"
           echo "::error::Production deployment of $SHA: $STATE"
           exit 1
+
+  protection:
+    name: Check that main is protected
+    # Daily and by hand. Branch protection is a repository setting, so it can
+    # change without a commit; this notices when it is missing or weakened.
+    if: github.event_name != 'deployment_status'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    concurrency:
+      group: protection-check
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write # open or close the one alert issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read the rules on main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if result=$(node scripts/ci/check-protection.mjs); then
+            echo "$result"
+            node scripts/ci/alert-issue.mjs close protection "$result"
+          else
+            echo "::error::$result"
+            node scripts/ci/alert-issue.mjs open protection "main is not protected" \
+              "$result Import .github/rulesets/protect-main.json in Settings → Rules → Rulesets (see docs/CI-CD.md)."
+            exit 1
+          fi

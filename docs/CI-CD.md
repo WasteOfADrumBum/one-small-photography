@@ -95,9 +95,28 @@ logs; only use addresses you are happy to have in a public log.
 
 ## Branch protection on `main`
 
-Wanted: pull requests required, **CI gate** required and up to date with `main`, no force
-pushes, no deletion, no required human approval, no bypass. See the evidence table for what is
-actually set.
+Wanted: pull requests required (with no required human approval), **CI gate** required and up
+to date with `main`, no force pushes, no deletion, no bypass. Docs-only changes still get a
+passing gate, so they are never stuck.
+
+**Status: not set.** The agent's GitHub access is refused by its proxy for every settings write
+(branch protection and rulesets both answered 403 on 2026-11-05), so this is the one owner step.
+`.github/rulesets/protect-main.json` holds the exact ruleset:
+
+1. GitHub → the repository → **Settings → Rules → Rulesets → New ruleset → Import a ruleset**.
+2. Choose `.github/rulesets/protect-main.json` (download it from the repository first) and
+   **Create**.
+
+That's it. A daily job ("Check that main is protected" in `production-smoke.yml`) reads the
+rules on `main` and opens a `production-alert` issue while any of them is missing, and closes it
+once they are all there. It needs no admin rights.
+
+With the ruleset on, everyone, Joshua included, changes `main` through a pull request whose CI
+gate has passed. To allow yourself a bypass for emergencies, add yourself under "Bypass list"
+when importing; the daily check doesn't mind.
+
+The merge queue is supported (`merge_group` is a CI trigger) but not required: with one
+person merging, "up to date before merging" gives the same guarantee.
 
 ## Running it locally
 
