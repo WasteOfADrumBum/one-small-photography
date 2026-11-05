@@ -17,8 +17,8 @@ export default defineConfig({
   expect: { timeout: 7_000 },
   fullyParallel: false,
   forbidOnly: CI,
-  // One retry in CI so a flaky test shows up as "flaky" in the report (and the
-  // summary step fails on it) instead of blocking or passing silently.
+  // One retry in CI so a flaky test shows up as "flaky" instead of failing the
+  // run or passing silently: the summary step lists it and annotates the run.
   retries: CI ? 1 : 0,
   // One worker: the admin tests briefly break this run's photo folder on purpose.
   workers: 1,
@@ -38,7 +38,8 @@ export default defineConfig({
     locale: 'en-US',
   },
   projects: [
-    { name: 'setup', testMatch: /seed\.setup\.ts/ },
+    // No retry: /setup works once, so a second try would fail for the wrong reason.
+    { name: 'setup', testMatch: /seed\.setup\.ts/, retries: 0 },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },

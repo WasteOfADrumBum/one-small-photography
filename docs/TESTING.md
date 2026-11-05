@@ -77,5 +77,9 @@ deployment script (`scripts/migrate.mjs`).
 Budgets live in `e2e/budgets.json`, each set about 15% above what the pages measured on
 2026-11-05, so a real regression fails while ordinary changes don't.
 
-Retries: one in CI. A test that passes only on retry is reported as **flaky** in the job summary
+Retries: one in CI (none for the setup step, which can only run once). A test that passes only on retry is reported as **flaky** in the job summary
 and as a warning on the run, so retries never hide it.
+
+**Not yet seen running:** Firefox and WebKit have not been run on this suite (only Chromium,
+locally and in CI). The first weekly run is the first evidence. One thing to watch there: the
+admin session cookie is `Secure`, and WebKit may refuse a `Secure` cookie on `http://localhost`.

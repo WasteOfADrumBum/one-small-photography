@@ -51,8 +51,73 @@ describe('stripMetadata', () => {
     );
   });
 
+  const join = (...parts: Uint8Array[]) => new Uint8Array(Buffer.concat(parts));
+  const segment = (marker: number, body: string) => {
+    const bytes = new TextEncoder().encode(body);
+    return new Uint8Array([
+      0xff,
+      marker,
+      (bytes.length + 2) >> 8,
+      (bytes.length + 2) & 0xff,
+      ...bytes,
+    ]);
+  };
+
+  it('drops anything after the end of the image, such as a second photo with GPS', async () => {
+    const withTrailer = join(PLAIN_JPEG, JPEG_WITH_GPS);
+    const out = stripMetadata(withTrailer, 'jpg');
+    expect(Buffer.from(out).equals(Buffer.from(PLAIN_JPEG))).toBe(true);
+    expect(Buffer.from(out).includes(Buffer.from('Exif'))).toBe(false);
+  });
+
+  it('drops the MPF index of extra images but keeps the colour profile', () => {
+    const icc = segment(0xe2, 'ICC_PROFILE\0\x01\x01colour');
+    const mpf = segment(0xe2, 'MPF\0MM\0*');
+    const file = join(PLAIN_JPEG.subarray(0, 2), icc, mpf, PLAIN_JPEG.subarray(2));
+    expect(
+      Buffer.from(stripMetadata(file, 'jpg')).equals(
+        Buffer.from(join(PLAIN_JPEG.subarray(0, 2), icc, PLAIN_JPEG.subarray(2))),
+      ),
+    ).toBe(true);
+  });
+
+  it('copes with fill bytes before a marker', async () => {
+    const stripped = stripMetadata(JPEG_WITH_GPS, 'jpg');
+    const filled = join(
+      JPEG_WITH_GPS.subarray(0, 2),
+      new Uint8Array([0xff, 0xff]),
+      JPEG_WITH_GPS.subarray(2),
+    );
+    const out = stripMetadata(filled, 'jpg');
+    expect(await gpsOf(out)).toBeUndefined();
+    expect(Buffer.from(out).equals(Buffer.from(stripped))).toBe(true);
+  });
+
+  it('keeps tables between the scans of a progressive photo', () => {
+    const sos = PLAIN_JPEG.findIndex((b, i) => b === 0xff && PLAIN_JPEG[i + 1] === 0xda);
+    const eoi = PLAIN_JPEG.length - 2;
+    // A second "scan" after the first: a comment (dropped) and a table segment (kept).
+    const dht = segment(0xc4, 'table');
+    const file = join(
+      PLAIN_JPEG.subarray(0, eoi),
+      segment(0xfe, 'note'),
+      dht,
+      PLAIN_JPEG.subarray(sos, eoi),
+      PLAIN_JPEG.subarray(eoi),
+    );
+    const expected = join(
+      PLAIN_JPEG.subarray(0, eoi),
+      dht,
+      PLAIN_JPEG.subarray(sos, eoi),
+      PLAIN_JPEG.subarray(eoi),
+    );
+    expect(Buffer.from(stripMetadata(file, 'jpg')).equals(Buffer.from(expected))).toBe(true);
+  });
+
   it('refuses truncated or mislabelled files instead of storing them', () => {
     expect(() => stripMetadata(JPEG_WITH_GPS.subarray(0, 30), 'jpg')).toThrow();
     expect(() => stripMetadata(JPEG_WITH_GPS, 'webp')).toThrow();
+    // Cut off before the end-of-image marker.
+    expect(() => stripMetadata(PLAIN_JPEG.subarray(0, PLAIN_JPEG.length - 2), 'jpg')).toThrow();
   });
 });

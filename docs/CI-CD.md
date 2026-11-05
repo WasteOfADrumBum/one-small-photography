@@ -24,7 +24,7 @@ All run in parallel; the gate waits for all of them.
 | Unit, integration and migration tests | Vitest against a disposable Postgres: API, auth, uploads, visibility, contact, backups, migrations                                                           | never             |
 | Production build and migrations       | `npm run vercel-build` with `VERCEL_ENV=production` on an empty Postgres; a second run applies nothing; the preview path skips; the Vercel output is checked | docs-only changes |
 | Browser tests (Chromium)              | The Playwright suite against the built site; see [TESTING.md](TESTING.md)                                                                                    | docs-only changes |
-| Security checks                       | `npm audit` policy, gitleaks over the full history, dependency review on pull requests                                                                       | never             |
+| Security checks                       | `npm audit` policy over the whole lockfile, gitleaks over the full history                                                                                   | never             |
 | CodeQL                                | `security-extended` queries over `src` and `scripts`; fails on errors or high severity                                                                       | never             |
 | **CI gate**                           | Passes only if every job passed, or a job allowed to skip did so for a docs-only change                                                                      | never             |
 
@@ -64,8 +64,11 @@ they deploy at all; it could not be read from here.
 `production-smoke.yml`, on a deployment status from Vercel:
 
 1. Runs only for environment `Production`, state `success`, created by `vercel[bot]`. A
-   `failure` or `error` status runs a separate job that opens a "Production deployment failed"
-   alert instead. Previews never run either job.
+   `failure` or `error` status from Vercel runs a separate job: a cancelled deployment (usually
+   replaced by a newer push) is noted in the run with no alert; any other failure opens a
+   "Production deployment failed" alert, which closes when a later production deployment
+   passes smoke. Previews never run either job, and skipped events never queue behind (or
+   displace) a real smoke run, because the one-at-a-time rule is on the job, not the workflow.
 2. Checks the commit is a full SHA that is on `main`, then polls `/version.json` (every 15 s, up
    to 10 minutes) until the live site reports that commit. If a newer commit on `main` is live
    by then, this run stands down without testing (the newer deployment has its own run). If

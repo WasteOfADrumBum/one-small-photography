@@ -37,18 +37,48 @@ function stripJpeg(file: Uint8Array): Uint8Array {
   if (file[0] !== 0xff || file[1] !== 0xd8) throw new Error('Not a JPEG.');
   const kept: Uint8Array[] = [file.subarray(0, 2)];
   let at = 2;
-  while (at + 4 <= file.length) {
+  let inScan = false;
+  for (;;) {
+    if (at >= file.length) throw new Error('Malformed JPEG.'); // no end-of-image marker
+    if (inScan) {
+      // Compressed image data runs until the next real marker. Inside it, 0xFF is
+      // followed by 0x00 (an escaped byte) or a restart marker (D0..D7).
+      const from = at;
+      while (at + 1 < file.length) {
+        if (file[at] === 0xff) {
+          const next = file[at + 1]!;
+          if (next !== 0x00 && !(next >= 0xd0 && next <= 0xd7) && next !== 0xff) break;
+        }
+        at += 1;
+      }
+      kept.push(file.subarray(from, at));
+      if (at + 1 >= file.length) throw new Error('Malformed JPEG.');
+    }
     if (file[at] !== 0xff) throw new Error('Malformed JPEG.');
-    const marker = file[at + 1]!;
-    // Start of scan: everything after is image data, kept as is.
-    if (marker === 0xda) break;
+    while (file[at + 1] === 0xff) at += 1; // fill bytes before a marker
+    const marker = file[at + 1];
+    if (marker === undefined) throw new Error('Malformed JPEG.');
+    if (marker === 0xd9) {
+      // End of image. Anything after it (MPF second images, motion-photo trailers,
+      // appended data) is dropped: it can carry its own Exif and GPS.
+      kept.push(file.subarray(at, at + 2));
+      return concat(kept);
+    }
+    if (at + 4 > file.length) throw new Error('Malformed JPEG.');
     const length = (file[at + 2]! << 8) | file[at + 3]!;
     if (length < 2 || at + 2 + length > file.length) throw new Error('Malformed JPEG.');
-    if (!JPEG_METADATA_MARKERS.has(marker)) kept.push(file.subarray(at, at + 2 + length));
+    const segment = file.subarray(at, at + 2 + length);
+    if (!isMetadataSegment(marker, segment)) kept.push(segment);
     at += 2 + length;
+    // Start of scan: compressed data follows (progressive photos have several scans).
+    inScan = marker === 0xda;
   }
-  kept.push(file.subarray(at));
-  return concat(kept);
+}
+
+/** APP2 holds either the ICC colour profile (kept) or MPF, the index of extra images (dropped). */
+function isMetadataSegment(marker: number, segment: Uint8Array): boolean {
+  if (JPEG_METADATA_MARKERS.has(marker)) return true;
+  return marker === 0xe2 && ascii(segment, 4) === 'MPF\0';
 }
 
 const ascii = (bytes: Uint8Array, at: number) => String.fromCharCode(...bytes.subarray(at, at + 4));

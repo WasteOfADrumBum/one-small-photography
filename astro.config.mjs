@@ -9,6 +9,8 @@ import tailwindcss from '@tailwindcss/vite';
 // Vercel's output can't be served locally; routes, middleware, cookies and API
 // handlers are the same code either way.
 // The Node adapter is a dev dependency, loaded only for those test builds.
+if (process.env.OSP_ADAPTER === 'node' && process.env.VERCEL)
+  throw new Error('OSP_ADAPTER=node is for local browser-test builds only; unset it on Vercel.');
 const adapter =
   process.env.OSP_ADAPTER === 'node'
     ? (await import('@astrojs/node')).default({ mode: 'standalone' })

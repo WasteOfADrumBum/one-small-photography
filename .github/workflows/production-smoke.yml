@@ -20,10 +20,6 @@ defaults:
   run:
     shell: bash
 
-concurrency:
-  group: production-smoke
-  cancel-in-progress: false
-
 env:
   SITE_URL: https://photo.onesmall.company
 
@@ -38,12 +34,19 @@ jobs:
        github.event.deployment_status.state == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # One smoke run at a time, never cancelled. At job level, so the many
+    # deployment events this job skips (previews, pending states) never join
+    # the group and can't displace a queued production run.
+    concurrency:
+      group: production-smoke
+      cancel-in-progress: false
     permissions:
       contents: read
       issues: write # open or close the one alert issue
     steps:
-      # Always the code on main, never the deployed commit's own workflow files
-      # or scripts, so a deployment of some other ref can't change what runs here.
+      # The scripts always come from main. (GitHub takes this workflow file itself
+      # from the deployed commit; the `if` above and wait-for-deployment's check
+      # that the commit is on main limit what that can reach. See docs/CI-CD.md.)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
@@ -79,10 +82,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           OUTCOME: ${{ job.status }}
+          EVENT: ${{ github.event_name }}
           WHAT: ${{ github.event_name == 'deployment_status' && format('the production deployment of {0}', github.event.deployment.sha) || github.event_name }}
         run: |
           if [[ "$OUTCOME" == "success" ]]; then
             node scripts/ci/alert-issue.mjs close smoke "Production smoke passed again ($WHAT)."
+            if [[ "$EVENT" == "deployment_status" ]]; then
+              node scripts/ci/alert-issue.mjs close deploy "A production deployment succeeded and passed smoke ($WHAT)."
+            fi
           else
             node scripts/ci/alert-issue.mjs open smoke "Production smoke check failed" \
               "The read-only checks of $SITE_URL failed after $WHAT. Open the run for the failing checks."
@@ -93,9 +100,13 @@ jobs:
     if: >-
       github.event_name == 'deployment_status' &&
       github.event.deployment.environment == 'Production' &&
+      github.event.deployment.creator.login == 'vercel[bot]' &&
       (github.event.deployment_status.state == 'failure' || github.event.deployment_status.state == 'error')
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    concurrency:
+      group: production-deploy-alert
+      cancel-in-progress: false
     permissions:
       contents: read
       issues: write # open or close the one alert issue
@@ -110,7 +121,14 @@ jobs:
           STATE: ${{ github.event.deployment_status.state }}
           SHA: ${{ github.event.deployment.sha }}
           LOG_URL: ${{ github.event.deployment_status.target_url }}
+          DESCRIPTION: ${{ github.event.deployment_status.description }}
         run: |
+          # A cancelled deployment (usually replaced by a newer push) is not a
+          # failure: say so in the run and raise no alert.
+          if [[ "${DESCRIPTION,,}" == *cancel* ]]; then
+            echo "::notice::Production deployment of $SHA was cancelled ($DESCRIPTION); no alert."
+            exit 0
+          fi
           node scripts/ci/alert-issue.mjs open deploy "Production deployment failed" \
             "Vercel reported the production deployment of $SHA as $STATE. The live site keeps serving the previous deployment. Build log: $LOG_URL"
           echo "::error::Production deployment of $SHA: $STATE"

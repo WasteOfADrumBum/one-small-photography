@@ -17,7 +17,19 @@ if (!token || !repo || !['open', 'close'].includes(action) || !kind) {
 }
 const label = 'production-alert';
 const marker = `<!-- alert:${kind} -->`;
+// Up to three tries, so one GitHub hiccup or timeout does not lose an alert.
 const api = async (path, init = {}) => {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await apiOnce(path, init);
+    } catch (err) {
+      if (attempt >= 3 || (err.status && err.status < 500)) throw err;
+      console.log(`Retrying after: ${err.message}`);
+      await new Promise((resolve) => setTimeout(resolve, 5_000 * attempt));
+    }
+  }
+};
+const apiOnce = async (path, init = {}) => {
   const res = await fetch(`https://api.github.com/repos/${repo}${path}`, {
     ...init,
     headers: {
@@ -29,7 +41,10 @@ const api = async (path, init = {}) => {
     signal: AbortSignal.timeout(20_000),
   });
   if (!res.ok)
-    throw new Error(`${init.method ?? 'GET'} ${path}: ${res.status} ${await res.text()}`);
+    throw Object.assign(
+      new Error(`${init.method ?? 'GET'} ${path}: ${res.status} ${await res.text()}`),
+      { status: res.status },
+    );
   return res.status === 204 ? null : res.json();
 };
 

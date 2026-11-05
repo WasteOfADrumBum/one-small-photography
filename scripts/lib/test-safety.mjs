@@ -17,6 +17,10 @@ export function assertDisposableDatabaseUrl(url, label = 'TEST_DATABASE_URL') {
   }
   if (!/^postgres(ql)?:$/.test(parsed.protocol))
     throw new Error(`${label} must be a postgres:// URL.`);
+  // node-postgres lets ?host= override the address, so refuse it outright.
+  for (const key of ['host', 'hostaddr'])
+    if (parsed.searchParams.has(key))
+      throw new Error(`${label} sets "${key}" in its options; give the address in the URL itself.`);
   if (!LOOPBACK.has(parsed.hostname)) {
     throw new Error(
       `${label} points at ${parsed.hostname}. Tests erase data, so they only run against a ` +

@@ -13,6 +13,14 @@ const output = (ready, reason) => {
     appendFileSync(GITHUB_OUTPUT, `ready=${ready}\nreason=${reason.replace(/\n/g, ' ')}\n`);
 };
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+const known = (sha) => {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+};
 const isAncestor = (a, b) => {
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', a, b]);
@@ -57,6 +65,8 @@ while (Date.now() < deadline) {
       }
       if (/^[0-9a-f]{40}$/.test(commit)) {
         try {
+          // A commit merged after this run started is not in the first fetch.
+          if (!known(commit)) git('fetch', '--quiet', 'origin', 'main');
           git('cat-file', '-e', `${commit}^{commit}`);
           if (isAncestor(DEPLOY_SHA, commit)) {
             output(

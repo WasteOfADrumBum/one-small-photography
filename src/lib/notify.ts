@@ -18,8 +18,12 @@ const RESEND_URL = 'https://api.resend.com/emails';
  * email is ever sent; anything other than this machine is ignored, so the setting
  * can't send notes (and the API key) to another server.
  */
-export function resendUrl(override = process.env.RESEND_API_URL): string {
-  if (!override) return RESEND_URL;
+export function resendUrl(
+  override = process.env.RESEND_API_URL,
+  onVercel = Boolean(process.env.VERCEL_ENV),
+): string {
+  // On Vercel the setting is ignored, so a stray value can't silently stop email.
+  if (!override || onVercel) return RESEND_URL;
   try {
     const url = new URL(override);
     if (url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname))

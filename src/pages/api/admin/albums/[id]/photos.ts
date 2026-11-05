@@ -118,13 +118,16 @@ export const POST: APIRoute = async ({ params, request }) => {
     })
     .returning();
 
-  try {
-    await Promise.all(
-      (Object.keys(files) as PhotoSize[]).map((size) =>
-        putPhoto(photoKey(photo!.id, size, format!), files[size].bytes, files[size].type),
-      ),
-    );
-  } catch (err) {
+  // Wait for every size to finish (not just the first failure), so cleanup
+  // can't race a write that is still in flight.
+  const stored = await Promise.allSettled(
+    (Object.keys(files) as PhotoSize[]).map((size) =>
+      putPhoto(photoKey(photo!.id, size, format!), files[size].bytes, files[size].type),
+    ),
+  );
+  const failed = stored.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failed) {
+    const err = failed.reason;
     // Undo everything: the record, and any size that did reach storage before the failure.
     await db().delete(photos).where(eq(photos.id, photo!.id));
     await deletePhotoFiles(photo!.id, format!).catch(() => {});

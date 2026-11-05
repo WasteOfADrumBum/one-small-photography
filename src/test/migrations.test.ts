@@ -60,12 +60,46 @@ describe('migration files', () => {
   // still live during a deploy (and after a rollback) keeps working. Anything
   // destructive needs its own reviewed release; list it here with the reason.
   const REVIEWED_DESTRUCTIVE: Record<string, string> = {};
-  const DESTRUCTIVE =
-    /\b(drop\s+(table|column|schema|type|index)|rename\s+(column|to)|alter\s+column\s+\S+\s+(set\s+data\s+)?type|truncate|delete\s+from)\b/i;
+  const DESTRUCTIVE = new RegExp(
+    [
+      String.raw`drop\s+(table|column|schema|type|index|constraint|view|function|sequence|default)`,
+      String.raw`rename\s+(column|to|value)`,
+      String.raw`alter\s+column\s+\S+\s+(set\s+data\s+)?type`,
+      String.raw`alter\s+column\s+\S+\s+set\s+not\s+null`,
+      // A new NOT NULL column with no default breaks inserts from the previous release.
+      String.raw`add\s+column\s+(?:(?!default)[^;,])*\bnot\s+null(?:(?!default)[^;,])*(?=[;,]|$)`,
+      'truncate',
+      String.raw`delete\s+from`,
+    ]
+      .map((p) => `\\b(?:${p})`)
+      .join('|'),
+    'i',
+  );
 
   it('every migration in the journal has its file, and nothing else is in the folder', () => {
     const files = readdirSync('drizzle').filter((f) => f.endsWith('.sql'));
     expect(files.sort()).toEqual(journal.entries.map((e) => `${e.tag}.sql`).sort());
+  });
+
+  it('the destructive-change check catches what would break the previous release', () => {
+    const breaking = [
+      'ALTER TABLE "photos" DROP COLUMN "title";',
+      'ALTER TABLE "photos" RENAME COLUMN "title" TO "name";',
+      'ALTER TABLE "photos" ALTER COLUMN "title" SET DATA TYPE integer;',
+      'ALTER TABLE "photos" ALTER COLUMN "title" SET NOT NULL;',
+      'ALTER TABLE "photos" ADD COLUMN "rank" integer NOT NULL;',
+      'ALTER TABLE "photos" DROP CONSTRAINT "photos_album_fk";',
+      "ALTER TYPE \"mood\" RENAME VALUE 'a' TO 'b';",
+      'DELETE FROM "photos";',
+    ];
+    const safe = [
+      'ALTER TABLE "photos" ADD COLUMN "rank" integer DEFAULT 0 NOT NULL;',
+      'ALTER TABLE "photos" ADD COLUMN "note" text;',
+      'CREATE TABLE "x" ("id" uuid PRIMARY KEY NOT NULL);',
+      'CREATE INDEX "photos_rank" ON "photos" ("rank");',
+    ];
+    expect(breaking.filter((sql) => !DESTRUCTIVE.test(sql))).toEqual([]);
+    expect(safe.filter((sql) => DESTRUCTIVE.test(sql))).toEqual([]);
   });
 
   it('no migration drops, renames or retypes anything without a reviewed exception', () => {

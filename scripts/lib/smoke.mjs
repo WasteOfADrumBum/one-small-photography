@@ -1,7 +1,8 @@
 // Read-only checks against a running site (production by default). Used by
 // scripts/smoke.mjs and the "Production smoke" workflow. Nothing here signs in
-// or changes data: the one POST is refused by the cross-site check before any
-// handler runs.
+// or changes data. Two POSTs: one is refused by the cross-site check before any
+// handler runs, the other is an empty contact form that fails validation before
+// anything is saved, rate-limited or emailed.
 
 export const DEFAULT_SITE = 'https://photo.onesmall.company';
 
@@ -135,12 +136,15 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch, options =
     expectStatus(await get('/portfolio/this-album-does-not-exist'), 404);
   });
   await check('unknown and known-hidden addresses answer 404, never publicly cached', async () => {
-    for (const path of ['/img/00000000-0000-4000-8000-000000000000/sm.webp', ...hiddenPaths]) {
+    // Hidden paths are named by number only: the log of this public repo is public.
+    const paths = ['/img/00000000-0000-4000-8000-000000000000/sm.webp', ...hiddenPaths];
+    for (const [i, path] of paths.entries()) {
+      const label = i === 0 ? 'an unknown photo' : `hidden address #${i}`;
       const res = await get(path);
       await res.arrayBuffer();
-      expectStatus(res, 404);
+      if (res.status !== 404) throw new Error(`${label}: HTTP ${res.status}, expected 404`);
       if ((res.headers.get('cache-control') ?? '').includes('public'))
-        throw new Error(`${path} is publicly cacheable`);
+        throw new Error(`${label} is publicly cacheable`);
     }
     return hiddenPaths.length
       ? `${hiddenPaths.length} known hidden addresses`
