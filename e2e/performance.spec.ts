@@ -26,16 +26,22 @@ function recordAssets(page: Page) {
   return assets;
 }
 
-/** Bytes of each distinct file once: some engines report a preloaded file twice. */
-const unique = (list: { url: string; type: string; bytes: number }[], type: string) => {
-  const files = new Map<string, number>();
-  for (const a of list)
-    if (a.type === type) files.set(a.url, Math.max(files.get(a.url) ?? 0, a.bytes));
-  return files;
-};
-const sum = (files: Map<string, number>) => [...files.values()].reduce((n, b) => n + b, 0);
-const listing = (files: Map<string, number>) =>
-  [...files].map(([url, bytes]) => `${url} ${bytes}`).join(', ');
+/**
+ * Each distinct script or style the page loaded, with its size as the server
+ * sends it. Engines can report a cached file's body wrongly (Firefox gave a
+ * 134 kB script as 594 kB), so the size comes from one fresh request per file.
+ */
+const sizes = new Map<string, number>();
+async function files(page: Page, list: { url: string; type: string }[], type: string) {
+  const out = new Map<string, number>();
+  for (const { url } of list.filter((a) => a.type === type)) {
+    if (!sizes.has(url)) sizes.set(url, (await (await page.request.get(url)).body()).length);
+    out.set(url, sizes.get(url)!);
+  }
+  return out;
+}
+const sum = (f: Map<string, number>) => [...f.values()].reduce((n, b) => n + b, 0);
+const listing = (f: Map<string, number>) => [...f].map(([url, b]) => `${url} ${b}`).join(', ');
 
 test('each page stays within its script and style budget', async ({ page }) => {
   const measured: Record<string, { js: number; css: number }> = {};
@@ -43,8 +49,8 @@ test('each page stays within its script and style budget', async ({ page }) => {
     const path = key.replace('{album}', seed.public.slug);
     const assets = recordAssets(page);
     await page.goto(path, { waitUntil: 'networkidle' });
-    const scripts = unique(assets, 'script');
-    const styles = unique(assets, 'stylesheet');
+    const scripts = await files(page, assets, 'script');
+    const styles = await files(page, assets, 'stylesheet');
     const js = sum(scripts);
     const css = sum(styles);
     measured[key] = { js, css };

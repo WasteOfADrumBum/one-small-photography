@@ -54,6 +54,8 @@ test.describe('the admin journey', () => {
     await signIn(page);
     await expect(page).toHaveURL(/\/admin$/);
     await expect(page.getByRole('tab', { name: 'Albums' })).toBeVisible();
+    // Typing before React has hydrated the form is lost (Firefox showed this).
+    await expect(page.locator('astro-island[ssr]')).toHaveCount(0);
 
     // 2. Create an album (it starts hidden).
     await page.getByLabel('Name').fill(title);
