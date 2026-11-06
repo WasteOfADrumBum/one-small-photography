@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 9); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 10); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -6,22 +6,21 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
-- Branch: claude/project-thread-svwmjb
-- Recorded commit: `3555985` on `claude/project-thread-svwmjb`
-- Last checkpoint: 2026-11-03T16:30:00Z by Claude Code
+- Branch: claude/project-thread-llnmsl
+- Recorded commit: `7e05123` on `claude/project-thread-llnmsl`
+- Last checkpoint: 2026-11-06T18:55:00Z by Claude Code
 
 ## Next action
 
-Owner: review and merge the docs PR (#29), then make the release decision in docs/RELEASE.md section 6 yourself. No agent step remains.
+Owner: import .github/rulesets/protect-main.json (Settings > Rules > Rulesets > Import), and turn on Vercel Web Analytics or ask for the script to be removed. Then the next production smoke should pass and close alert #32.
 
 ## Completed
 
-- Recorded Joshua Small's 2026-11-03 acceptance of the unencrypted K:\ backup copy risk (owner-stated, in his words) in docs/RELEASE.md section 2; the copy is not described as encrypted
-- PR #28 merged as a1227ca; main CI run 78 green (per GitHub)
-- Production deployment dpl_7xGuAn2vCBEnj1ag4ET6J3J4LSXU READY at a1227ca (per Vercel API)
-- Production smoke run 41664171346 passed 10/10 after that deployment (read from its log)
-- docs/RELEASE.md and docs/RECOVERY.md updated with the owner's 2026-11-03 results, labelled owner-reported; file recovery kept distinct from database-record restoration; K:\ encryption marked unconfirmed
-- Fixed the CI unhandled Postgres 57P01 error, WCAG 2.2 defects, backup tooling (PR #28)
+- CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md
+- CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run 42271118896)
+- Firefox and WebKit weekly: 56/56 each, 0 flaky (run 42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)
+- Production smoke on every production deployment, plus daily; alert issues labelled production-alert open and close automatically
+- Smoke after 7e05123 (run 42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page
 
 ## In progress
 
@@ -29,15 +28,18 @@ _none recorded_
 
 ## Tests (agent-reported)
 
-- `GitHub CI on main (push) after PR #28`: pass at `a1227ca`, 2026-11-03T14:31:00Z
-- `Production smoke (manual dispatch after the PR #28 deployment), 10/10 checks`: pass at `a1227ca`, 2026-11-03T15:28:00Z
-- `npm run format:check && npm run lint && npm run check && npm test (160 tests, Postgres 16) && npm run build, run locally on the PR #28 branch`: pass at `d39790f`, 2026-11-03T13:42:00Z
-- `GitHub CI on main @ 153eee0 (push) before the fix`: fail at `153eee0`, 2026-11-03T03:42:00Z
+- `GitHub CI on main (push) after PR #38`: pass at `7e05123`, 2026-11-06T18:40:00Z
+- `Production smoke after the 7e05123 deployment: HTTP 14/14, browser checks failed on the analytics script 404`: fail at `7e05123`, 2026-11-06T18:45:00Z
+- `Browser tests (Firefox, WebKit) on 164be9b: 56/56 each`: pass at `164be9b`, 2026-11-06T18:31:00Z
+- `PR CI on 8ae8631 (PR #38 head)`: pass at `8ae8631`, 2026-11-06T18:31:00Z
+- `Locally: lint, astro check, prettier, Vitest 197 on Postgres 16, workflow lint + zizmor, Chromium e2e 57/57 over HTTP and over HTTPS`: pass at `164be9b`, 2026-11-06T18:20:00Z
+- `Production smoke after the 97eaeb6 deployment: 13/14 (404 cache header)`: fail at `97eaeb6`, 2026-11-06T17:37:00Z
 
 ## Unverified changes
 
-- Owner-reported 2026-11-03, not verified by the agent: keyboard, Narrator and phone checks passed; first-backup.ps1 ran under PowerShell 7.6.9; backup verified and its copy on K:\ matched the SHA-256; B2 bucket private with Keep all versions; retained sm.webp opened after deleting a disposable photo
-- File recovery only: restoring a deleted photo's database record, and restoring the real backup file into a new database, have not been tested
-- The K:\ backup copy is not encrypted (owner-accepted risk, 2026-11-03); owner-stated, not verified by the agent
-- The agent never ran first-backup.ps1 under PowerShell and has no B2 access
-- Carried over: share card in real link previews, photo-audit against B2
+- Branch protection on main is not set: the agent's proxy refuses settings writes (403). The ruleset file is ready to import; a daily job alerts while it is missing
+- Dependency graph is off, so GitHub dependency review is not in CI
+- No VoiceOver or NVDA pass has been done; owner-reported Narrator, keyboard and phone checks from 2026-11-03 stand as owner-reported
+- The deployment-failed alert job has not run on a real failed deployment
+- Whether GitHub alert emails reach Joshua depends on his notification settings, not checked
+- Carried over: file recovery only tested; restoring the real backup into a new database not tested

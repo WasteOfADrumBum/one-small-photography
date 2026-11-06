@@ -3,6 +3,7 @@
 How changes are checked, merged, deployed and watched, and the evidence behind each claim.
 Testing commands: [TESTING.md](TESTING.md). Deployment and migrations:
 [DEPLOYMENT.md](DEPLOYMENT.md). Accessibility: [ACCESSIBILITY-EVIDENCE.md](ACCESSIBILITY-EVIDENCE.md).
+Requirements, evidence and score: [CI-CD-EVIDENCE.md](CI-CD-EVIDENCE.md).
 
 ## Workflows
 
