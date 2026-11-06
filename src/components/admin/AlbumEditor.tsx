@@ -142,9 +142,26 @@ export default function AlbumEditor({
     setPending((list) => list.map((p) => ({ ...p, settings: { ...p.settings, ...changes } })));
   }
 
+  /** Ready photos, plus any whose upload failed (a dropped connection, say), so they can be retried. */
+  const canUpload = (p: Pending) =>
+    Boolean(p.prepared) && (p.status === 'ready' || p.status === 'error');
+
+  // One upload run at a time: a second click while one runs would send some photos twice.
+  const [uploading, setUploading] = useState(false);
+
   async function uploadAll() {
+    if (uploading) return;
+    setUploading(true);
+    try {
+      await uploadEach();
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function uploadEach() {
     for (const item of pending) {
-      if (item.status !== 'ready' || !item.prepared) continue;
+      if (!canUpload(item) || !item.prepared) continue;
       patchPending(item.key, { status: 'uploading' });
       const { prepared } = item;
       const form = new FormData();
@@ -235,7 +252,7 @@ export default function AlbumEditor({
     }, 'Album deleted');
   };
 
-  const readyCount = pending.filter((p) => p.status === 'ready').length;
+  const readyCount = pending.filter(canUpload).length;
 
   return (
     <div className="space-y-12">
@@ -403,7 +420,12 @@ export default function AlbumEditor({
                 </li>
               ))}
             </ul>
-            <Button variant="primary" icon={Upload} disabled={readyCount === 0} onClick={uploadAll}>
+            <Button
+              variant="primary"
+              icon={Upload}
+              disabled={readyCount === 0 || uploading}
+              onClick={uploadAll}
+            >
               Upload {readyCount} {readyCount === 1 ? 'photo' : 'photos'}
             </Button>
           </div>

@@ -1,0 +1,29 @@
+{
+  "$comment": "Moderate advisories with no non-breaking fix, reviewed 2026-11-05 by the agent; the repository owner (Joshua Small) decides whether to keep accepting them. Each must name its scope and expire; scripts/ci/audit-policy.mjs fails on an expired or missing entry, and on any high or critical advisory.",
+  "exceptions": [
+    {
+      "advisory": "GHSA-3g3m-2fjr-6pw4",
+      "package": "glob (via @astrojs/vercel > @vercel/nft)",
+      "owner": "Repository owner (Joshua Small)",
+      "scope": "Build time only: used to trace files while building the Vercel function. Not in the deployed function bundle and never given visitor input.",
+      "reason": "The only fix is glob 14, which @vercel/nft does not support yet; npm's suggested fix downgrades @astrojs/vercel to 8.x.",
+      "expires": "2027-02-05"
+    },
+    {
+      "advisory": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch (via glob and build tooling)",
+      "owner": "Repository owner (Joshua Small)",
+      "scope": "Build and development time only: patterns come from our own build configuration, never from visitors.",
+      "reason": "Fixed only in minimatch 11, which the depending packages do not accept yet.",
+      "expires": "2027-02-05"
+    },
+    {
+      "advisory": "GHSA-67mh-4wv8-2f99",
+      "package": "esbuild 0.18 (via drizzle-kit > @esbuild-kit)",
+      "owner": "Repository owner (Joshua Small)",
+      "scope": "Development only: drizzle-kit's bundled esbuild dev server, which this project never starts. Not installed in production builds' output.",
+      "reason": "drizzle-kit pins the old esbuild; the fix needs a drizzle-kit release that drops @esbuild-kit.",
+      "expires": "2027-02-05"
+    }
+  ]
+}

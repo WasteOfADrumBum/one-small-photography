@@ -93,3 +93,18 @@ export async function applyMigrations(url, migrationsFolder = './drizzle') {
     await migrateNeon(drizzleNeon(neon(url)), { migrationsFolder });
   }
 }
+
+/** How many migrations the database has recorded as applied (0 for a new database). */
+export async function countAppliedMigrations(url) {
+  const db = openDatabase(url);
+  try {
+    const [table] = await db.query(
+      "select to_regclass('drizzle.__drizzle_migrations') is not null as present",
+    );
+    if (!table?.present) return 0;
+    const [row] = await db.query('select count(*)::int as n from drizzle.__drizzle_migrations');
+    return row?.n ?? 0;
+  } finally {
+    await db.end();
+  }
+}

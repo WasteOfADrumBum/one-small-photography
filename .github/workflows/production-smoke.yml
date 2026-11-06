@@ -1,10 +1,14 @@
 name: Production smoke
 
 # Read-only checks of the live site: pages load, photos are served, the admin
-# stays locked and security headers are present. A failed scheduled run emails
-# the repo owner (GitHub's default for failed workflows), which is the site's
-# free uptime alert. Nothing here signs in or changes data.
+# stays locked, hidden content stays hidden, headers are present. Nothing here
+# signs in, saves or sends anything, and no secrets are used.
+#
+# Runs after every successful production deployment (Vercel reports it to
+# GitHub as a deployment status), daily as a fallback, and by hand. A failure
+# opens or updates one "production-alert" issue; the next pass closes it.
 on:
+  deployment_status:
   schedule:
     - cron: '17 13 * * *'
   workflow_dispatch:
@@ -12,13 +16,151 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  SITE_URL: https://photo.onesmall.company
+
 jobs:
   smoke:
+    name: Smoke test the live site
+    # Deployment events: only a successful Production deployment made by Vercel.
+    # Previews and other states never run this job.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment.environment == 'Production' &&
+       github.event.deployment_status.state == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
+    # One smoke run at a time, never cancelled. At job level, so the many
+    # deployment events this job skips (previews, pending states) never join
+    # the group and can't displace a queued production run.
+    concurrency:
+      group: production-smoke
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write # open or close the one alert issue
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # The scripts always come from main. (GitHub takes this workflow file itself
+      # from the deployed commit; the `if` above and wait-for-deployment's check
+      # that the commit is on main limit what that can reach. See docs/CI-CD.md.)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-      - run: node scripts/smoke.mjs https://photo.onesmall.company
+          cache: npm
+      - name: Wait for the live site to serve this deployment
+        id: deploy
+        if: github.event_name == 'deployment_status'
+        env:
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          DEPLOY_ENVIRONMENT: ${{ github.event.deployment.environment }}
+          DEPLOY_CREATOR: ${{ github.event.deployment.creator.login }}
+        run: node scripts/ci/wait-for-deployment.mjs
+      - name: HTTP checks
+        id: http
+        if: steps.deploy.outcome == 'skipped' || steps.deploy.outputs.ready == 'true'
+        env:
+          EXPECTED_COMMIT: ${{ steps.deploy.outputs.ready == 'true' && github.event.deployment.sha || '' }}
+          SMOKE_HIDDEN_PATHS: ${{ vars.SMOKE_HIDDEN_PATHS }}
+        run: node scripts/smoke.mjs "$SITE_URL"
+      - name: Browser checks
+        if: steps.http.outcome == 'success'
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          node scripts/smoke-browser.mjs "$SITE_URL"
+      - name: Record the result
+        if: always() && steps.deploy.outputs.ready != 'false'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ job.status }}
+          EVENT: ${{ github.event_name }}
+          WHAT: ${{ github.event_name == 'deployment_status' && format('the production deployment of {0}', github.event.deployment.sha) || github.event_name }}
+        run: |
+          if [[ "$OUTCOME" == "success" ]]; then
+            node scripts/ci/alert-issue.mjs close smoke "Production smoke passed again ($WHAT)."
+            if [[ "$EVENT" == "deployment_status" ]]; then
+              node scripts/ci/alert-issue.mjs close deploy "A production deployment succeeded and passed smoke ($WHAT)."
+            fi
+          else
+            node scripts/ci/alert-issue.mjs open smoke "Production smoke check failed" \
+              "The read-only checks of $SITE_URL failed after $WHAT. Open the run for the failing checks."
+          fi
+
+  deployment-failed:
+    name: Report a failed production deployment
+    if: >-
+      github.event_name == 'deployment_status' &&
+      github.event.deployment.environment == 'Production' &&
+      github.event.deployment.creator.login == 'vercel[bot]' &&
+      (github.event.deployment_status.state == 'failure' || github.event.deployment_status.state == 'error')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: production-deploy-alert
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write # open or close the one alert issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Open or update the alert
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STATE: ${{ github.event.deployment_status.state }}
+          SHA: ${{ github.event.deployment.sha }}
+          LOG_URL: ${{ github.event.deployment_status.target_url }}
+          DESCRIPTION: ${{ github.event.deployment_status.description }}
+        run: |
+          # A cancelled deployment (usually replaced by a newer push) is not a
+          # failure: say so in the run and raise no alert.
+          if [[ "${DESCRIPTION,,}" == *cancel* ]]; then
+            echo "::notice::Production deployment of $SHA was cancelled ($DESCRIPTION); no alert."
+            exit 0
+          fi
+          node scripts/ci/alert-issue.mjs open deploy "Production deployment failed" \
+            "Vercel reported the production deployment of $SHA as $STATE. The live site keeps serving the previous deployment. Build log: $LOG_URL"
+          echo "::error::Production deployment of $SHA: $STATE"
+          exit 1
+
+  protection:
+    name: Check that main is protected
+    # Daily and by hand. Branch protection is a repository setting, so it can
+    # change without a commit; this notices when it is missing or weakened.
+    if: github.event_name != 'deployment_status'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    concurrency:
+      group: protection-check
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write # open or close the one alert issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read the rules on main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if result=$(node scripts/ci/check-protection.mjs); then
+            echo "$result"
+            node scripts/ci/alert-issue.mjs close protection "$result"
+          else
+            echo "::error::$result"
+            node scripts/ci/alert-issue.mjs open protection "main is not protected" \
+              "$result Import .github/rulesets/protect-main.json in Settings → Rules → Rulesets (see docs/CI-CD.md)."
+            exit 1
+          fi

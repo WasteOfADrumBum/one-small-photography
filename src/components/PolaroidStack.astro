@@ -13,9 +13,15 @@ interface Props {
   subtitle?: string;
   tone?: 'moss' | 'sage' | 'gold';
   photos?: Photo[];
+  /**
+   * Set when the stack sits inside a link. Browsers don't name a link from a
+   * <figure> inside it (Chrome gave these links no name at all), so the figure
+   * steps aside and the link is named by the caption and subtitle.
+   */
+  inLink?: boolean;
 }
 
-const { title, subtitle, tone = 'moss', photos = [] } = Astro.props;
+const { title, subtitle, tone = 'moss', photos = [], inLink = false } = Astro.props;
 const fills = { moss: 'bg-moss', sage: 'bg-sage/40', gold: 'bg-gold/30' } as const;
 const [cover, second, third] = photos;
 const back = [
@@ -24,7 +30,7 @@ const back = [
 ];
 ---
 
-<figure class="group relative mx-auto aspect-[4/5] w-56 sm:w-64">
+<figure class="group relative mx-auto aspect-[4/5] w-56 sm:w-64" role={inLink ? 'none' : undefined}>
   {back.map(({ photo, rotate, shade }) => (
     <div
       class:list={[

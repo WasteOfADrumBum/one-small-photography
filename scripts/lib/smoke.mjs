@@ -1,7 +1,8 @@
 // Read-only checks against a running site (production by default). Used by
 // scripts/smoke.mjs and the "Production smoke" workflow. Nothing here signs in
-// or changes data: the one POST is refused by the cross-site check before any
-// handler runs.
+// or changes data. Two POSTs: one is refused by the cross-site check before any
+// handler runs, the other is an empty contact form that fails validation before
+// anything is saved, rate-limited or emailed.
 
 export const DEFAULT_SITE = 'https://photo.onesmall.company';
 
@@ -18,8 +19,14 @@ function headerProblems(res) {
     .map(([name]) => `${name}=${res.headers.get(name) ?? 'missing'}`);
 }
 
-/** Runs every check and returns [{ name, ok, detail }]. Never throws. */
-export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch) {
+/**
+ * Runs every check and returns [{ name, ok, detail }]. Never throws.
+ *
+ * Options: `expectedCommit` (the live site must be built from it), and
+ * `hiddenPaths` (addresses of known hidden albums or photos that must answer 404).
+ */
+export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch, options = {}) {
+  const { expectedCommit, hiddenPaths = [] } = options;
   const results = [];
   const get = (path, init = {}) =>
     fetchImpl(new URL(path, base), {
@@ -40,11 +47,27 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch) {
       throw new Error(`HTTP ${res.status}, expected ${codes.join(' or ')}`);
   };
 
+  const canonicalOf = (html) => /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+
+  if (expectedCommit) {
+    await check('the live site is the expected build', async () => {
+      const res = await get('/version.json');
+      expectStatus(res, 200);
+      const { commit } = await res.json();
+      if (commit !== expectedCommit)
+        throw new Error(`live commit ${commit}, expected ${expectedCommit}`);
+      return commit.slice(0, 7);
+    });
+  }
+
   let portfolioHtml = '';
-  await check('home page loads', async () => {
+  await check('home page loads, with its canonical address', async () => {
     const res = await get('/');
     expectStatus(res, 200);
-    if (!(await res.text()).includes('OneSmallPhoto')) throw new Error('site name missing');
+    const html = await res.text();
+    if (!html.includes('OneSmallPhoto')) throw new Error('site name missing');
+    const canonical = canonicalOf(html);
+    if (canonical !== new URL('/', DEFAULT_SITE).href) throw new Error(`canonical ${canonical}`);
   });
   await check('portfolio lists albums, with security headers', async () => {
     const res = await get('/portfolio');
@@ -55,6 +78,19 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch) {
     const albums = new Set(portfolioHtml.match(/href="\/portfolio\/[^"]+"/g) ?? []).size;
     if (albums === 0) throw new Error('no album links');
     return `${albums} albums`;
+  });
+  await check('a public album opens, uncached, with its photos', async () => {
+    const href = portfolioHtml.match(/href="(\/portfolio\/[^"]+)"/)?.[1];
+    if (!href) throw new Error('no album link on /portfolio');
+    const res = await get(href);
+    expectStatus(res, 200);
+    const html = await res.text();
+    if (!html.includes('data-gallery-item')) throw new Error('no photos on the album page');
+    if (!(res.headers.get('cache-control') ?? '').includes('no-store'))
+      throw new Error(`cache-control ${res.headers.get('cache-control')}`);
+    const canonical = canonicalOf(html);
+    if (canonical !== new URL(href, DEFAULT_SITE).href) throw new Error(`canonical ${canonical}`);
+    return href;
   });
   await check('a published photo is served and cached', async () => {
     const src = portfolioHtml.match(/\/img\/[0-9a-f-]{36}\/(?:sm|md|lg)\.(?:webp|jpg)/)?.[0];
@@ -98,6 +134,32 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch) {
   });
   await check('unknown pages answer 404', async () => {
     expectStatus(await get('/portfolio/this-album-does-not-exist'), 404);
+  });
+  await check('unknown and known-hidden addresses answer 404, never publicly cached', async () => {
+    // Hidden paths are named by number only: the log of this public repo is public.
+    const paths = ['/img/00000000-0000-4000-8000-000000000000/sm.webp', ...hiddenPaths];
+    for (const [i, path] of paths.entries()) {
+      const label = i === 0 ? 'an unknown photo' : `hidden address #${i}`;
+      const res = await get(path);
+      await res.arrayBuffer();
+      if (res.status !== 404) throw new Error(`${label}: HTTP ${res.status}, expected 404`);
+      if ((res.headers.get('cache-control') ?? '').includes('public'))
+        throw new Error(`${label} is publicly cacheable`);
+    }
+    return hiddenPaths.length
+      ? `${hiddenPaths.length} known hidden addresses`
+      : 'no hidden fixtures set';
+  });
+  await check('the contact form validates without saving or sending anything', async () => {
+    // An empty note fails validation before the database or email is touched.
+    const res = await get('/api/contact', {
+      method: 'POST',
+      headers: { origin: new URL(base).origin, 'content-type': 'application/json' },
+      body: '{}',
+    });
+    expectStatus(res, 400);
+    const body = await res.json().catch(() => ({}));
+    if (!body.error) throw new Error('no validation message');
   });
   await check('robots.txt and sitemap.xml are served', async () => {
     expectStatus(await get('/robots.txt'), 200);

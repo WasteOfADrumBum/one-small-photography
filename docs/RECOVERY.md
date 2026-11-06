@@ -195,7 +195,8 @@ real master copies; the site only stores resized versions.
 - **Database migrations are forward-only.** A deploy that added a migration has already changed
   the tables. Rolling back the code is fine when the migration only added things (all current
   ones do). If a future migration removes or renames columns, take a backup first (section 2).
-- Preview deployments have no database variables, so they never touch production data.
+- Preview deployments have no database variables, so they never touch production data; a
+  preview that could see one fails its build. More in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## 6. Secrets leaked or a device lost
 
@@ -209,9 +210,11 @@ Rotate in this order, updating each value in Vercel (Production) and redeploying
 
 ## 7. Monitoring
 
-- **Production smoke** (GitHub Actions, daily and on demand): read-only checks that pages load,
-  photos are served, the admin stays locked and security headers are present. A failed run emails
-  you. Run it now: GitHub → Actions → Production smoke → Run workflow, or
+- **Production smoke** (GitHub Actions, after every production deployment, daily and on
+  demand): read-only checks that pages load, photos are served, the admin stays locked and
+  security headers are present. A failure opens a `production-alert` issue (closed by the next
+  pass); whether GitHub emails you about it depends on your notification settings. Details in
+  [CI-CD.md](CI-CD.md). Run it now: GitHub → Actions → Production smoke → Run workflow, or
   `node scripts/smoke.mjs` locally.
 - **Errors:** Vercel → Project → Logs (Hobby keeps 1 hour) and Observability.
 - **Usage:** Vercel, Neon and Backblaze dashboards. All three are on no-card free plans, which

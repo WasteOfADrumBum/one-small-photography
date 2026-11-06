@@ -1,0 +1,11 @@
+{
+  "$comment": "Uncompressed bytes per page, measured 2026-11-05 (pages 133,843 B JS / 46,855 B CSS; /contact 362,430 B JS because of the React form) with about 15% headroom. Raise a budget only on purpose, in review.",
+  "pages": {
+    "/": { "js": 155000, "css": 54000 },
+    "/portfolio": { "js": 155000, "css": 54000 },
+    "/portfolio/{album}": { "js": 155000, "css": 54000 },
+    "/contact": { "js": 415000, "css": 54000 },
+    "/login": { "js": 155000, "css": 54000 }
+  },
+  "maxLayoutShift": 0.1
+}

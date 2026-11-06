@@ -1,19 +1,31 @@
 // Applies pending migrations in ./drizzle to the database. Runs on every
-// Vercel build (see the `vercel-build` script), before the site is built.
-import { applyMigrations } from './lib/db.mjs';
+// Vercel build through the `vercel-build` script, before the site is built, so
+// a failed migration stops the deployment and the live site keeps running the
+// previous version. Migrations must be backward compatible (expand, then
+// contract in a later release): see docs/DEPLOYMENT.md.
+import { applyMigrations, countAppliedMigrations, describeDatabase, redact } from './lib/db.mjs';
+import { migrationPlan } from './lib/migrate-plan.mjs';
 
-// Preview deploys share the production database, so only production deploys
-// change its tables. Unmerged branches never migrate it.
-if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production') {
-  console.log(`Skipping database migrations on a ${process.env.VERCEL_ENV} deploy.`);
+const plan = migrationPlan(process.env);
+if (plan.action === 'skip') {
+  console.log(plan.message);
   process.exit(0);
 }
-
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error('DATABASE_URL is not set; add it in Vercel project settings.');
+if (plan.action === 'fail') {
+  console.error(plan.message);
   process.exit(1);
 }
 
-await applyMigrations(url);
-console.log('Database migrations applied.');
+const url = process.env.DATABASE_URL;
+try {
+  const before = await countAppliedMigrations(url);
+  await applyMigrations(url);
+  const after = await countAppliedMigrations(url);
+  console.log(
+    `Database migrations applied to ${describeDatabase(url)}: ${after - before} new, ${after} in total.`,
+  );
+} catch (err) {
+  // Node's own error text can include the connection string; never print it.
+  console.error(`Database migration failed: ${redact(err?.message ?? err, url)}`);
+  process.exit(1);
+}

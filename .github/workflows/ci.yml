@@ -1,24 +1,84 @@
 name: CI
 
+# Every pull request and every push to main. The last job, "CI gate", is the one
+# required check for merging to main: it passes only when every job below
+# passed, or was skipped for a reason this file allows. See docs/CI-CD.md.
 on:
   pull_request:
   push:
     branches: [main]
+  merge_group:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    # Explicit bash turns on pipefail, so a failing command piped into tee fails the step.
+    shell: bash
+
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer push to the same pull request replaces the run in progress. Runs on
+  # main are never cancelled, so every merged commit gets a full result.
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Disposable Postgres started by each job that needs one (never Neon).
+  TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/osp_test
+  E2E_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
 
 jobs:
-  verify:
+  changes:
+    name: What changed
     runs-on: ubuntu-latest
-    # A throwaway Postgres for the database tests (see src/test/integration.test.ts).
+    timeout-minutes: 3
+    outputs:
+      code: ${{ steps.classify.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Classify the change
+        id: classify
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          MG_BASE: ${{ github.event.merge_group.base_sha }}
+        run: node scripts/ci/classify-changes.mjs
+
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Format
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run check
+      - name: Workflow lint (actionlint, zizmor)
+        run: bash scripts/ci/workflow-lint.sh
+
+  test:
+    name: Unit, integration and migration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16@sha256:933463a6c8eba2b9f5cd414138738cd8d5519cd2c471214c222652f547a66a32 # 16, pinned 2026-11-05
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: osp_test
@@ -27,21 +87,204 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      - name: Format
-        run: npm run format:check
-      - name: Lint
-        run: npm run lint
-      - name: Type check
-        run: npm run check
-      - name: Test
-        run: npm test
+      - run: npm ci --no-audit --no-fund
+      - name: Test (Vitest, real Postgres)
+        run: npm test -- --reporter=default --reporter=junit --outputFile.junit=test-results/vitest.xml
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vitest-report-${{ github.run_attempt }}
+          path: test-results/vitest.xml
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy-build:
+    name: Production build and migrations
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16@sha256:933463a6c8eba2b9f5cd414138738cd8d5519cd2c471214c222652f547a66a32 # 16, pinned 2026-11-05
         env:
-          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/osp_test
-      - name: Build
-        run: npm run build
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: osp_deploy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # The exact command Vercel runs for production: migrations, then the
+      # Vercel build, against a fresh database standing in for Neon.
+      - name: npm run vercel-build (production, fresh database)
+        env:
+          VERCEL_ENV: production
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/osp_deploy
+        run: npm run vercel-build 2>&1 | tee deploy-build.log
+      - name: Run it again (nothing to migrate)
+        env:
+          VERCEL_ENV: production
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/osp_deploy
+        run: node scripts/migrate.mjs | tee -a deploy-build.log | grep -q ' 0 new'
+      - name: Preview build path skips migrations
+        env:
+          VERCEL_ENV: preview
+        run: node scripts/migrate.mjs | grep -q 'Skipping database migrations'
+      - name: Check the Vercel output
+        run: node scripts/ci/check-build-output.mjs | tee -a deploy-build.log
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deploy-build-log-${{ github.run_attempt }}
+          path: deploy-build.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  e2e:
+    name: Browser tests (Chromium)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16@sha256:933463a6c8eba2b9f5cd414138738cd8d5519cd2c471214c222652f547a66a32 # 16, pinned 2026-11-05
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build the site for local serving
+        run: npm run build:e2e
+      - name: Run the browser tests
+        run: npm run test:e2e -- --project=chromium
+      - name: Summarise results and flag flaky tests
+        if: always()
+        run: node scripts/ci/e2e-summary.mjs
+      - name: Upload report, traces and server log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-report-${{ github.run_attempt }}
+          # Synthetic data only: the account, session and database exist for
+          # this run alone and are dropped when it ends. The saved sign-in
+          # (e2e/.auth) is not uploaded.
+          path: |
+            playwright-report/
+            test-results/
+            !test-results/**/*.auth*
+          retention-days: 7
+          if-no-files-found: ignore
+
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Dependency vulnerabilities (policy in security/audit-exceptions.json)
+        run: npm run audit:policy
+      - name: Secrets in the code and its history (gitleaks)
+        run: bash scripts/ci/secret-scan.sh
+      # GitHub's dependency-review action needs the repository's Dependency graph,
+      # which is off here and needs an admin to turn on (docs/CI-CD.md). Until
+      # then the audit policy above checks the whole lockfile, new packages included.
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # upload the CodeQL results to code scanning
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+          config-file: ./.github/codeql/codeql-config.yml
+      - id: analyze
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          output: codeql-results
+      - name: Fail on findings
+        env:
+          SARIF_DIR: codeql-results
+        run: node scripts/ci/codeql-findings.mjs
+
+  gate:
+    name: CI gate
+    if: always()
+    # Every job above must be listed here, or the gate cannot see it.
+    needs: [changes, static, test, deploy-build, e2e, security, codeql]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check every job's result
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node - <<'EOF'
+          const needs = JSON.parse(process.env.RESULTS);
+          const codeChanged = needs.changes.outputs?.code;
+          // Jobs that may be skipped, and only for this reason.
+          const skippable = { 'deploy-build': 'docs-only', e2e: 'docs-only' };
+          const problems = [];
+          if (needs.changes.result !== 'success' || !['true', 'false'].includes(codeChanged))
+            problems.push(`changes: ${needs.changes.result} (code=${codeChanged ?? 'missing'})`);
+          for (const [job, { result }] of Object.entries(needs)) {
+            if (result === 'success') continue;
+            if (result === 'skipped' && skippable[job] && codeChanged === 'false') {
+              console.log(`${job}: skipped (allowed: ${skippable[job]} change)`);
+              continue;
+            }
+            problems.push(`${job}: ${result}`);
+          }
+          for (const [job, { result }] of Object.entries(needs)) console.log(`${job}: ${result}`);
+          if (problems.length) {
+            console.log(`::error::CI gate failed: ${problems.join('; ')}`);
+            process.exit(1);
+          }
+          console.log(`CI gate passed (code changed: ${codeChanged}).`);
+          EOF

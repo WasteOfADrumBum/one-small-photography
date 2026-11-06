@@ -26,3 +26,7 @@ onesmallphoto-db-*.json
 onesmallphoto-db-*.json.sha256
 *-backup.json
 OneSmallPhoto-Backups/
+/e2e/.auth/
+/test-results/
+/playwright-report/
+/blob-report/

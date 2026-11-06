@@ -1,0 +1,13 @@
+# gitleaks settings: the default rules, plus an allowlist for test-only values.
+title = "one-small-photography"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Throwaway credentials of the disposable CI and local test Postgres, and synthetic test values"
+regexes = [
+  '''postgres://postgres:postgres@localhost''',
+  '''re_e2e_not_a_real_key''',
+  '''re_test''',
+]

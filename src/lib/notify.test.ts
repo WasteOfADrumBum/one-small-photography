@@ -93,3 +93,28 @@ describe('what a sender can put in the email', () => {
     expect(escapeHtml(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
   });
 });
+
+describe('resendUrl', () => {
+  it('uses the real API unless a local stand-in is named', async () => {
+    const { resendUrl } = await import('@/lib/notify');
+    expect(resendUrl(undefined, false)).toBe('https://api.resend.com/emails');
+    expect(resendUrl('http://127.0.0.1:4010/emails', false)).toBe('http://127.0.0.1:4010/emails');
+    expect(resendUrl('http://localhost:4010/emails', false)).toBe('http://localhost:4010/emails');
+  });
+
+  it('ignores the setting on Vercel, so a stray value cannot stop real email', async () => {
+    const { resendUrl } = await import('@/lib/notify');
+    expect(resendUrl('http://127.0.0.1:4010/emails', true)).toBe('https://api.resend.com/emails');
+  });
+
+  it('never sends notes or the API key to any other server', async () => {
+    const { resendUrl } = await import('@/lib/notify');
+    for (const url of [
+      'https://evil.example/emails',
+      'http://10.0.0.5/x',
+      'not a url',
+      'https://localhost/x',
+    ])
+      expect(resendUrl(url, false)).toBe('https://api.resend.com/emails');
+  });
+});
