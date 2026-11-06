@@ -26,7 +26,16 @@ function recordAssets(page: Page) {
   return assets;
 }
 
-const sum = (list: { bytes: number }[]) => list.reduce((n, a) => n + a.bytes, 0);
+/** Bytes of each distinct file once: some engines report a preloaded file twice. */
+const unique = (list: { url: string; type: string; bytes: number }[], type: string) => {
+  const files = new Map<string, number>();
+  for (const a of list)
+    if (a.type === type) files.set(a.url, Math.max(files.get(a.url) ?? 0, a.bytes));
+  return files;
+};
+const sum = (files: Map<string, number>) => [...files.values()].reduce((n, b) => n + b, 0);
+const listing = (files: Map<string, number>) =>
+  [...files].map(([url, bytes]) => `${url} ${bytes}`).join(', ');
 
 test('each page stays within its script and style budget', async ({ page }) => {
   const measured: Record<string, { js: number; css: number }> = {};
@@ -34,11 +43,13 @@ test('each page stays within its script and style budget', async ({ page }) => {
     const path = key.replace('{album}', seed.public.slug);
     const assets = recordAssets(page);
     await page.goto(path, { waitUntil: 'networkidle' });
-    const js = sum(assets.filter((a) => a.type === 'script'));
-    const css = sum(assets.filter((a) => a.type === 'stylesheet'));
+    const scripts = unique(assets, 'script');
+    const styles = unique(assets, 'stylesheet');
+    const js = sum(scripts);
+    const css = sum(styles);
     measured[key] = { js, css };
-    expect(js, `${path} JavaScript bytes`).toBeLessThanOrEqual(budget.js);
-    expect(css, `${path} CSS bytes`).toBeLessThanOrEqual(budget.css);
+    expect(js, `${path} JavaScript bytes (${listing(scripts)})`).toBeLessThanOrEqual(budget.js);
+    expect(css, `${path} CSS bytes (${listing(styles)})`).toBeLessThanOrEqual(budget.css);
     page.removeAllListeners('response');
   }
   test.info().annotations.push({ type: 'measured', description: JSON.stringify(measured) });

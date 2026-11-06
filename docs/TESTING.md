@@ -13,6 +13,7 @@ them touch the live site, the real database, the real photo bucket or real email
 | `npm run build:e2e`                     | Builds the site with the Node adapter so it can be served locally | nothing                               |
 | `npm run test:e2e`                      | Browser tests, Chromium (the pull-request suite)                  | `E2E_DATABASE_URL`, a `build:e2e`     |
 | `npm run test:e2e -- --project=firefox` | The same suite in Firefox (`webkit` for Safari's engine)          | `npx playwright install firefox`      |
+| `E2E_HTTPS=1 npm run test:e2e`          | Serves the site over HTTPS with a throwaway one-day certificate   | `openssl`                             |
 | `npm run audit:policy`                  | Dependency advisories against `security/audit-exceptions.json`    | network                               |
 | `npm run secrets:scan`                  | gitleaks over the code and its full history                       | network (downloads a pinned gitleaks) |
 | `npm run workflows:lint`                | actionlint and zizmor over `.github/workflows`                    | network (downloads pinned binaries)   |
@@ -80,6 +81,7 @@ Budgets live in `e2e/budgets.json`, each set about 15% above what the pages meas
 Retries: one in CI (none for the setup step, which can only run once). A test that passes only on retry is reported as **flaky** in the job summary
 and as a warning on the run, so retries never hide it.
 
-**Not yet seen running:** Firefox and WebKit have not been run on this suite (only Chromium,
-locally and in CI). The first weekly run is the first evidence. One thing to watch there: the
-admin session cookie is `Secure`, and WebKit may refuse a `Secure` cookie on `http://localhost`.
+**Firefox and WebKit:** the weekly workflow serves the site over HTTPS (`E2E_HTTPS=1`), because
+WebKit refuses the admin's `Secure` session cookie on `http://localhost`, as the first run showed.
+The certificate is made for the run, trusted only by that run, and deleted afterwards. The
+pull-request suite stays on plain HTTP in Chromium; both modes pass locally in Chromium.

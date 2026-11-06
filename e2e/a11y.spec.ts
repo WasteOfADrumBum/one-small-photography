@@ -47,7 +47,9 @@ const publicPages = () => [
   '/no-such-page',
 ];
 
-test('public pages have no detectable WCAG 2.2 AA violations', async ({ page }) => {
+test('public pages have no detectable WCAG 2.2 AA violations', async ({ page, browserName }) => {
+  // Nine pages, each scrolled and scanned: WebKit needs more than the default 30 s.
+  test.slow(browserName === 'webkit');
   for (const path of publicPages()) {
     await page.goto(path);
     await settle(page);
