@@ -1,16 +1,16 @@
-<!-- generated from .engineering/state.json (revision 10) -->
+<!-- generated from .engineering/state.json (revision 11) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 10, `ckpt-0010-cicd-standard`, 2026-11-06T18:55:00Z by Claude Code
+- Checkpoint: revision 11, `ckpt-0011-portfolio-all-photos`, 2026-11-06T23:20:00Z by Claude Code
 - Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-The CI/CD work is merged (PR #30, #38). This docs-only PR adds docs/CI-CD-EVIDENCE.md and this checkpoint. Open item for an agent after the owner chooses: if analytics is to be removed, drop webAnalytics from astro.config.mjs in a PR and confirm the next smoke passes and closes alert #32. Do not record approval.
+PR from claude/project-thread-keruxw adds the All photos view (src/pages/portfolio/all.astro, src/scripts/gallery-batches.ts, lightbox now delegated and batch-aware). Wait for CI and Joshua's review; Joshua is doing UI work on a separate branch, so expect possible conflicts in Gallery.astro or portfolio/index.astro. Earlier owner items still open. Do not record approval.
 
 ## Unfinished
 
