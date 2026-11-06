@@ -84,7 +84,7 @@ test('phones download small photos, not the full-size ones', async ({ browser })
 });
 
 test('photos do not shift the layout as they load', async ({ page }) => {
-  for (const path of ['/', '/portfolio', `/portfolio/${seed.public.slug}`]) {
+  for (const path of ['/', '/portfolio', `/portfolio/${seed.public.slug}`, '/portfolio/all']) {
     // Slow every photo down so the page lays out before any of them arrive.
     await page.route('**/img/**', async (route) => {
       await new Promise((r) => setTimeout(r, 300));

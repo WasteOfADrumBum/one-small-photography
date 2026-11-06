@@ -1,0 +1,53 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Gallery from '@/components/Gallery.astro';
+import { listAllPublishedPhotos, type AllPhotosEntry } from '@/lib/albums';
+import { hasDatabase } from '@/db/client';
+import { albumPhotoAlt } from '@/lib/alt-text';
+import { site } from '@/lib/site';
+
+export const prerender = false;
+
+let entries: AllPhotosEntry[] = [];
+if (hasDatabase()) {
+  try {
+    entries = await listAllPublishedPhotos();
+  } catch (err) {
+    console.error('Could not load photos', err);
+  }
+}
+// Like the album pages: never cached, so admin edits show on the next load.
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+const photos = entries.map((e) => e.photo);
+// Blank alt text falls back exactly as on the photo's own album page.
+const fallbackAlts = entries.map((e) => albumPhotoAlt(e.albumTitle, e.position));
+const albumTitles = entries.map((e) => e.albumTitle);
+---
+
+<BaseLayout
+  title="All photos"
+  description={`Every photo from every album by ${site.owner}, in one gallery.`}
+>
+  <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <a href="/portfolio" class="text-sm">
+      ← All albums
+    </a>
+    <h1 class="title-sunlit mt-6 text-5xl" data-reveal>
+      <span>All photos</span>
+    </h1>
+    <p class="mt-4 max-w-xl text-sand" data-reveal>
+      {photos.length > 0
+        ? `Every print from every album, ${photos.length} in all. Tap one to see it full screen.`
+        : 'Photos coming soon.'}
+    </p>
+    {photos.length > 0 && (
+      <Gallery
+        photos={photos}
+        fallbackAlts={fallbackAlts}
+        albumTitles={albumTitles}
+        batchSize={24}
+      />
+    )}
+  </section>
+</BaseLayout>

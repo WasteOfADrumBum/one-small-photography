@@ -28,14 +28,18 @@ export async function getAlbumWithPhotos(
   });
 }
 
-/** A slug based on the title that no other album uses. */
+/** Album slugs that would collide with a fixed page under /portfolio. */
+export const RESERVED_SLUGS = new Set(['all']);
+
+/** A slug based on the title that no other album uses (nor a reserved page name). */
 export async function uniqueSlug(title: string, exceptId?: string): Promise<string> {
   const base = slugify(title);
-  const taken = new Set(
-    (await db().select({ id: albums.id, slug: albums.slug }).from(albums))
+  const taken = new Set([
+    ...RESERVED_SLUGS,
+    ...(await db().select({ id: albums.id, slug: albums.slug }).from(albums))
       .filter((a) => a.id !== exceptId)
       .map((a) => a.slug),
-  );
+  ]);
   let slug = base;
   for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
   return slug;
@@ -89,6 +93,31 @@ export async function getPublishedAlbumBySlug(
       },
     },
   });
+}
+
+/** A photo on the All photos page, with the album it belongs to and its place there. */
+export type AllPhotosEntry = { photo: GalleryPhoto; albumTitle: string; position: number };
+
+/**
+ * Every visible photo in every visible album, album by album in display order,
+ * for the All photos page. `position` counts from 1 within the photo's album,
+ * so the alt-text fallback reads the same as on the album's own page.
+ */
+export async function listAllPublishedPhotos(): Promise<AllPhotosEntry[]> {
+  const rows = await db().query.albums.findMany({
+    where: eq(albums.published, true),
+    orderBy: [asc(albums.sortOrder), asc(albums.createdAt)],
+    with: {
+      photos: {
+        where: eq(photos.published, true),
+        orderBy: [asc(photos.sortOrder), asc(photos.createdAt)],
+        with: { camera: true, lens: true },
+      },
+    },
+  });
+  return rows.flatMap((album) =>
+    album.photos.map((photo, i) => ({ photo, albumTitle: album.title, position: i + 1 })),
+  );
 }
 
 /** The cover first, then the rest in order: the top three become the Polaroid stack. */

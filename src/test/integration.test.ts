@@ -214,6 +214,8 @@ describe.skipIf(!url)('with a database', () => {
       expect(first.slug).toBe('fashion-and-models');
       expect(second.slug).toBe('fashion-and-models-2');
       expect(await uniqueSlug('Fashion & Models', first.id)).toBe('fashion-and-models');
+      // /portfolio/all is the All photos page, so no album may take that address.
+      expect(await uniqueSlug('All')).toBe('all-2');
     });
 
     it('shows only visible albums and visible photos on the site', async () => {

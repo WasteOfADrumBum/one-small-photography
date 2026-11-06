@@ -1,7 +1,7 @@
 {
   "stateVersion": 1,
-  "revision": 10,
-  "checkpointId": "ckpt-0010-cicd-standard",
+  "revision": 11,
+  "checkpointId": "ckpt-0011-portfolio-all-photos",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
@@ -10,16 +10,17 @@
     "independentVerification": "none"
   },
   "recorded": {
-    "branch": "claude/project-thread-llnmsl",
-    "commit": "7e051230d47d02447d60ba75a5d9d2d896ddffec",
-    "recordedAt": "2026-11-06T18:55:00Z"
+    "branch": "claude/project-thread-keruxw",
+    "commit": "64e78ce4676bb44dbea637d7e8a34b968f28bc25",
+    "recordedAt": "2026-11-06T23:20:00Z"
   },
   "development": {
     "milestone": "Photography release (owner decision pending in docs/RELEASE.md section 6)",
     "activeTask": null,
-    "workingBranch": "claude/project-thread-llnmsl",
+    "workingBranch": "claude/project-thread-keruxw",
     "activePr": null,
     "lastCompleted": [
+      "All photos view: /portfolio/all (button on /portfolio) shows every visible photo in batches of 24 with lazy images; branch claude/project-thread-keruxw at 64e78ce, PR open for Joshua's review",
       "CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md",
       "CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run 42271118896)",
       "Firefox and WebKit weekly: 56/56 each, 0 flaky (run 42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)",
@@ -27,7 +28,7 @@
       "Smoke after 7e05123 (run 42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page"
     ],
     "inProgress": [],
-    "nextAction": "Owner: import .github/rulesets/protect-main.json (Settings > Rules > Rulesets > Import), and turn on Vercel Web Analytics or ask for the script to be removed. Then the next production smoke should pass and close alert #32."
+    "nextAction": "Joshua: review and merge the All photos PR. Owner items unchanged: import .github/rulesets/protect-main.json, and decide on Vercel Web Analytics."
   },
   "decisions": {
     "made": [
@@ -125,6 +126,13 @@
   "verification": {
     "testsRun": [
       {
+        "command": "Locally on 64e78ce: prettier, eslint, astro check, Vitest 202/202 on Postgres 16, Chromium e2e 68/68 (Firefox/WebKit not run)",
+        "result": "pass",
+        "commit": "64e78ce4676bb44dbea637d7e8a34b968f28bc25",
+        "at": "2026-11-06T23:20:00Z",
+        "ciRunUrl": null
+      },
+      {
         "command": "GitHub CI on main (push) after PR #38",
         "result": "pass",
         "commit": "7e051230d47d02447d60ba75a5d9d2d896ddffec",
@@ -181,7 +189,7 @@
       "tool": "Claude Code",
       "model": null
     },
-    "checkpointedAt": "2026-11-06T18:55:00Z",
+    "checkpointedAt": "2026-11-06T23:20:00Z",
     "unfinished": [
       "Owner: import the main ruleset",
       "Owner: Vercel Web Analytics on or off",
@@ -190,7 +198,7 @@
     "blockers": [
       "Settings writes are refused by the agent's GitHub proxy (branch protection, rulesets, Dependency graph)"
     ],
-    "continuation": "The CI/CD work is merged (PR #30, #38). This docs-only PR adds docs/CI-CD-EVIDENCE.md and this checkpoint. Open item for an agent after the owner chooses: if analytics is to be removed, drop webAnalytics from astro.config.mjs in a PR and confirm the next smoke passes and closes alert #32. Do not record approval.",
+    "continuation": "PR from claude/project-thread-keruxw adds the All photos view (src/pages/portfolio/all.astro, src/scripts/gallery-batches.ts, lightbox now delegated and batch-aware). Wait for CI and Joshua's review; Joshua is doing UI work on a separate branch, so expect possible conflicts in Gallery.astro or portfolio/index.astro. Earlier owner items still open. Do not record approval.",
     "uncommittedWorkOutsideCheckpoint": "none",
     "persistedBy": "local-file"
   }

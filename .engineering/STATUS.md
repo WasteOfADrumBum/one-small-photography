@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 10); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 11); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -6,16 +6,17 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
-- Branch: claude/project-thread-llnmsl
-- Recorded commit: `7e05123` on `claude/project-thread-llnmsl`
-- Last checkpoint: 2026-11-06T18:55:00Z by Claude Code
+- Branch: claude/project-thread-keruxw
+- Recorded commit: `64e78ce` on `claude/project-thread-keruxw`
+- Last checkpoint: 2026-11-06T23:20:00Z by Claude Code
 
 ## Next action
 
-Owner: import .github/rulesets/protect-main.json (Settings > Rules > Rulesets > Import), and turn on Vercel Web Analytics or ask for the script to be removed. Then the next production smoke should pass and close alert #32.
+Joshua: review and merge the All photos PR. Owner items unchanged: import .github/rulesets/protect-main.json, and decide on Vercel Web Analytics.
 
 ## Completed
 
+- All photos view: /portfolio/all (button on /portfolio) shows every visible photo in batches of 24 with lazy images; branch claude/project-thread-keruxw at 64e78ce, PR open for Joshua's review
 - CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md
 - CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run 42271118896)
 - Firefox and WebKit weekly: 56/56 each, 0 flaky (run 42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)
@@ -28,6 +29,7 @@ _none recorded_
 
 ## Tests (agent-reported)
 
+- `Locally on 64e78ce: prettier, eslint, astro check, Vitest 202/202 on Postgres 16, Chromium e2e 68/68 (Firefox/WebKit not run)`: pass at `64e78ce`, 2026-11-06T23:20:00Z
 - `GitHub CI on main (push) after PR #38`: pass at `7e05123`, 2026-11-06T18:40:00Z
 - `Production smoke after the 7e05123 deployment: HTTP 14/14, browser checks failed on the analytics script 404`: fail at `7e05123`, 2026-11-06T18:45:00Z
 - `Browser tests (Firefox, WebKit) on 164be9b: 56/56 each`: pass at `164be9b`, 2026-11-06T18:31:00Z
