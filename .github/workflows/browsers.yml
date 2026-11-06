@@ -52,6 +52,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       # Chromium too: the setup step that creates the account and albums runs in it.
       - name: Install ${{ matrix.browser }}
+        # A stalled package mirror once held this for the whole job; fail it by name.
+        timeout-minutes: 12
         env:
           BROWSER: ${{ matrix.browser }}
         run: npx playwright install --with-deps "$BROWSER" chromium
