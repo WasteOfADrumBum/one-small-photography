@@ -12,7 +12,9 @@ export const GET: APIRoute = async ({ site }) => {
   const paths: string[] = ['/', ...[...nav, ...footerNav].map((item) => item.href)];
   if (hasDatabase()) {
     try {
-      for (const album of await listPublishedAlbums()) paths.push(`/portfolio/${album.slug}`);
+      const albums = await listPublishedAlbums();
+      if (albums.some((album) => album.photos.length > 0)) paths.push('/portfolio/all');
+      for (const album of albums) paths.push(`/portfolio/${album.slug}`);
     } catch (err) {
       console.error('Could not list albums for the sitemap', err);
     }

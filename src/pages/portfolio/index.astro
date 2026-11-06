@@ -22,6 +22,7 @@ const tones = ['moss', 'gold', 'sage'] as const;
 // One, two or three per row, matching the gap below. A flex row (not a grid) so a
 // partly filled last row sits in the middle instead of hugging the left edge.
 const cell = 'w-full sm:w-[calc((100%-2.5rem)/2)] lg:w-[calc((100%-5rem)/3)]';
+const totalPhotos = albums.reduce((sum, album) => sum + album.photos.length, 0);
 const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'Events', 'Weddings'];
 ---
 
@@ -36,6 +37,13 @@ const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'E
     <p class="mt-4 max-w-xl text-sand" data-reveal>
       Each album is a stack of prints. Pick one to open the full gallery.
     </p>
+    {totalPhotos > 0 && (
+      <p class="mt-8" data-reveal>
+        <a href="/portfolio/all" class="btn-gilt px-6 py-3">
+          View all {totalPhotos} photos →
+        </a>
+      </p>
+    )}
     <div class="mt-20 flex flex-wrap justify-center gap-x-10 gap-y-28">
       {albums.length > 0
         ? albums.map((album, i) => (

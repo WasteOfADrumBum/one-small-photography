@@ -7,41 +7,75 @@ import { albumPhotoAlt, photoAlt } from '@/lib/alt-text';
 interface Props {
   photos: GalleryPhoto[];
   /** For alt text when a photo has none of its own. */
-  albumTitle: string;
+  albumTitle?: string;
+  /**
+   * Each photo's last-resort alt text, when the photos come from more than one
+   * album (the All photos page). Overrides `albumTitle`.
+   */
+  fallbackAlts?: string[];
+  /** Each photo's album, shown in the viewer, when the photos span albums. */
+  albumTitles?: string[];
+  /**
+   * Render only this many photos at first and bring in the rest, a batch at a
+   * time, as the visitor scrolls near the end (src/scripts/gallery-batches.ts).
+   */
+  batchSize?: number;
 }
-const { photos, albumTitle } = Astro.props;
-const alts = photos.map((photo, i) => photoAlt(photo, albumPhotoAlt(albumTitle, i + 1)));
+const { photos, albumTitle = '', fallbackAlts, albumTitles, batchSize } = Astro.props;
+const alts = photos.map((photo, i) =>
+  photoAlt(photo, fallbackAlts?.[i] ?? albumPhotoAlt(albumTitle, i + 1)),
+);
+const size = batchSize && batchSize > 0 ? batchSize : photos.length || 1;
+const batches: { photo: GalleryPhoto; index: number }[][] = [];
+photos.forEach((photo, index) => {
+  if (index % size === 0) batches.push([]);
+  batches.at(-1)!.push({ photo, index });
+});
+// Each batch is its own set of columns: CSS columns refill from the top when
+// items are added, so appending to one set would shuffle photos already seen.
+const columns = 'columns-1 gap-4 sm:columns-2 lg:columns-3';
 ---
 
-<div class="mt-14 columns-1 gap-4 sm:columns-2 lg:columns-3">
-  {photos.map((photo, index) => (
-    <button
-      type="button"
-      class="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-sm bg-moss"
-      data-gallery-item={index}
-      data-src={photoUrl(photo, 'lg')}
-      data-title={photo.title}
-      data-description={photo.description}
-      data-alt={alts[index]}
-      aria-label={`${alts[index]}. Open full screen.`}
-      aria-haspopup="dialog"
-      data-protected
-    >
-      <img
-        src={photoUrl(photo, 'md')}
-        srcset={photoSrcset(photo)}
-        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-        width={photo.width}
-        height={photo.height}
-        alt={alts[index]}
-        loading={index < 3 ? 'eager' : 'lazy'}
-        decoding="async"
-        draggable="false"
+<div class="mt-14" data-gallery data-gallery-total={photos.length}>
+  {batches.map((batch, b) => {
+    const items = batch.map(({ photo, index }) => (
+      <button
+        type="button"
+        class="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-sm bg-moss"
+        data-gallery-item={index}
+        data-src={photoUrl(photo, 'lg')}
+        data-title={photo.title}
+        data-description={photo.description}
+        data-album={albumTitles?.[index]}
+        data-alt={alts[index]}
+        aria-label={`${alts[index]}. Open full screen.`}
+        aria-haspopup="dialog"
         data-protected
-        class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
-      />
-    </button>
-  ))}
+      >
+        <img
+          src={photoUrl(photo, 'md')}
+          srcset={photoSrcset(photo)}
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          width={photo.width}
+          height={photo.height}
+          alt={alts[index]}
+          loading={index < 3 ? 'eager' : 'lazy'}
+          decoding="async"
+          draggable="false"
+          data-protected
+          class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
+        />
+      </button>
+    ));
+    return b === 0 ? (
+      <div class={columns}>{items}</div>
+    ) : (
+      <template data-gallery-batch>
+        <div class={columns}>{items}</div>
+      </template>
+    );
+  })}
+  {batches.length > 1 && <div data-gallery-sentinel aria-hidden="true" class="h-px" />}
 </div>
 
 <!-- Each photo's settings line, rendered here once and copied into the viewer. -->
@@ -102,6 +136,7 @@ const alts = photos.map((photo, i) => photoAlt(photo, albumPhotoAlt(albumTitle, 
         <p data-position class="sr-only" aria-live="polite"></p>
         <p data-title class="font-serif text-2xl"></p>
         <p data-description class="mt-1 text-sand"></p>
+        <p data-album class="mt-1 text-sm text-sand/80 empty:hidden"></p>
         <div data-settings class="mt-4"></div>
       </figcaption>
     </figure>
@@ -110,5 +145,7 @@ const alts = photos.map((photo, i) => photoAlt(photo, albumPhotoAlt(albumTitle, 
 
 <script>
   import { initLightbox } from '@/scripts/lightbox';
+  import { initGalleryBatches } from '@/scripts/gallery-batches';
   initLightbox();
+  initGalleryBatches();
 </script>

@@ -41,6 +41,28 @@ test('the portfolio lists visible albums only, with their photo counts', async (
   await expect(page.getByText(seed.hidden.title)).toHaveCount(0);
 });
 
+test('All photos gathers every visible photo from every visible album', async ({ page }) => {
+  // The seeded Broken Files album has a photo whose file is gone on purpose.
+  const noErrors = watchErrors(page, [/status of 404/]);
+  await page.goto('/portfolio');
+  await page.getByRole('link', { name: /View all \d+ photos/ }).click();
+  await expect(page).toHaveURL(/\/portfolio\/all$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'All photos' })).toBeVisible();
+  const html = await page.content();
+  for (const id of seed.public.photoIds) expect(html).toContain(id);
+  expect(html).not.toContain(seed.public.hiddenPhotoId);
+  expect(html).not.toContain(seed.hidden.photoId);
+  // Past the first few, photos wait until they are scrolled near.
+  const lazy = await page
+    .locator('[data-gallery-item] img')
+    .evaluateAll((els) => els.slice(3).every((el) => el.getAttribute('loading') === 'lazy'));
+  expect(lazy).toBe(true);
+  await page.locator(`[data-gallery-item][data-album="${seed.public.title}"]`).first().click();
+  const viewer = page.getByRole('dialog', { name: 'Photo viewer' });
+  await expect(viewer.getByText(`From ${seed.public.title}`)).toBeVisible();
+  noErrors();
+});
+
 test('an album shows its visible photos at their real shape', async ({ page }) => {
   const noErrors = watchErrors(page);
   await page.goto(`/portfolio/${seed.public.slug}`);
@@ -130,9 +152,13 @@ test('hidden albums and photos stay out of public pages, files and the sitemap',
   }
   const sitemap = await (await request.get('/sitemap.xml')).text();
   expect(sitemap).toContain(`/portfolio/${seed.public.slug}`);
+  expect(sitemap).toContain('/portfolio/all');
   expect(sitemap).not.toContain(seed.hidden.slug);
   const home = await (await request.get('/')).text();
   expect(home).not.toContain(seed.hidden.photoId);
+  const all = await (await request.get('/portfolio/all')).text();
+  expect(all).not.toContain(seed.hidden.photoId);
+  expect(all).not.toContain(seed.public.hiddenPhotoId);
 });
 
 test('pages name their canonical address on the real domain', async ({ page }) => {

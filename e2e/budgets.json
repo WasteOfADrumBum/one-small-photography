@@ -4,6 +4,7 @@
     "/": { "js": 155000, "css": 54000 },
     "/portfolio": { "js": 155000, "css": 54000 },
     "/portfolio/{album}": { "js": 155000, "css": 54000 },
+    "/portfolio/all": { "js": 155000, "css": 54000 },
     "/contact": { "js": 415000, "css": 54000 },
     "/login": { "js": 155000, "css": 54000 }
   },

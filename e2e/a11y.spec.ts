@@ -40,6 +40,7 @@ const publicPages = () => [
   '/portfolio',
   `/portfolio/${seed.public.slug}`,
   `/portfolio/${seed.empty.slug}`,
+  '/portfolio/all',
   '/contact',
   '/the-triad',
   '/under-the-hood',

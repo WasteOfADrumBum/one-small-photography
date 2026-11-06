@@ -66,6 +66,37 @@ describe('initLightbox', () => {
     expect(document.activeElement).toBe(item(1));
   });
 
+  it('shows album names when given, and steps into batches not yet in the page', () => {
+    document.body.innerHTML = `
+      <div data-gallery data-gallery-total="3">
+        <div><button data-gallery-item="0" data-src="/img/a/lg.webp" data-album="Fields"></button></div>
+        <template data-gallery-batch>
+          <div><button data-gallery-item="1" data-src="/img/b/lg.webp" data-album="Faces"></button>
+          <button data-gallery-item="2" data-src="/img/c/lg.webp"></button></div>
+        </template>
+      </div>
+      <dialog data-lightbox>
+        <button data-prev></button><button data-next></button><button data-close></button>
+        <img data-image alt="" />
+        <p data-position></p><p data-title></p><p data-description></p><p data-album></p><div data-settings></div>
+      </dialog>`;
+    dialog().showModal ??= function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    initLightbox();
+    item(0).click();
+    expect(part('position').textContent).toBe('Photo 1 of 3');
+    expect(part('album').textContent).toBe('From Fields');
+    part('prev').click(); // wraps to the last photo, which was still waiting
+    expect(part('position').textContent).toBe('Photo 3 of 3');
+    expect(part('image').getAttribute('src')).toBe('/img/c/lg.webp');
+    expect(part('album').textContent).toBe('');
+    part('prev').click();
+    expect(part('album').textContent).toBe('From Faces');
+    item(1).click(); // photos brought in later open too
+    expect(part('position').textContent).toBe('Photo 2 of 3');
+  });
+
   it('does nothing on a page without a gallery', () => {
     document.body.innerHTML = '';
     expect(() => initLightbox()).not.toThrow();
