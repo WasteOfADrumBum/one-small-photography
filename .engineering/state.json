@@ -1,7 +1,7 @@
 {
   "stateVersion": 1,
-  "revision": 9,
-  "checkpointId": "ckpt-0009-backup-risk-accepted",
+  "revision": 10,
+  "checkpointId": "ckpt-0010-cicd-standard",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
@@ -10,25 +10,24 @@
     "independentVerification": "none"
   },
   "recorded": {
-    "branch": "claude/project-thread-svwmjb",
-    "commit": "3555985e85b155256ddaf0e4c13cb7b9d0d4e824",
-    "recordedAt": "2026-11-03T16:30:00Z"
+    "branch": "claude/project-thread-llnmsl",
+    "commit": "7e051230d47d02447d60ba75a5d9d2d896ddffec",
+    "recordedAt": "2026-11-06T18:55:00Z"
   },
   "development": {
     "milestone": "Photography release (owner decision pending in docs/RELEASE.md section 6)",
     "activeTask": null,
-    "workingBranch": "claude/project-thread-svwmjb",
+    "workingBranch": "claude/project-thread-llnmsl",
     "activePr": null,
     "lastCompleted": [
-      "Recorded Joshua Small's 2026-11-03 acceptance of the unencrypted K:\\ backup copy risk (owner-stated, in his words) in docs/RELEASE.md section 2; the copy is not described as encrypted",
-      "PR #28 merged as a1227ca; main CI run 78 green (per GitHub)",
-      "Production deployment dpl_7xGuAn2vCBEnj1ag4ET6J3J4LSXU READY at a1227ca (per Vercel API)",
-      "Production smoke run 41664171346 passed 10/10 after that deployment (read from its log)",
-      "docs/RELEASE.md and docs/RECOVERY.md updated with the owner's 2026-11-03 results, labelled owner-reported; file recovery kept distinct from database-record restoration; K:\\ encryption marked unconfirmed",
-      "Fixed the CI unhandled Postgres 57P01 error, WCAG 2.2 defects, backup tooling (PR #28)"
+      "CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md",
+      "CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run 42271118896)",
+      "Firefox and WebKit weekly: 56/56 each, 0 flaky (run 42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)",
+      "Production smoke on every production deployment, plus daily; alert issues labelled production-alert open and close automatically",
+      "Smoke after 7e05123 (run 42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page"
     ],
     "inProgress": [],
-    "nextAction": "Owner: review and merge the docs PR (#29), then make the release decision in docs/RELEASE.md section 6 yourself. No agent step remains."
+    "nextAction": "Owner: import .github/rulesets/protect-main.json (Settings > Rules > Rulesets > Import), and turn on Vercel Web Analytics or ask for the script to be removed. Then the next production smoke should pass and close alert #32."
   },
   "decisions": {
     "made": [
@@ -94,6 +93,20 @@
         "decidedBy": "human",
         "humanRef": "Joshua Small, project thread, 2026-11-03T16:10:42Z",
         "recordedAt": "2026-11-03T16:30:00Z"
+      },
+      {
+        "id": "e2e-https-for-webkit",
+        "summary": "Firefox/WebKit tests serve the built site over HTTPS with a throwaway certificate because WebKit refuses Secure cookies on http://localhost; the PR suite stays on HTTP",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-06T18:55:00Z"
+      },
+      {
+        "id": "dependency-review-removed",
+        "summary": "GitHub dependency review removed from CI until the owner turns on the Dependency graph; the npm audit policy covers the lockfile meanwhile",
+        "decidedBy": "agent",
+        "humanRef": null,
+        "recordedAt": "2026-11-06T18:55:00Z"
       }
     ],
     "constraints": [
@@ -105,46 +118,62 @@
     "unresolved": [
       "Keep or drop the proposed contact-page privacy sentence",
       "Accept 30-day CDN copy of later-hidden photos for v1 (ROADMAP R-3) or prioritise the purge",
-      "Release approval and scope (docs/RELEASE.md section 6, owner)"
+      "Release approval and scope (docs/RELEASE.md section 6, owner)",
+      "Vercel Web Analytics: turn it on for the project, or remove webAnalytics from astro.config.mjs (owner)"
     ]
   },
   "verification": {
     "testsRun": [
       {
-        "command": "GitHub CI on main (push) after PR #28",
+        "command": "GitHub CI on main (push) after PR #38",
         "result": "pass",
-        "commit": "a1227cad9e707abad47692cafdc2b43d4a4f9635",
-        "at": "2026-11-03T14:31:00Z",
-        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41654227493"
+        "commit": "7e051230d47d02447d60ba75a5d9d2d896ddffec",
+        "at": "2026-11-06T18:40:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271766367"
       },
       {
-        "command": "Production smoke (manual dispatch after the PR #28 deployment), 10/10 checks",
-        "result": "pass",
-        "commit": "a1227cad9e707abad47692cafdc2b43d4a4f9635",
-        "at": "2026-11-03T15:28:00Z",
-        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41664171346"
+        "command": "Production smoke after the 7e05123 deployment: HTTP 14/14, browser checks failed on the analytics script 404",
+        "result": "fail",
+        "commit": "7e051230d47d02447d60ba75a5d9d2d896ddffec",
+        "at": "2026-11-06T18:45:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271830897"
       },
       {
-        "command": "npm run format:check && npm run lint && npm run check && npm test (160 tests, Postgres 16) && npm run build, run locally on the PR #28 branch",
+        "command": "Browser tests (Firefox, WebKit) on 164be9b: 56/56 each",
         "result": "pass",
-        "commit": "d39790f3bfe9b0db7fe95b96009ee967abc33018",
-        "at": "2026-11-03T13:42:00Z",
+        "commit": "164be9b",
+        "at": "2026-11-06T18:31:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42267842079"
+      },
+      {
+        "command": "PR CI on 8ae8631 (PR #38 head)",
+        "result": "pass",
+        "commit": "8ae863129bfde1f51b6db181f9ee6c9dad2d322c",
+        "at": "2026-11-06T18:31:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271118896"
+      },
+      {
+        "command": "Locally: lint, astro check, prettier, Vitest 197 on Postgres 16, workflow lint + zizmor, Chromium e2e 57/57 over HTTP and over HTTPS",
+        "result": "pass",
+        "commit": "164be9b",
+        "at": "2026-11-06T18:20:00Z",
         "ciRunUrl": null
       },
       {
-        "command": "GitHub CI on main @ 153eee0 (push) before the fix",
+        "command": "Production smoke after the 97eaeb6 deployment: 13/14 (404 cache header)",
         "result": "fail",
-        "commit": "153eee0484003d2150508a858c372cd80960645f",
-        "at": "2026-11-03T03:42:00Z",
-        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/41573644714"
+        "commit": "97eaeb6ee17ff1ae2a59a8ea10efd0d47479d67a",
+        "at": "2026-11-06T17:37:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42263055341"
       }
     ],
     "unverifiedChanges": [
-      "Owner-reported 2026-11-03, not verified by the agent: keyboard, Narrator and phone checks passed; first-backup.ps1 ran under PowerShell 7.6.9; backup verified and its copy on K:\\ matched the SHA-256; B2 bucket private with Keep all versions; retained sm.webp opened after deleting a disposable photo",
-      "File recovery only: restoring a deleted photo's database record, and restoring the real backup file into a new database, have not been tested",
-      "The K:\\ backup copy is not encrypted (owner-accepted risk, 2026-11-03); owner-stated, not verified by the agent",
-      "The agent never ran first-backup.ps1 under PowerShell and has no B2 access",
-      "Carried over: share card in real link previews, photo-audit against B2"
+      "Branch protection on main is not set: the agent's proxy refuses settings writes (403). The ruleset file is ready to import; a daily job alerts while it is missing",
+      "Dependency graph is off, so GitHub dependency review is not in CI",
+      "No VoiceOver or NVDA pass has been done; owner-reported Narrator, keyboard and phone checks from 2026-11-03 stand as owner-reported",
+      "The deployment-failed alert job has not run on a real failed deployment",
+      "Whether GitHub alert emails reach Joshua depends on his notification settings, not checked",
+      "Carried over: file recovery only tested; restoring the real backup into a new database not tested"
     ]
   },
   "handoff": {
@@ -152,10 +181,16 @@
       "tool": "Claude Code",
       "model": null
     },
-    "checkpointedAt": "2026-11-03T16:30:00Z",
-    "unfinished": ["Owner approval decision in docs/RELEASE.md section 6"],
-    "blockers": ["Owner release decision (docs/RELEASE.md section 6)"],
-    "continuation": "Docs pull request #29 records the owner-reported 2026-11-03 results and the owner's acceptance of the unencrypted K:\\ backup risk. The owner reviews and merges it. Do not record approval.",
+    "checkpointedAt": "2026-11-06T18:55:00Z",
+    "unfinished": [
+      "Owner: import the main ruleset",
+      "Owner: Vercel Web Analytics on or off",
+      "Owner release decision (docs/RELEASE.md section 6)"
+    ],
+    "blockers": [
+      "Settings writes are refused by the agent's GitHub proxy (branch protection, rulesets, Dependency graph)"
+    ],
+    "continuation": "The CI/CD work is merged (PR #30, #38). This docs-only PR adds docs/CI-CD-EVIDENCE.md and this checkpoint. Open item for an agent after the owner chooses: if analytics is to be removed, drop webAnalytics from astro.config.mjs in a PR and confirm the next smoke passes and closes alert #32. Do not record approval.",
     "uncommittedWorkOutsideCheckpoint": "none",
     "persistedBy": "local-file"
   }
