@@ -50,10 +50,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
+      # Chromium too: the setup step that creates the account and albums runs in it.
       - name: Install ${{ matrix.browser }}
         env:
           BROWSER: ${{ matrix.browser }}
-        run: npx playwright install --with-deps "$BROWSER"
+        run: npx playwright install --with-deps "$BROWSER" chromium
       - name: Build the site for local serving
         run: npm run build:e2e
       - name: Run the browser tests

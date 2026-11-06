@@ -182,8 +182,18 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
+      # The browser is cached by Playwright version. No --with-deps: the runner
+      # image already has Chromium's system libraries, and installing them with
+      # apt took up to 10 minutes. If one goes missing the tests fail at launch.
+      - name: Cache Chromium
+        id: browser-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        if: steps.browser-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
       - name: Build the site for local serving
         run: npm run build:e2e
       - name: Run the browser tests

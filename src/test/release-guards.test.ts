@@ -85,6 +85,28 @@ describe('production smoke checks', () => {
     expect(results.find((r) => !r.ok)?.name).toBe('the live site is the expected build');
   });
 
+  it("accepts Vercel's default 404 headers, but not a 404 that shared caches keep", async () => {
+    const unknownPhoto = '/img/00000000-0000-4000-8000-000000000000/sm.webp';
+    const vercelDefault = site({
+      [unknownPhoto]: new Response('Not found', {
+        status: 404,
+        headers: { 'cache-control': 'public, max-age=0, must-revalidate' },
+      }),
+    });
+    const okResults = await runSmoke('https://photo.example', vercelDefault.fetchImpl, {});
+    expect(okResults.filter((r) => !r.ok)).toEqual([]);
+    const cached = site({
+      [unknownPhoto]: new Response('Not found', {
+        status: 404,
+        headers: { 'cache-control': 'public, s-maxage=600' },
+      }),
+    });
+    const bad = await runSmoke('https://photo.example', cached.fetchImpl, {});
+    expect(bad.filter((r) => !r.ok).map((r) => r.name)).toEqual([
+      'unknown and known-hidden addresses answer 404, never publicly cached',
+    ]);
+  });
+
   it('fails when a known hidden address is served', async () => {
     const { fetchImpl } = site({ '/portfolio/oops': new Response('<html>', { status: 200 }) });
     const results = await runSmoke('https://photo.example', fetchImpl, {
