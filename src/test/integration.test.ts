@@ -421,7 +421,9 @@ describe.skipIf(!url)('with a database', () => {
         { id: photo.id, file: 'xl.webp' },
         { id: photo.id, file: 'md.jpg' },
       ]) {
-        expect((await call(imgRoute.GET, { params })).status).toBe(404);
+        const res = await call(imgRoute.GET, { params });
+        expect(res.status).toBe(404);
+        expect(res.headers.get('Cache-Control')).toBe('private, no-store');
       }
     });
 

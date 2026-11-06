@@ -47,6 +47,16 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch, options =
       throw new Error(`HTTP ${res.status}, expected ${codes.join(' or ')}`);
   };
 
+  // Shared caches may store it: `public` (or s-maxage) with a lifetime above zero.
+  // Vercel's own default for function responses, `public, max-age=0,
+  // must-revalidate`, says public but is never served stale, so it does not count.
+  const publiclyCached = (header) => {
+    const value = (header ?? '').toLowerCase();
+    if (/\b(no-store|private)\b/.test(value)) return false;
+    const ages = [...value.matchAll(/\b(?:s-maxage|max-age)=(\d+)/g)].map((m) => Number(m[1]));
+    return /\bpublic\b/.test(value) && ages.some((n) => n > 0);
+  };
+
   const canonicalOf = (html) => /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
 
   if (expectedCommit) {
@@ -143,8 +153,8 @@ export async function runSmoke(base = DEFAULT_SITE, fetchImpl = fetch, options =
       const res = await get(path);
       await res.arrayBuffer();
       if (res.status !== 404) throw new Error(`${label}: HTTP ${res.status}, expected 404`);
-      if ((res.headers.get('cache-control') ?? '').includes('public'))
-        throw new Error(`${label} is publicly cacheable`);
+      if (publiclyCached(res.headers.get('cache-control')))
+        throw new Error(`${label} is publicly cacheable (${res.headers.get('cache-control')})`);
     }
     return hiddenPaths.length
       ? `${hiddenPaths.length} known hidden addresses`

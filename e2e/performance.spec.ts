@@ -26,7 +26,22 @@ function recordAssets(page: Page) {
   return assets;
 }
 
-const sum = (list: { bytes: number }[]) => list.reduce((n, a) => n + a.bytes, 0);
+/**
+ * Each distinct script or style the page loaded, with its size as the server
+ * sends it. Engines can report a cached file's body wrongly (Firefox gave a
+ * 134 kB script as 594 kB), so the size comes from one fresh request per file.
+ */
+const sizes = new Map<string, number>();
+async function files(page: Page, list: { url: string; type: string }[], type: string) {
+  const out = new Map<string, number>();
+  for (const { url } of list.filter((a) => a.type === type)) {
+    if (!sizes.has(url)) sizes.set(url, (await (await page.request.get(url)).body()).length);
+    out.set(url, sizes.get(url)!);
+  }
+  return out;
+}
+const sum = (f: Map<string, number>) => [...f.values()].reduce((n, b) => n + b, 0);
+const listing = (f: Map<string, number>) => [...f].map(([url, b]) => `${url} ${b}`).join(', ');
 
 test('each page stays within its script and style budget', async ({ page }) => {
   const measured: Record<string, { js: number; css: number }> = {};
@@ -34,11 +49,13 @@ test('each page stays within its script and style budget', async ({ page }) => {
     const path = key.replace('{album}', seed.public.slug);
     const assets = recordAssets(page);
     await page.goto(path, { waitUntil: 'networkidle' });
-    const js = sum(assets.filter((a) => a.type === 'script'));
-    const css = sum(assets.filter((a) => a.type === 'stylesheet'));
+    const scripts = await files(page, assets, 'script');
+    const styles = await files(page, assets, 'stylesheet');
+    const js = sum(scripts);
+    const css = sum(styles);
     measured[key] = { js, css };
-    expect(js, `${path} JavaScript bytes`).toBeLessThanOrEqual(budget.js);
-    expect(css, `${path} CSS bytes`).toBeLessThanOrEqual(budget.css);
+    expect(js, `${path} JavaScript bytes (${listing(scripts)})`).toBeLessThanOrEqual(budget.js);
+    expect(css, `${path} CSS bytes (${listing(styles)})`).toBeLessThanOrEqual(budget.css);
     page.removeAllListeners('response');
   }
   test.info().annotations.push({ type: 'measured', description: JSON.stringify(measured) });

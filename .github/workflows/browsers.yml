@@ -50,15 +50,21 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
+      # Chromium too: the setup step that creates the account and albums runs in it.
       - name: Install ${{ matrix.browser }}
+        # A stalled package mirror once held this for the whole job; fail it by name.
+        timeout-minutes: 12
         env:
           BROWSER: ${{ matrix.browser }}
-        run: npx playwright install --with-deps "$BROWSER"
+        run: npx playwright install --with-deps "$BROWSER" chromium
       - name: Build the site for local serving
         run: npm run build:e2e
       - name: Run the browser tests
         env:
           BROWSER: ${{ matrix.browser }}
+          # WebKit refuses a Secure cookie on http://localhost, so the site is
+          # served over HTTPS with a throwaway certificate for every engine here.
+          E2E_HTTPS: '1'
         run: npm run test:e2e -- "--project=$BROWSER"
       - name: Summarise results and flag flaky tests
         if: always()

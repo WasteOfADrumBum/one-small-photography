@@ -26,13 +26,13 @@ test('the one-time setup page is closed once the account exists', async ({ reque
   expect(res.headers()['location']).toBe('/login');
 });
 
-test('the login only forwards to admin pages', async ({ page }) => {
+test('the login only forwards to admin pages', async ({ page, baseURL }) => {
   for (const next of ['https://evil.example/', '//evil.example', 'javascript:alert(1)']) {
     await page.goto(`/login?next=${encodeURIComponent(next)}`);
     await page.getByLabel('Email').fill(E2E.adminEmail);
     await page.getByLabel('Password').fill(E2E.adminPassword);
     await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page).toHaveURL(/^http:\/\/localhost:\d+\/admin$/);
+    await expect(page).toHaveURL(`${new URL(baseURL!).origin}/admin`);
     await page.context().clearCookies();
   }
 });

@@ -8,7 +8,11 @@ import { copyrightXmp, embedXmp } from '@/lib/xmp';
 
 export const prerender = false;
 
-const notFound = () => new Response('Not found', { status: 404 });
+// Never cached anywhere: a photo that is hidden now may be published later, and
+// its address must work as soon as it is. (Without this, Vercel adds its own
+// default `public, max-age=0, must-revalidate`.)
+const notFound = () =>
+  new Response('Not found', { status: 404, headers: { 'Cache-Control': 'private, no-store' } });
 const xmp = copyrightXmp();
 
 /**

@@ -34,6 +34,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',
+    // E2E_HTTPS=1 serves the site with a throwaway self-signed certificate.
+    ignoreHTTPSErrors: baseURL.startsWith('https:'),
     timezoneId: 'America/New_York',
     locale: 'en-US',
   },

@@ -4,6 +4,8 @@
 //   npm run build:e2e        (once, after changing the app)
 //   npm run test:e2e         (Chromium: the pull-request suite)
 //   npm run test:e2e -- --project=firefox --project=webkit
+//   E2E_HTTPS=1 npm run test:e2e   (serve over HTTPS with a throwaway certificate;
+//                                   WebKit needs it for the Secure session cookie)
 //
 // Needs E2E_DATABASE_URL or TEST_DATABASE_URL: a Postgres on this machine that
 // this script may create a database on. See docs/TESTING.md.
@@ -14,10 +16,12 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { createServer } from 'node:http';
+import { createServer, get as httpGet } from 'node:http';
+import { get as httpsGet } from 'node:https';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pg from 'pg';
@@ -61,6 +65,7 @@ const resultsDir = 'test-results';
 mkdirSync(resultsDir, { recursive: true });
 
 let storageDir;
+let tlsDir;
 let server;
 let sink;
 let admin;
@@ -83,6 +88,7 @@ async function cleanup() {
     // Only a folder this run created and marked is ever deleted.
     if (storageDir && isOwnTestStorage(storageDir, runId))
       rmSync(storageDir, { recursive: true, force: true });
+    if (tlsDir && isOwnTestStorage(tlsDir, runId)) rmSync(tlsDir, { recursive: true, force: true });
   }
   await admin?.end().catch(() => {});
 }
@@ -117,13 +123,57 @@ function startMailSink() {
   return new Promise((resolve) => srv.listen(0, '127.0.0.1', () => resolve(srv)));
 }
 
-async function waitForServer(base, child) {
+/** Status of GET url; over HTTPS it trusts only this run's own certificate. */
+function status(url, ca) {
+  return new Promise((resolve, reject) => {
+    const get = url.startsWith('https:') ? httpsGet : httpGet;
+    get(url, ca ? { ca } : {}, (res) => {
+      res.resume();
+      resolve(res.statusCode);
+    }).on('error', reject);
+  });
+}
+
+/**
+ * A self-signed certificate for localhost, valid for one day, in a folder this
+ * run creates and marks, so cleanup removes exactly it.
+ */
+function makeCertificate() {
+  const dir = mkdtempSync(join(tmpdir(), 'osp-e2e-tls-'));
+  markTestStorage(dir, runId);
+  const key = join(dir, 'key.pem');
+  const cert = join(dir, 'cert.pem');
+  const made = spawnSync(
+    'openssl',
+    [
+      'req',
+      '-x509',
+      '-newkey',
+      'rsa:2048',
+      '-nodes',
+      '-days',
+      '1',
+      '-subj',
+      '/CN=localhost',
+      '-addext',
+      'subjectAltName=DNS:localhost',
+      '-keyout',
+      key,
+      '-out',
+      cert,
+    ],
+    { encoding: 'utf8' },
+  );
+  if (made.status !== 0) throw new Error(`openssl could not make a certificate:\n${made.stderr}`);
+  return { dir, key, cert };
+}
+
+async function waitForServer(base, child, ca) {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     if (child.exitCode !== null) throw new Error(`the site exited with code ${child.exitCode}`);
     try {
-      const res = await fetch(new URL('/version.json', base));
-      if (res.ok) return;
+      if ((await status(new URL('/version.json', base).href, ca)) === 200) return;
     } catch {
       // not listening yet
     }
@@ -158,7 +208,10 @@ try {
   const sinkUrl = `http://127.0.0.1:${sink.address().port}`;
 
   const port = Number(process.env.E2E_PORT) || 4400 + Math.floor(Math.random() * 500);
-  const baseURL = `http://localhost:${port}`;
+  const https = process.env.E2E_HTTPS === '1';
+  const tls = https ? makeCertificate() : undefined;
+  tlsDir = tls?.dir;
+  const baseURL = `${https ? 'https' : 'http'}://localhost:${port}`;
   const setupToken = randomBytes(18).toString('base64url');
   const adminPassword = `e2e-${randomBytes(12).toString('base64url')}`;
 
@@ -177,12 +230,14 @@ try {
       RESEND_API_KEY: 're_e2e_not_a_real_key',
       CONTACT_TO_EMAIL: 'owner@e2e.test',
       RESEND_API_URL: `${sinkUrl}/emails`,
+      // Read by the Node adapter: with both set it serves HTTPS.
+      ...(tls && { SERVER_KEY_PATH: tls.key, SERVER_CERT_PATH: tls.cert }),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   server.stdout.pipe(log);
   server.stderr.pipe(log);
-  await waitForServer(baseURL, server);
+  await waitForServer(baseURL, server, tls && readFileSync(tls.cert));
   console.log(`e2e: site on ${baseURL}, database ${dbName}, run ${runId}`);
 
   const args = process.argv.slice(2);
@@ -200,6 +255,7 @@ try {
       E2E_ADMIN_EMAIL: `admin-${runId}@e2e.test`,
       E2E_ADMIN_PASSWORD: adminPassword,
       E2E_RUN_ID: runId,
+      ...(tls && { NODE_EXTRA_CA_CERTS: tls.cert }),
     },
   });
   exitCode = await new Promise((resolve) => tests.on('exit', (code) => resolve(code ?? 1)));
