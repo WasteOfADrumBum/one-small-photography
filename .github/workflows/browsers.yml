@@ -26,7 +26,7 @@ env:
 jobs:
   browsers:
     name: Browser tests (${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -85,7 +85,7 @@ jobs:
     name: Record the result
     needs: browsers
     if: always() && github.event_name == 'schedule'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
     permissions:
       contents: read
