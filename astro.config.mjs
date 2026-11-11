@@ -14,7 +14,7 @@ if (process.env.OSP_ADAPTER === 'node' && process.env.VERCEL)
 const adapter =
   process.env.OSP_ADAPTER === 'node'
     ? (await import('@astrojs/node')).default({ mode: 'standalone' })
-    : vercel({ webAnalytics: { enabled: true } });
+    : vercel();
 
 // Pages are prerendered by default; admin and API routes opt into
 // on-demand rendering with `export const prerender = false`.
