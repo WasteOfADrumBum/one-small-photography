@@ -1,10 +1,10 @@
-<!-- generated from .engineering/state.json (revision 11) -->
+<!-- generated from .engineering/state.json (revision 12) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 11, `ckpt-0011-portfolio-all-photos`, 2026-11-06T23:20:00Z by Claude Code
+- Checkpoint: revision 12, `repair-schema-2026-11-12`, 2026-11-12T02:08:42Z by Claude Code
 - Written by: a local edit that the agent then pushed; confirm the branch head matches
 - Uncommitted work outside this checkpoint: **none**
 
