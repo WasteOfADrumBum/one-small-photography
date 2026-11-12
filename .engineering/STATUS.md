@@ -1,4 +1,4 @@
-<!-- generated from .engineering/state.json (revision 11); edit state.json through a checkpoint, not this file -->
+<!-- generated from .engineering/state.json (revision 12); edit state.json through a checkpoint, not this file -->
 
 # one-small-photography: development status
 
@@ -6,9 +6,9 @@ All values are **agent-reported**, not independently verified. Check GitHub befo
 
 - Milestone: Photography release (owner decision pending in docs/RELEASE.md section 6)
 - Active task: none recorded
-- Branch: claude/project-thread-keruxw
+- Branch: `claude/project-thread-keruxw`
 - Recorded commit: `64e78ce` on `claude/project-thread-keruxw`
-- Last checkpoint: 2026-11-06T23:20:00Z by Claude Code
+- Last checkpoint: 2026-11-12T02:08:42Z by Claude Code
 
 ## Next action
 
@@ -18,10 +18,10 @@ Joshua: review and merge the All photos PR. Owner items unchanged: import .githu
 
 - All photos view: /portfolio/all (button on /portfolio) shows every visible photo in batches of 24 with lazy images; branch claude/project-thread-keruxw at 64e78ce, PR open for Joshua's review
 - CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md
-- CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run 42271118896)
-- Firefox and WebKit weekly: 56/56 each, 0 flaky (run 42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)
+- [withheld: possible sensitive data]
+- [withheld: possible sensitive data]
 - Production smoke on every production deployment, plus daily; alert issues labelled production-alert open and close automatically
-- Smoke after 7e05123 (run 42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page
+- [withheld: possible sensitive data]
 
 ## In progress
 
@@ -29,12 +29,12 @@ _none recorded_
 
 ## Tests (agent-reported)
 
-- `Locally on 64e78ce: prettier, eslint, astro check, Vitest 202/202 on Postgres 16, Chromium e2e 68/68 (Firefox/WebKit not run)`: pass at `64e78ce`, 2026-11-06T23:20:00Z
+- `Locally on 64e78ce: prettier, eslint, astro check, Vitest 202/202 on Postgres 16, Chromium e2e 68/68 (Firefox/WebKit no…`: pass at `64e78ce`, 2026-11-06T23:20:00Z
 - `GitHub CI on main (push) after PR #38`: pass at `7e05123`, 2026-11-06T18:40:00Z
 - `Production smoke after the 7e05123 deployment: HTTP 14/14, browser checks failed on the analytics script 404`: fail at `7e05123`, 2026-11-06T18:45:00Z
 - `Browser tests (Firefox, WebKit) on 164be9b: 56/56 each`: pass at `164be9b`, 2026-11-06T18:31:00Z
 - `PR CI on 8ae8631 (PR #38 head)`: pass at `8ae8631`, 2026-11-06T18:31:00Z
-- `Locally: lint, astro check, prettier, Vitest 197 on Postgres 16, workflow lint + zizmor, Chromium e2e 57/57 over HTTP and over HTTPS`: pass at `164be9b`, 2026-11-06T18:20:00Z
+- `Locally: lint, astro check, prettier, Vitest 197 on Postgres 16, workflow lint + zizmor, Chromium e2e 57/57 over HTTP a…`: pass at `164be9b`, 2026-11-06T18:20:00Z
 - `Production smoke after the 97eaeb6 deployment: 13/14 (404 cache header)`: fail at `97eaeb6`, 2026-11-06T17:37:00Z
 
 ## Unverified changes
