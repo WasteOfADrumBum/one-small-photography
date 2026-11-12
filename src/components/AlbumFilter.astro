@@ -1,0 +1,61 @@
+---
+/**
+ * The portfolio's tag filter: a dropdown that adds a filter, the active filters as
+ * removable chips underneath, and a line saying how many albums show. The behaviour is in
+ * src/scripts/album-filter.ts; it filters every element on the page that has a
+ * `data-album-tags` attribute (the tag ids, separated by spaces).
+ *
+ * Starts hidden and is revealed by the script, so without JavaScript the page simply
+ * lists every album.
+ */
+import type { AlbumTag } from '@/lib/album-tags';
+
+interface Props {
+  /** The tags to offer, usually `tagsInUse(albums)`: only ones some album carries. */
+  tags: (AlbumTag & { count: number })[];
+}
+
+const { tags } = Astro.props;
+---
+
+{tags.length > 0 && (
+  <div class="mt-10 max-w-xl" data-album-filter hidden>
+    <label for="album-filter" class="block text-sm text-sand">
+      Filter albums by type of photography
+    </label>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <select
+        id="album-filter"
+        data-album-filter-select
+        class="min-h-11 w-full rounded-full border border-sand/60 bg-espresso px-4 py-2 text-paper focus:border-gold sm:w-72"
+      >
+        <option value="">Add a filter…</option>
+        {tags.map((tag) => (
+          <option value={tag.id} data-label={tag.label}>
+            {tag.label} ({tag.count})
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        data-album-filter-clear
+        hidden
+        class="min-h-8 cursor-pointer text-sm text-gold underline underline-offset-4 hover:text-paper"
+      >
+        Clear filters
+      </button>
+    </div>
+    <ul
+      data-album-filter-chips
+      hidden
+      aria-label="Active filters"
+      class="mt-4 flex flex-wrap gap-2"
+    />
+    <p data-album-filter-status role="status" class="mt-3 min-h-5 text-sm text-sand" />
+  </div>
+)}
+
+<script>
+  import { initAlbumFilter } from '@/scripts/album-filter';
+  initAlbumFilter();
+</script>

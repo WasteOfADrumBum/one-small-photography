@@ -11,6 +11,7 @@ import SettingsFields, {
   type Settings,
 } from './SettingsFields';
 import { Sortable, useSortableItem } from './sortable';
+import TagPicker from './TagPicker';
 import { ExternalLink, Star, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
@@ -82,7 +83,9 @@ export default function AlbumEditor({
   const { state: saveState, track: run, dismiss } = useSaveStatus();
 
   const updateAlbum = (
-    changes: Partial<Pick<DbAlbum, 'title' | 'description' | 'published' | 'coverPhotoId'>>,
+    changes: Partial<
+      Pick<DbAlbum, 'title' | 'description' | 'published' | 'coverPhotoId' | 'tags'>
+    >,
   ) =>
     run(async () => {
       const next = await api<Album>(`/api/admin/albums/${album.id}`, send('PATCH', changes));
@@ -281,6 +284,14 @@ export default function AlbumEditor({
               details.description !== album.description &&
               updateAlbum({ description: details.description })
             }
+          />
+          <TagPicker
+            value={album.tags}
+            onChange={(tags) => {
+              // Show the change right away; the saved album replaces it when the server answers.
+              setAlbum((a) => ({ ...a, tags }));
+              void updateAlbum({ tags });
+            }}
           />
           <p className="text-xs text-sand">
             There's no save button. Changes save on their own when you click away from a field, and

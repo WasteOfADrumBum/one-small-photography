@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/db/client';
 import { albums, photos } from '@/db/schema';
 import { getAlbumWithPhotos, uniqueSlug } from '@/lib/albums';
+import { AlbumTags } from '@/lib/album-tag-schema';
 import { fail, json, readJson } from '@/lib/http';
 import { deletePhotoFiles } from '@/lib/storage';
 
@@ -23,6 +24,7 @@ const UpdateAlbum = z.object({
   description: z.string().trim().max(2000).optional(),
   published: z.boolean().optional(),
   coverPhotoId: z.uuid().nullable().optional(),
+  tags: AlbumTags.optional(),
 });
 
 export const PATCH: APIRoute = async ({ params, request }) => {
