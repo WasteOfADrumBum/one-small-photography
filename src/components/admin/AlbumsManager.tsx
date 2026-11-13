@@ -3,6 +3,7 @@ import type { AlbumSummary } from '@/lib/albums';
 import { GripVertical, ImageOff, Plus, Star } from 'lucide-react';
 import { photoUrl } from '@/lib/photo-url';
 import { FEATURED_ALBUM_COUNT } from '@/lib/featured';
+import { albumTagLabel, cleanAlbumTags } from '@/lib/album-tags';
 import { api, send } from './api';
 import { Sortable, useSortableItem } from './sortable';
 import {
@@ -240,6 +241,9 @@ function AlbumRow({
           {album.description && (
             <span className="mt-1 line-clamp-2 text-sm text-sand">{album.description}</span>
           )}
+          <span className="mt-1 block truncate text-xs text-sand">
+            {cleanAlbumTags(album.tags).map(albumTagLabel).join(' · ') || 'No tags yet'}
+          </span>
         </span>
       </a>
       {featured && (

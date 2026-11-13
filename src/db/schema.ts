@@ -38,6 +38,8 @@ export const albums = pgTable('albums', {
   title: text('title').notNull(),
   description: text('description').notNull().default(''),
   coverPhotoId: uuid('cover_photo_id'),
+  /** Kinds of photography in the album: ids from src/lib/album-tags.ts. Filters the portfolio. */
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
   sortOrder: integer('sort_order').notNull().default(0),
   published: boolean('published').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

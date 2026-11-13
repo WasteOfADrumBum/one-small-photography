@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import AlbumFilter from '@/components/AlbumFilter.astro';
 import PolaroidStack from '@/components/PolaroidStack.astro';
 import { listPublishedAlbums, stackPhotos, type PublicAlbum } from '@/lib/albums';
+import { cleanAlbumTags, tagsInUse } from '@/lib/album-tags';
 import { hasDatabase } from '@/db/client';
 
 export const prerender = false;
@@ -23,6 +25,8 @@ const tones = ['moss', 'gold', 'sage'] as const;
 // partly filled last row sits in the middle instead of hugging the left edge.
 const cell = 'w-full sm:w-[calc((100%-2.5rem)/2)] lg:w-[calc((100%-5rem)/3)]';
 const totalPhotos = albums.reduce((sum, album) => sum + album.photos.length, 0);
+// Only tags that some visible album carries are offered, so a filter never comes up empty.
+const filterTags = tagsInUse(albums);
 const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'Events', 'Weddings'];
 ---
 
@@ -44,10 +48,16 @@ const placeholders = ['Portraits', 'Fashion & Models', 'Landscapes & Nature', 'E
         </a>
       </p>
     )}
+    <AlbumFilter tags={filterTags} />
     <div class="mt-20 flex flex-wrap justify-center gap-x-10 gap-y-28">
       {albums.length > 0
         ? albums.map((album, i) => (
-            <a href={`/portfolio/${album.slug}`} class:list={[cell, 'no-underline']} data-reveal>
+            <a
+              href={`/portfolio/${album.slug}`}
+              class:list={[cell, 'no-underline']}
+              data-album-tags={cleanAlbumTags(album.tags).join(' ')}
+              data-reveal
+            >
               <PolaroidStack
                 title={album.title}
                 tone={tones[i % tones.length]}
