@@ -1,26 +1,27 @@
-<!-- generated from .engineering/state.json (revision 12) -->
+<!-- generated from .engineering/state.json (revision 13) -->
 
 # Handoff: one-small-photography
 
 Read this, then **verify against GitHub** (branch head, open PRs, CI) before continuing. Nothing below is independently verified.
 
-- Checkpoint: revision 12, `repair-schema-2026-11-12`, 2026-11-12T02:08:42Z by Claude Code
-- Written by: a local edit that the agent then pushed; confirm the branch head matches
+- Checkpoint: revision 13, `album-tags-pr46-2026-11-13`, 2026-11-13T13:00:45Z by Claude Code (claude-fable-5-2)
+- Written by: the hub writer (committed through the GitHub API)
 - Uncommitted work outside this checkpoint: **none**
 
 ## Continue with
 
-PR from claude/project-thread-keruxw adds the All photos view (src/pages/portfolio/all.astro, src/scripts/gallery-batches.ts, lightbox now delegated and batch-aware). Wait for CI and Joshua's review; Joshua is doing UI work on a separate branch, so expect possible conflicts in Gallery.astro or portfolio/index.astro. Earlier owner items still open. Do not record approval.
+PR #46 (album tags and portfolio filter) is merged as dcefd23 and production serves it; CI on main and the production smoke passed. The previous main (f118807) is kept on backup/main-2026-11-13-pre-pr46. Nothing is in progress. The owner's local checkout is on hero-logo-animation, 84 commits behind main when checked on 2026-11-12; expect conflicts in portfolio/index.astro if that branch is revived. Next: owner tags albums; then add browser tests for the filter. Do not record approval.
 
 ## Unfinished
 
-- Owner: import the main ruleset
+- Owner: tag albums in the admin; check the admin tag picker and the portfolio filter in a browser
+- Browser tests for the tag filter and the tag picker (seed a tagged album in e2e/seed.setup.ts)
 - Owner: Vercel Web Analytics on or off
 - Owner release decision (docs/RELEASE.md section 6)
 
 ## Blockers
 
-- Settings writes are refused by the agent's GitHub proxy (branch protection, rulesets, Dependency graph)
+_none recorded_
 
 ## Decisions
 

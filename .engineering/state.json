@@ -1,7 +1,7 @@
 {
   "stateVersion": 1,
-  "revision": 12,
-  "checkpointId": "repair-schema-2026-11-12",
+  "revision": 13,
+  "checkpointId": "album-tags-pr46-2026-11-13",
   "projectId": "one-small-photography",
   "repository": "https://github.com/WasteOfADrumBum/one-small-photography",
   "hub": "https://github.com/WasteOfADrumBum/one-small-engineering",
@@ -10,25 +10,27 @@
     "independentVerification": "none"
   },
   "recorded": {
-    "branch": "claude/project-thread-keruxw",
-    "commit": "64e78ce4676bb44dbea637d7e8a34b968f28bc25",
-    "recordedAt": "2026-11-12T02:08:42Z"
+    "branch": "main",
+    "commit": "dcefd231ed9340cda9bb11824da59df32b4947e9",
+    "recordedAt": "2026-11-13T13:00:45Z"
   },
   "development": {
     "milestone": "Photography release (owner decision pending in docs/RELEASE.md section 6)",
     "activeTask": null,
-    "workingBranch": "claude/project-thread-keruxw",
+    "workingBranch": "main",
     "activePr": null,
     "lastCompleted": [
-      "All photos view: /portfolio/all (button on /portfolio) shows every visible photo in batches of 24 with lazy images; branch claude/project-thread-keruxw at 64e78ce, PR open for Joshua's review",
       "CI/CD brought to the standard in docs/CI-CD.md: PR #30 (merged by Joshua Small as 97eaeb6) and follow-up PR #38 (merged as 7e05123); agent-reported score 92/100 in docs/CI-CD-EVIDENCE.md",
       "CI: one required 'CI gate' over static checks, Vitest on Postgres 16, the real vercel-build on an empty database, Chromium browser suite, npm audit policy, gitleaks, CodeQL; about 2 minutes per PR (run https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271118896)",
       "Firefox and WebKit weekly: 56/56 each, 0 flaky (run https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42267842079); WebKit is served over HTTPS (E2E_HTTPS=1)",
       "Production smoke on every production deployment, plus daily; alert issues labelled production-alert open and close automatically",
-      "Smoke after 7e05123 (run https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page"
+      "Smoke after 7e05123 (run https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42271830897): HTTP checks 14/14; browser checks found Vercel Analytics script 404 on every public page",
+      "All photos view (/portfolio/all) is on main; the revision 12 record still listed its PR as open",
+      "PR #46 (owner request, 2026-11-12): album tags from a fixed list of 34 kinds of photography (src/lib/album-tags.ts); admin tag picker with removable chips in the album editor; tag filter with chips on /portfolio (any-match, state kept in ?tags=); migration 0003 adds albums.tags (jsonb, default []). Photos are not tagged. Squash-merged as dcefd23",
+      "Protect main ruleset imported from .github/rulesets/protect-main.json on 2026-11-12 (required check: CI gate)"
     ],
     "inProgress": [],
-    "nextAction": "Joshua: review and merge the All photos PR. Owner items unchanged: import .github/rulesets/protect-main.json, and decide on Vercel Web Analytics."
+    "nextAction": "Joshua Small: tag the albums in the admin (the portfolio filter stays hidden until a visible album has a tag) and look at the admin tag picker, which no one has viewed in a browser. Owner items unchanged: Vercel Web Analytics on or off; release decision (docs/RELEASE.md section 6)."
   },
   "decisions": {
     "made": [
@@ -173,33 +175,62 @@
         "commit": "97eaeb6ee17ff1ae2a59a8ea10efd0d47479d67a",
         "at": "2026-11-06T17:37:00Z",
         "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/42263055341"
+      },
+      {
+        "command": "Locally on 72d4010: prettier --check, eslint, astro check, vitest run (183 passed, 35 skipped: no local Postgres, so the database tests did not run)",
+        "result": "pass",
+        "commit": null,
+        "at": "2026-11-12T22:40:00Z",
+        "ciRunUrl": null
+      },
+      {
+        "command": "GitHub CI on PR #46 head 72d4010: CI gate, static checks, unit/integration/migration tests, production build and migrations, Chromium browser tests, security checks, CodeQL",
+        "result": "pass",
+        "commit": null,
+        "at": "2026-11-13T12:55:00Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/43429133249"
+      },
+      {
+        "command": "GitHub CI on main (push) after PR #46",
+        "result": "pass",
+        "commit": "dcefd231ed9340cda9bb11824da59df32b4947e9",
+        "at": "2026-11-13T12:59:44Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/43429529459"
+      },
+      {
+        "command": "Production smoke after the dcefd23 deployment; agent also read /version.json (commit dcefd23) and /portfolio (200)",
+        "result": "pass",
+        "commit": "dcefd231ed9340cda9bb11824da59df32b4947e9",
+        "at": "2026-11-13T12:58:58Z",
+        "ciRunUrl": "https://github.com/WasteOfADrumBum/one-small-photography/actions/runs/43429596531"
       }
     ],
     "unverifiedChanges": [
-      "Branch protection on main is not set: the agent's proxy refuses settings writes (403). The ruleset file is ready to import; a daily job alerts while it is missing",
       "Dependency graph is off, so GitHub dependency review is not in CI",
       "No VoiceOver or NVDA pass has been done; owner-reported Narrator, keyboard and phone checks from 2026-11-03 stand as owner-reported",
       "The deployment-failed alert job has not run on a real failed deployment",
       "Whether GitHub alert emails reach Joshua depends on his notification settings, not checked",
-      "Carried over: file recovery only tested; restoring the real backup into a new database not tested"
+      "Carried over: file recovery only tested; restoring the real backup into a new database not tested",
+      "Album tags (PR #46): the portfolio filter was viewed by the agent only on a temporary local page with fake albums at one desktop width; the admin tag picker was not viewed in a browser at all; no browser test covers either (the e2e seed has no tagged album, so the filter is hidden in the a11y sweep)",
+      "Album tags (PR #46): no owner review before merge; the owner asked for the merge in the session (2026-11-13) and the previous main is on backup/main-2026-11-13-pre-pr46",
+      "On production no album is tagged yet, so the filter has not been seen working on the live site"
     ]
   },
   "handoff": {
     "lastAgent": {
       "tool": "Claude Code",
-      "model": null
+      "model": "claude-fable-5-2"
     },
-    "checkpointedAt": "2026-11-12T02:08:42Z",
+    "checkpointedAt": "2026-11-13T13:00:45Z",
     "unfinished": [
-      "Owner: import the main ruleset",
+      "Owner: tag albums in the admin; check the admin tag picker and the portfolio filter in a browser",
+      "Browser tests for the tag filter and the tag picker (seed a tagged album in e2e/seed.setup.ts)",
       "Owner: Vercel Web Analytics on or off",
       "Owner release decision (docs/RELEASE.md section 6)"
     ],
-    "blockers": [
-      "Settings writes are refused by the agent's GitHub proxy (branch protection, rulesets, Dependency graph)"
-    ],
-    "continuation": "PR from claude/project-thread-keruxw adds the All photos view (src/pages/portfolio/all.astro, src/scripts/gallery-batches.ts, lightbox now delegated and batch-aware). Wait for CI and Joshua's review; Joshua is doing UI work on a separate branch, so expect possible conflicts in Gallery.astro or portfolio/index.astro. Earlier owner items still open. Do not record approval.",
+    "blockers": [],
+    "continuation": "PR #46 (album tags and portfolio filter) is merged as dcefd23 and production serves it; CI on main and the production smoke passed. The previous main (f118807) is kept on backup/main-2026-11-13-pre-pr46. Nothing is in progress. The owner's local checkout is on hero-logo-animation, 84 commits behind main when checked on 2026-11-12; expect conflicts in portfolio/index.astro if that branch is revived. Next: owner tags albums; then add browser tests for the filter. Do not record approval.",
     "uncommittedWorkOutsideCheckpoint": "none",
-    "persistedBy": "local-file"
+    "persistedBy": "github-api"
   }
 }
