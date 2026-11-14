@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "@astrojs/node": "11.1.11",
+    "@astrojs/node": "11.1.13",
     "@axe-core/playwright": "4.14.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.65.0",
