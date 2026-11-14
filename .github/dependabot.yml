@@ -11,6 +11,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    # `typescript` stays on 6.x because astro check and typescript-eslint need its JavaScript API, which TypeScript 7
+    # does not ship. TypeScript 7 itself is the `typescript7` alias and still gets updates. See docs/typescript-7.md.
+    ignore:
+      - dependency-name: typescript
+        versions: ['>=7.0.0']
     # Security fixes still arrive as soon as they are published.
   - package-ecosystem: github-actions
     directory: /
