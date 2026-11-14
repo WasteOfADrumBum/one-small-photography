@@ -11,11 +11,6 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
-    # TypeScript 7 is deferred: typescript-eslint and @astrojs/check do not accept it yet (peer range
-    # stops below 6.1). Remove this once they do; see the Hub readiness notes.
-    ignore:
-      - dependency-name: typescript
-        versions: ['>=7.0.0']
     # Security fixes still arrive as soon as they are published.
   - package-ecosystem: github-actions
     directory: /
