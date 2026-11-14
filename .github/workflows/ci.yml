@@ -69,6 +69,10 @@ jobs:
         run: npm run lint
       - name: Type check
         run: npm run check
+      # TypeScript 7 checks the .ts files; astro check and lint above stay on TypeScript 6 until they support 7
+      # (see docs/typescript-7.md).
+      - name: Type check (TypeScript 7)
+        run: npm run typecheck:ts7
       - name: Workflow lint (actionlint, zizmor)
         run: bash scripts/ci/workflow-lint.sh
 

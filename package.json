@@ -14,6 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "preview": "astro preview",
     "check": "astro check",
+    "typecheck:ts7": "astro sync && node node_modules/typescript7/bin/tsc --noEmit -p tsconfig.ts7.json",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -72,6 +73,7 @@
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
+    "typescript7": "npm:typescript@^7.0.2",
     "typescript-eslint": "^8.72.1",
     "vitest": "^5.1.0"
   },
