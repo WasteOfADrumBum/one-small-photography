@@ -23,16 +23,35 @@ async function expectNoViolations(page: Page, label: string, include?: string) {
   expect(summary, `axe violations on ${label}`).toEqual([]);
 }
 
-/** Scroll-triggered reveals start transparent; show everything before checking contrast. */
+/**
+ * Scroll-triggered reveals start transparent; show everything before checking contrast.
+ * A fixed wait was not enough on WebKit, which sometimes ran axe while a fade was still
+ * part way. Each reveal is scrolled into view, then the check waits until every rendered
+ * reveal is fully opaque, and names any that never finish instead of timing out blind.
+ */
 async function settle(page: Page) {
-  await page.evaluate(async () => {
-    for (let y = 0; y < document.body.scrollHeight; y += 400) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 60));
+  const stuck = await page.evaluate(async () => {
+    const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const reveals = [...document.querySelectorAll<HTMLElement>('[data-reveal]')];
+    for (const el of reveals) {
+      el.scrollIntoView({ block: 'center' });
+      await pause(80);
     }
+    window.scrollTo(0, document.body.scrollHeight);
+    await pause(80);
     window.scrollTo(0, 0);
+    const pending = () =>
+      reveals.filter(
+        (el) => el.getClientRects().length > 0 && Number(getComputedStyle(el).opacity) < 0.99,
+      );
+    const deadline = Date.now() + 8000;
+    while (pending().length > 0 && Date.now() < deadline) await pause(100);
+    return pending().map(
+      (el) =>
+        `<${el.tagName.toLowerCase()}> "${(el.textContent ?? '').trim().slice(0, 40)}" at opacity ${getComputedStyle(el).opacity}`,
+    );
   });
-  await page.waitForTimeout(1000);
+  expect(stuck, `reveals that never finished on ${new URL(page.url()).pathname}`).toEqual([]);
 }
 
 const publicPages = () => [

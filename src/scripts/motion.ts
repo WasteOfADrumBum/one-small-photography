@@ -25,4 +25,16 @@ export function initMotion(): void {
       scrollTrigger: { trigger: el, start: 'top 85%' },
     });
   }
+
+  // A reveal whose start the visitor can never scroll to (the last lines of a page, or a page
+  // shorter than the window) would otherwise stay invisible. Play those straight away, and
+  // check again whenever ScrollTrigger re-measures the page, for example after photos load.
+  const revealUnreachable = () => {
+    const maxScroll = ScrollTrigger.maxScroll(window);
+    for (const trigger of ScrollTrigger.getAll()) {
+      if (trigger.start > maxScroll) trigger.animation?.play();
+    }
+  };
+  ScrollTrigger.addEventListener('refresh', revealUnreachable);
+  revealUnreachable();
 }
