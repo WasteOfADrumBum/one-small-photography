@@ -22,9 +22,19 @@ export function initMotion(): void {
       y: 0,
       duration: 0.9,
       ease: 'power3.out',
-      // clamp(): an element near the very bottom whose top never reaches 85% of the
-      // viewport still reveals at the end of the page instead of staying invisible.
-      scrollTrigger: { trigger: el, start: 'clamp(top 85%)' },
+      scrollTrigger: { trigger: el, start: 'top 85%' },
     });
   }
+
+  // A reveal whose start the visitor can never scroll to (the last lines of a page, or a page
+  // shorter than the window) would otherwise stay invisible. Play those straight away, and
+  // check again whenever ScrollTrigger re-measures the page, for example after photos load.
+  const revealUnreachable = () => {
+    const maxScroll = ScrollTrigger.maxScroll(window);
+    for (const trigger of ScrollTrigger.getAll()) {
+      if (trigger.start > maxScroll) trigger.animation?.play();
+    }
+  };
+  ScrollTrigger.addEventListener('refresh', revealUnreachable);
+  revealUnreachable();
 }
