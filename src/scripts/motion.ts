@@ -22,7 +22,9 @@ export function initMotion(): void {
       y: 0,
       duration: 0.9,
       ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 85%' },
+      // clamp(): an element near the very bottom whose top never reaches 85% of the
+      // viewport still reveals at the end of the page instead of staying invisible.
+      scrollTrigger: { trigger: el, start: 'clamp(top 85%)' },
     });
   }
 }
