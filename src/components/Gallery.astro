@@ -63,6 +63,7 @@ const columns = 'columns-1 gap-4 sm:columns-2 lg:columns-3';
           decoding="async"
           draggable="false"
           data-protected
+          style={`aspect-ratio: ${photo.width} / ${photo.height}`}
           class="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
         />
       </button>

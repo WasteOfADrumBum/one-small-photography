@@ -23,7 +23,11 @@ async function expectNoViolations(page: Page, label: string, include?: string) {
   expect(summary, `axe violations on ${label}`).toEqual([]);
 }
 
-/** Scroll-triggered reveals start transparent; show everything before checking contrast. */
+/**
+ * Scroll-triggered reveals start transparent; show everything before checking contrast.
+ * A fixed wait was not enough on WebKit, which sometimes ran axe while a fade was still
+ * part way, so wait until every reveal has actually finished at full opacity.
+ */
 async function settle(page: Page) {
   await page.evaluate(async () => {
     for (let y = 0; y < document.body.scrollHeight; y += 400) {
@@ -32,7 +36,14 @@ async function settle(page: Page) {
     }
     window.scrollTo(0, 0);
   });
-  await page.waitForTimeout(1000);
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll<HTMLElement>('[data-reveal]')].every(
+        (el) => getComputedStyle(el).opacity === '1',
+      ),
+    undefined,
+    { timeout: 10_000 },
+  );
 }
 
 const publicPages = () => [
